@@ -1,0 +1,30 @@
+<div style="height:100%;width:100%">
+
+    <div    dojoType="dijit.layout.BorderContainer"
+            design="headline"
+            gutters="false"
+            style="height:100%;width:100%;">
+
+        <div    dojoType="dijit.layout.ContentPane"
+                region="top"
+                splitter="false"
+                style="overflow:hidden;height:16px;">
+
+            <span class="bfree dijitDarkLabel" style="padding-right:8px;vertical-align:middle">Show Only:</span>
+            <span class="bfree dijitDarkLabel boldLabel" style="padding-right:8px;vertical-align:middle"><input dojoAttachPoint="chkUsers"/><label for="chkUsers">Users</label></span>
+            <span class="bfree dijitDarkLabel boldLabel" style="padding-right:8px;vertical-align:middle"><input dojoAttachPoint="chkGroups"/><label for="chkGroups">Groups</label></span>
+
+        </div>
+
+        <div    dojoType="dijit.layout.ContentPane"
+                region="center"
+                splitter="false"
+                style="padding-top:0">
+
+            <div dojoAttachPoint="gridNode"></div>
+
+        </div>
+
+    </div>
+
+</div>

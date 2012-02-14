@@ -1,0 +1,31 @@
+<div style="height:100%;position:relative;width:100%;">
+
+<div 	dojoType="dijit.layout.BorderContainer"
+		dojoAttachPoint="pneMain"
+		design="headline"
+		gutters="false"	 
+		style="height:100%;padding:0;width:100%">
+			
+	<div 	dojoType="dijit.layout.ContentPane"
+			dojoAttachPoint="pneDocTypes"					
+			region="top" 
+			splitter="false"
+			style="height:28px;padding:4px 8px 0 88px;position:relative">
+		
+		<label class="editorLabel darkLabel" for="cmbDocTypesNode" style="position:absolute;left:0px;top:8px">Document Type:</label>
+		<select dojoAttachPoint="cmbDocTypesNode"></select>
+							
+	</div>
+				
+	<div 	dojoType="dijit.layout.ContentPane"						
+			region="center" 
+			splitter="false"
+			style="background:#EEEEEE;border:solid 1px #C0C0C0;padding:0">
+		
+		<div dojoAttachPoint="pneEditorNode"></div>
+	
+	</div>			
+			
+</div>
+
+</div>

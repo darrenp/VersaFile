@@ -1,0 +1,11 @@
+<html>
+  <body>
+    <textarea>
+    	<% if @error.blank? %>
+    		<%= "{ file: '#{@fileinfo[:file]}', name: '#{@fileinfo[:name]}', size: #{@fileinfo[:size]}, type: '#{@fileinfo[:content_type]}' }" %>
+		<% else %>
+			<%= "{ file: '#{@fileinfo[:file]}', name: '#{@fileinfo[:name]}', size: #{@fileinfo[:size]}, type: '#{@fileinfo[:content_type]}', ERROR: #{@error.message.to_json()} }" %>
+		<% end %>
+    </textarea>
+  </body>
+</html>

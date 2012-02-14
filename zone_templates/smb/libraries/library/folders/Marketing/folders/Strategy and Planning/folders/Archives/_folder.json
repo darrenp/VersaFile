@@ -1,0 +1,1 @@
+{"name":"Archives","created_at":"2012-01-27T21:39:25Z","created_by":"admin","updated_at":"2012-01-30T19:53:03Z","updated_by":"admin","acl":"{\"inherits\":true,\"entries\":[{\"grantee_type\":\"Group\",\"grantee_name\":\"Administrators\",\"precedence\":16,\"role\":\"Admin\"},{\"grantee_type\":\"Group\",\"grantee_name\":\"Everyone\",\"precedence\":1,\"role\":\"Viewer\"}]}"}

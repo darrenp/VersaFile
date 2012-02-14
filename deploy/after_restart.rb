@@ -1,0 +1,1 @@
+sudo "monit -g dj_versafile restart all"

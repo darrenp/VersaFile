@@ -1,0 +1,59 @@
+<div style="height:100%;width:100%">
+
+    <div    dojoType="dijit.layout.BorderContainer"
+            design="headline"
+            gutters="false"
+            style="height:100%;width:100%;">
+
+        <div    dojoType="dijit.layout.ContentPane"
+                region="top"
+                splitter="false"
+                style="overflow:hidden;height:16px;">
+
+            <div id="chkInherit" dojoAttachPoint="chkInherit"></div>
+            <span class="bfree dijitDarkLabel boldLabel" style="vertical-align:middle">
+                <label for="chkInherit" dojoAttachPoint="lblInheritNode"></label>
+            </span>
+
+        </div>
+
+        <div    dojoType="dijit.layout.BorderContainer"
+                design="headline"
+                gutters="false"
+                region="center"
+                splitter="false"
+                style="">
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    region="top"
+                    splitter="false"
+                    style="overflow: hidden;height:16px">
+
+                <span class="bfree dijitDarkLabel boldLabel" style="padding-right:8px;vertical-align:middle">Everyone:</span><div dojoAttachPoint="cmbEveryone"></div>
+
+            </div>
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    region="center"
+                    splitter="false"
+                    style="">
+
+                <div dojoAttachPoint="gridNode"></div>
+
+            </div>
+
+        </div>
+
+        <div    dojoType="dijit.layout.ContentPane"
+                region="bottom"
+                splitter="false"
+                style="height:36px;padding-top:0">
+
+            <div dojoAttachPoint="btnAddNode"></div>
+            <div dojoAttachPoint="btnRemoveNode"></div>
+
+        </div>
+
+    </div>
+
+</div>

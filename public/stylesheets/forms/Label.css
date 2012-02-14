@@ -1,0 +1,63 @@
+/* NEW COLOR PALLETTE */
+.versafile .dijitDarkLabelV{
+    color: #75787B;
+}
+
+.versafile .dijitLightLabel{
+	color: #78CCFF;
+}
+
+.versafile .dijitDarkLabel{
+	color: #336699;
+}
+
+.versafile .dijitOkLabel{
+	color: #669900;
+    font-size: 0.80em;
+}
+
+.versafile .dijitErrorLabel{
+	color: #800000 !important;
+    font-size: 0.80em;
+}
+
+.versafile .dijitBoldLabel{
+	font-weight:bolder;
+}
+
+.versafile .dijitSmallLabel{
+	font-size: 0.80em;
+}
+
+.versafile .dijitMediumLabel{
+	font-size: 1.0em;
+}
+
+.versafile .dijitLargeLabel{
+	font-size: 1.05em;
+}
+
+/*
+.bfree .dijitLabel{
+}
+
+.bfree .dijitDarkLabel{
+	color: #336699;
+}
+
+.bfree .dijitOkLabel{
+	color: #669900;
+}
+
+.bfree .dijitErrorLabel{
+	color: #800000 !important;
+}
+
+.bfree .boldLabel{
+	font-weight:bolder;
+}
+
+
+
+
+*/

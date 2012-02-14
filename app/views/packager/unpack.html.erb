@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>VersaFile - Packaging</title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return true;">
+
+<div class="versaDivTop" style="position:absolute;top:0;left:0;width:100%">
+    <img src="/images/versafile-64.png" height="64" style=""/>
+</div>
+<div class="versaDivBottom" style="position:absolute;top:68px;left:0;width:100%;padding:8px 0 0 8px;">
+    <span class="dijitLargeLabel dijitDarkLabel">Package: <%= @package_name %></span>
+
+  <table>
+        <tr>
+          <td>Subdomain:</td>
+          <td><%= @results[:subdomain] %></td>
+        </tr>
+
+        <tr>
+          <td>Users:</td>
+          <td><%= @results[:users] %></td>
+        </tr>
+        <tr>
+          <td>Groups:</td>
+          <td><%= @results[:groups] %></td>
+        </tr>
+      <tr>
+        <td>Choice Lists:</td>
+        <td><%= @results[:choice_lists]%></td>
+      </tr>
+      <tr>
+        <td>Property Definitions:</td>
+        <td><%= @results[:property_definitions] %></td>
+      </tr>
+      <tr>
+        <td>Document Types:</td>
+        <td><%= @results[:document_types] %></td>
+      </tr>
+      <tr>
+        <td>View Definitions:</td>
+        <td><%= @results[:view_definitions] %></td>
+      </tr>
+      <tr>
+        <td>Folders:</td>
+        <td><%= @results[:folders] %></td>
+      </tr>
+      <tr>
+        <td>Documents:</td>
+        <td><%= @results[:documents] %></td>
+      </tr>
+      <tr>
+        <td>Versions:</td>
+        <td><%= @results[:versions] %></td>
+      </tr>
+
+    </table>
+
+</div>
+
+</body>
+
+</html>

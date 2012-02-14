@@ -1,0 +1,131 @@
+<div style="width:100%;height:100%">
+
+<div 	dojoType="dijit.layout.BorderContainer"
+		dojoAttachPoint="pneMain"
+		design="headline" 
+		gutters="false" 
+		style="width:100%;height:100%">
+		
+		
+<div 	dojoType="dijit.layout.BorderContainer"
+		design="headline" 
+		gutters="false"
+		region="center" 				
+		splitter="true" 
+		style="padding:8px 8px 0 8px">
+		
+	<div 	dojoType="dijit.layout.ContentPane"							
+			region="top" 				
+			splitter="false" 
+			style="position:relative;overflow:hidden;height:32px;padding:0;">
+			
+		<div dojoAttachPoint="docInfoNode"></div>			
+			
+	</div>
+	
+	<div 	dojoType="dijit.layout.ContentPane"							
+			region="center" 				
+			splitter="false" 
+			style="position:relative;overflow:hidden;padding:0;">
+			
+		<div 	dojoType="dijit.layout.BorderContainer"
+				design="headline" 
+				gutters="false"
+				region="center" 				
+				splitter="true" 
+				style="">
+				
+			<div 	dojoType="dijit.layout.ContentPane"							
+					region="center" 				
+					splitter="false" 
+					style="position:relative;overflow:hidden;padding:0;">
+					
+				<div dojoAttachPoint="propertyEditorNode"></div>					
+					
+			</div>	
+			
+			<div 	dojoType="dijit.layout.ContentPane"							
+					region="bottom" 				
+					splitter="false" 
+					style="height:112px;position:relative;overflow:hidden;padding:8px 8px 0 8px;">
+					
+				<table style="width:100%" border="0">
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Document Id:
+						</td>
+						<td dojoAttachPoint="docIdNode" class="mediumLabel darkLabel" style="width:100%">							
+						</td>
+					</tr>
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Checked Out: 
+						</td>
+						<td dojoAttachPoint="docCheckedOutNode" class="mediumLabel darkLabel">						
+						</td>
+					</tr>
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Checked Out By:
+						</td>
+						<td dojoAttachPoint="docCheckedOutByNode" class="mediumLabel darkLabel">						
+						</td>
+					</tr>
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Created By:
+						</td>
+						<td dojoAttachPoint="docCreatedByNode" class="mediumLabel darkLabel">						
+						</td>						
+					</tr>					
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Created At:
+						</td>
+						<td dojoAttachPoint="docCreatedAtNode" class="mediumLabel darkLabel">						
+						</td>
+					</tr>					
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Last Modified By:
+						</td>
+						<td dojoAttachPoint="docUpdatedByNode" class="mediumLabel darkLabel">						
+						</td>
+					</tr>
+					<tr>
+						<td class="mediumLabel darkBoldLabel" style="padding-right:4px;white-space:nowrap;">
+							Last Modified At:
+						</td>
+						<td dojoAttachPoint="docUpdatedAtNode" class="mediumLabel darkLabel">						
+						</td>
+					</tr>
+				</table>	
+					
+					
+									
+			</div>
+				
+		</div>			
+			
+	</div>
+		
+	<div 	dojoType="dijit.layout.ContentPane"							
+			region="bottom" 				
+			splitter="false" 
+			style="position:relative;overflow:hidden;height:36px;padding:0;text-align:right;">
+			
+		<div id="btnOkNode">
+			<div style="width:40px">OK</div>
+		</div>
+		
+		<div id="btnCancelNode">
+			<div style="width:40px">Cancel</div>
+		</div>			
+			
+	</div>		
+			
+</div>		
+		
+</div>
+
+</div>

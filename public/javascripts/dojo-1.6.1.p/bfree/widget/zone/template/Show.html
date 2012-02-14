@@ -1,0 +1,168 @@
+<div style="background:#D9D9D6;height:100%;width:100%;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="center"
+            spitter="false"
+            style="padding:8px 8px 0 8px">
+
+        <div    dojoType="dijit.layout.BorderContainer"
+                design="headline"
+                gutters="false"
+                style="height:100%;width:100%">
+
+            <div    dojoType="dijit.layout.BorderContainer"
+                    design="sidebar"
+                    gutters="false"
+                    region="top"
+                    splitter="false"
+                    class="versaTopPane">
+
+                <div    dojoType="dijit.layout.ContentPane"
+                        region="left"
+                        splitter="false"
+                        class="versaHeadPane">
+                    <img src="/images/versafile-64.png" height="56" style="position:relative;top:-8px;left:-8px"/>
+                </div>
+
+                <div    dojoType="dijit.layout.BorderContainer"
+                        design="sidebar"
+                        gutters="false"
+                        region="center"
+                        class="versaBarPane">
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="center"
+                            splitter="false"
+                            style="padding:0;overflow:hidden;position:relative;">
+
+                        <div style="display:none;width:256px;margin-left:auto;margin-right:auto">Good Dog.</div>
+
+                        <div dojoAttachPoint="toolbarNode"></div>
+
+                    </div>
+
+                    <div    dojoType="dijit.layout.BorderContainer"
+                            design="headline"
+                            gutters="false"
+                            region="right"
+                            splitter="false"
+                            style="width:256px;">
+
+                        <div    dojoType="dijit.layout.ContentPane"
+                                region="center"
+                                splitter="false"
+                                style="position:relative;text-align:right;padding:2px 0 0 0">
+
+                            <table cellpadding="0" cellspacing="0" style="position:absolute;right:0"><tr>
+                                <td style="padding-right:4px; border-right: 1px solid #75787B">
+                                    <a href="javascript://" class="versaLink" title="Edit Profile" dojoAttachEvent="onclick: _onUserEdit">
+                                    <span dojoAttachPoint="nameNode"></span>
+                                    </a>
+                                </td>
+                                <td style="padding-left:4px;"><a href="javascript://" class="versaLink" dojoAttachEvent="onclick: _onLogoff">Logout</a></td>
+                            </tr>
+                            </table>
+
+                        </div>
+
+                        <div    dojoType="dijit.layout.ContentPane"
+                                region="bottom"
+                                splitter="false"
+                                style="height:32px;padding:0;">
+                            <div dojoAttachPoint="searchBoxNode" style=""></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div    dojoType="dijit.layout.BorderContainer"
+                    design="headline"
+                    gutters="false"
+                    region="center"
+                    splitter="false"
+                    class="versaMainPane">
+
+                <div    dojoType="dijit.layout.BorderContainer"
+                        design="sidebar"
+                        gutters="true"
+                        region="center"
+                        splitter="false"
+                        class="">
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="left"
+                            splitter="true"
+                            class="versaInfoPane"
+                            style="padding:0;width:256px;">
+
+                        <div style="height: 100%">
+                           <div dojoAttachPoint="folderTreeNode" style="height: 100%"></div>
+                       </div>
+
+                    </div>
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="center"
+                            splitter="true"
+                            class="versaInfoPane"
+                            style="padding:0">
+
+                        <div dojoAttachPoint="documentGridNode"></div>
+
+                    </div>
+
+                </div>
+
+                <div    dojoType="dijit.layout.ContentPane"
+                        region="bottom"
+                        splitter="false"
+                        style="height:96px;padding: 0 6px 8px 6px">
+
+                    <div    dojoType="dojox.widget.Toaster"
+                           dojoAttachPoint="errorToaster"
+                           positionDirection="br-left"
+                           style="height:88px">
+                   </div>
+
+                   <div style="height:100%" class="versaInfoPane">
+                       <div dojoAttachPoint="itemInfoNode" style="width: 100%"></div>
+                   </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="bottom"
+            splitter="false"
+            style="position:relative;height:16px;overflow:hidden;">
+
+        <span class="dijitMediumLabel dijitDarkLabelV">VersaFile is an RKO Business Solutions product. Copyright © 2012 All rights reserved</span>
+
+        <span style="position:absolute;right:16px;">
+            <span dojoAttachPoint="versionSpan" class="dijitMediumLabel dijitDarkLabelV"></span>
+            <a href="mailto:support@versafile.com" class="versaLink">Contact Support</a>
+        </span>
+
+    </div>
+
+</div>
+
+</div>
+
+
+

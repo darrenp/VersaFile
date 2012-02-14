@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/grid/resources/Grid.css">
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/grid/resources/claroGrid.css">
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/bfree/_proto.js"></script>
+<script type="text/javascript">
+
+
+dojo.require('bfree.widget.Bfree');
+dojo.require('bfree.widget.SortGrid');
+dojo.require('bfree.api.ItemFileWriteStore');
+
+
+var view1 = [
+    {
+        cells: [
+            {
+                field: 'sort',
+                name: '&nbsp',
+                width: '16px',
+                hidden: true
+            },
+            {
+                field: 'name',
+                name: 'Property',
+                width: 'auto'
+            },
+            {
+                field: 'data_type',
+                name: 'Data Type',
+                width: '96px'
+            },
+            {
+                field: 'choice_list_id',
+                name: 'Choice List',
+                width:'96px'
+            },
+            {
+                field: 'default_value',
+                name: 'Default',
+                width: '128px',
+                styles: 'padding:0 2px 0 2px;text-align:center;'
+            },
+            {
+                field: 'is_required',
+                name: 'Required?',
+                width: '64px',
+                styles: 'text-align:center;'
+            }
+        ],
+        width: 'auto'
+    }
+];
+
+dojo.addOnLoad(function(){
+
+    var _propMapStore = new bfree.api.ItemFileWriteStore({
+            data: {
+                identifier: 'id',
+                label: 'name',
+                items: [{
+                    id: 1,
+                    name: 'Hiya'
+                }]
+            }
+        });
+
+    var g = new bfree.widget.SortGrid({
+            id: 'grdTest',
+            'class': 'versaGridOutlineNoPad versaNoHeader',
+            query: {},
+            noDataMessage: 'No Properties Defined',
+            store: _propMapStore,
+            structure: view1,
+            formatterScope: this,
+            rowHeight:24,
+            style: 'width:100%;height:256px'
+        }, 'gridNode');
+    g.startup();
+
+    var h = new bfree.widget.SortGrid({
+            id: 'grdTest2',
+            'class': 'versaGridOutlineNoPad',
+            query: {},
+            noDataMessage: 'No Properties Defined',
+            store: _propMapStore,
+            structure: view1,
+            formatterScope: this,
+            rowHeight:24,
+            style: 'width:100%;height:256px'
+        }, 'gridNode2');
+    h.startup();
+
+});
+
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return true;" style="padding: 32px !important">
+
+
+<div id="gridNode"></div>
+
+<div id="gridNode2"></div>
+
+
+</body>
+</html>

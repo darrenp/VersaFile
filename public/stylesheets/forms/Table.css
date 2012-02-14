@@ -1,0 +1,61 @@
+/* base table w/ cell padding */
+.versa-table{
+
+}
+.versa-table-horiz{
+}
+
+.versa-table-vert{
+}
+
+.versa-labelCell {
+    color: #336699;
+    vertical-align:top;
+    padding-top: 4px;
+}
+.versa-valueCell {
+}
+
+/* small table */
+.versainfo-table{
+    font-size:0.8em
+}
+.versainfo-table-horiz{
+}
+
+.versainfo-table-vert{
+}
+
+.versainfo-labelCell {
+    color: #336699;
+    vertical-align:top;
+}
+.versainfo-valueCell {
+}
+
+/* footer table */
+.versafoot-table{
+    font-size:11px;
+    width:1px;
+}
+.versafoot-table-horiz{
+}
+
+.versafoot-table-vert{
+}
+
+.versafoot-labelCell {
+    color: #336699;
+    vertical-align:middle;
+    overflow: hidden;
+    min-width:112px;
+}
+.versafoot-valueCell {
+    overflow: hidden;
+    white-space: nowrap;
+    max-width:228px;
+    min-width:228px;
+    padding-right:8px;
+}
+
+

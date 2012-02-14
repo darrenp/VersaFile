@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>VersaFile Preview</title>
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+<% if ENV['RAILS_ENV'] == 'production' %>
+
+<script type="text/javascript">
+
+var djConfig = {
+    isDebug: false,
+    parseOnLoad: true,
+    cacheBust: '<%= "%d.%02d.%02d.%04d" % [configatron.bfree.major_version, configatron.bfree.minor_version, configatron.bfree.revision_number, configatron.bfree.build_number] %>'
+};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script >
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/bfree.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: true,
+		parseOnLoad: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+
+<% end %>
+
+<script type="text/javascript">
+dojo.require('dijit._base.place');
+
+var _maintainAspectRatio = ('<%= @maintainAspectRatio %>' === 'true');
+var retryCount = 8;
+
+function _onInitialize()
+{
+
+	//try{
+        var v = dijit.getViewport();
+		var nodes = dojo.doc.getElementsByTagName('object');
+
+        dojo.forEach(nodes, function(node, idx){
+
+            var c = dojo.coords(nodes[0]);
+
+            if((retryCount < 1) || ((c.w > 16) && (c.h > 16))){
+
+                var v = dijit.getViewport();
+
+                _resizeObject(v, node);                ;
+                _positionObject(v, node);
+
+                if(parent) parent.dojo.publish('rko/bfree/preview/onLoad');
+            }
+            else{
+                //Not drawn yet...retry
+                retryCount--;
+			    setTimeout(_onInitialize, 500);
+		    }
+        }, this);
+
+	//}
+	//catch(e){
+	//	console.error(e);
+	//}
+
+}
+
+function _positionObject(v, domNode){
+
+    var c = dojo.coords(domNode);
+
+    console.log('C: ' + c.w + ', ' + c.h);
+    var offsetX = Math.floor((v.w / 2) - (c.w / 2));
+    var offsetY = Math.floor((v.h / 2) - (c.h / 2));
+
+    console.log('RESIZE: ' + offsetX + ', ' + offsetY);
+    dojo.style(domNode, { 'top': offsetY + 'px', 'left': offsetX + 'px' });
+}
+
+function _resizeObject(v, domNode){
+
+	try {
+
+        var c = dojo.coords(domNode);
+
+        //only resize if object is larger than frame
+        if((c.w < v.w) && (c.h < v.h))
+            return;
+
+        var objW = v.w;
+        var objH = v.h;
+
+		if (_maintainAspectRatio) {
+
+			//if we want to maintain the aspect ratio then calculate width & height
+            var objAspectRatio = c.w / c.h;
+
+            //object is wider than taller so resize to width
+            if (objAspectRatio > 1.0) {
+                objH = Math.floor(objW / objAspectRatio);
+            }
+            else{
+                objW = Math.floor(objH * objAspectRatio);
+            }
+
+		}
+		dojo.style(domNode, {
+            'width': objW + 'px',
+            'height': objH + 'px'
+        });
+
+	}
+	catch(e){
+		console.error(e);
+	}
+}
+
+function body_onResize(){
+
+	try{
+
+
+		//if((_objectWidth < 1) || (_objectHeight < 1))
+		//	return;
+
+		var nodes = dojo.doc.getElementsByTagName('object');
+        dojo.forEach(nodes, function(node, idx){
+            _resizeObject(node);
+        });
+
+	}
+	catch(e){
+		console.error(e);
+	}
+
+}
+
+dojo.addOnLoad(function(){
+   setTimeout(_onInitialize, 0);
+});
+
+dojo.addOnUnload(function(){
+
+});
+
+</script>
+
+</head>
+
+<body class="versafile" onresize="body_onResize();">
+
+<div style="width:100%;height:100%;position:relative">
+
+<% unless @element.nil? %>
+
+    <%= raw @element %>
+
+<% else %>
+<% unless @target.nil? %>
+
+<object data="<%= @target %>" type="<%= @content_type %>" style="position:absolute;top:0;left:0">
+    <div style="text-align:center">
+        <img src="/images/icons/32/invalid-preview.png" height="32" width="32"><br>
+        <span>Cannot preview file of type '<%= @content_type %>'</span>
+    </div>
+</object>
+
+<% end %>
+<% end %>
+
+</div>
+
+</body>
+</html>

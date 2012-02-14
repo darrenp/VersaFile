@@ -1,0 +1,135 @@
+<div style="background:#D9D9D6;height:100%;width:100%;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="center"
+            spitter="false"
+            style="padding:8px 8px 0 8px">
+
+        <div    dojoType="dijit.layout.BorderContainer"
+                design="headline"
+                gutters="false"
+                style="height:100%;width:100%">
+
+            <div    dojoType="dijit.layout.BorderContainer"
+                    design="sidebar"
+                    gutters="false"
+                    region="top"
+                    splitter="false"
+                    class="versaTopPane">
+
+                <div    dojoType="dijit.layout.ContentPane"
+                        region="left"
+                        splitter="false"
+                        class="versaHeadPane">
+                    <img src="/images/versafile-64.png" height="56" style="position:relative;top:-8px;left:-8px"/>
+                </div>
+
+                <div    dojoType="dijit.layout.BorderContainer"
+                        design="sidebar"
+                        gutters="false"
+                        region="center"
+                        class="versaBarPane">
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="center"
+                            splitter="false"
+                            style="padding:0;overflow:hidden;position:relative;">
+
+                        <div dojoAttachPoint="toolbarNode"></div>
+
+                    </div>
+
+                    <div    dojoType="dijit.layout.BorderContainer"
+                            design="headline"
+                            gutters="false"
+                            region="right"
+                            splitter="false"
+                            style="width:256px;">
+
+                        <div    dojoType="dijit.layout.ContentPane"
+                                region="center"
+                                splitter="false"
+                                style="position:relative;text-align:right;padding:2px 0 0 0">
+
+                            <table cellpadding="0" cellspacing="0" style="position:absolute;right:0"><tr>
+                                <td style="padding-right:4px; border-right: 1px solid #75787B">
+                                    <span dojoAttachPoint="nameNode"></span>
+                                </td>
+                                <td style="padding-left:4px;">
+                                    <a href="javascript://" class="versaLink" dojoAttachEvent="onclick: logoff">Logout</a>
+                                </td>
+                            </tr></table>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div    dojoType="dijit.layout.BorderContainer"
+                    design="headline"
+                    gutters="false"
+                    region="center"
+                    splitter="false"
+                    class="versaMainPane">
+
+                <div    dojoType="dijit.layout.BorderContainer"
+                        design="sidebar"
+                        gutters="true"
+                        region="center"
+                        splitter="false"
+                        class="">
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="left"
+                            splitter="true"
+                            class="versaInfoPane"
+                            style="padding:0;width:256px;">
+
+                        <div style="height: 100%">
+                           <div dojoAttachPoint="grdGrid" style="height: 100%"></div>
+                       </div>
+
+                    </div>
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="center"
+                            splitter="true"
+                            class="versaInfoPane"
+                            style="padding:0">
+                        <div dojoAttachPoint="usersPane">
+
+                        </div>
+                        <div dojoAttachPoint="serversPane" style="display: none;">
+
+                        </div>
+                        <div dojoAttachPoint="accountsPane" style="display: none;">
+
+                        </div>
+                        <div dojoAttachPoint="zonesPane" style="display: none;">
+
+                        </div>
+                        <div dojoType="dojox.widget.Toaster"
+                             dojoAttachPoint="errorToaster"
+                             positionDirection="br-left"
+                                style="height:88px">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+</div>
+
+</div>

@@ -1,0 +1,21 @@
+<h1>Listing property_definitions</h1>
+
+<table>
+  <tr>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @property_definitions.each do |property_definition| %>
+  <tr>
+    <td><%= link_to 'Show', property_definition %></td>
+    <td><%= link_to 'Edit', edit_property_definition_path(property_definition) %></td>
+    <td><%= link_to 'Destroy', property_definition, confirm: 'Are you sure?', method: :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Property definition', new_property_definition_path %>

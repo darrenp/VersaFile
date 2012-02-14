@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.widget.document.Accessor"]){dojo._hasResource["bfree.widget.document.Accessor"]=true;dojo.provide("bfree.widget.document.Accessor");dojo.declare("bfree.widget.document.Accessor",null,{library:null,zone:null,constructor:function(_1){this.library=_1.library;this.zone=_1.zone;},doCancelCheckout:function(_2){_2.cancelCheckout({zone:this.zone,library:this.library});this.library.getDocuments().refreshItem(_2.id);},doCheckout:function(_3){var _4=this.library.getDocuments();_3.checkout({zone:this.zone,library:this.library});return _4.refreshItem(_3.id);},doCopyLocal:function(_5){_5.copyLocal({zone:this.zone,library:this.library});},doRestore:function(_6,_7){var _8=this.library.getDocuments().getValue(_6,"folder_id");var _9;if(_8!=0){try{_9=this.library.getFolders().fetchById({id:_8});}catch(e){}}this.library.getDocuments().setValue(_6,"state",_6.setState(bfree.api.Document.states.DELETED,false));if(!_9||this.library.getFolders().isDirty({item:_9})){this.library.getDocuments().setValue(_6,"folder_id",0);}else{this.library.getDocuments().setValue(_6,"folder_id",_9.id);}if(_7){this.library.getDocuments().save();}},doView:function(_a){var _b=bfree.api.Utilities.getBox({scale:0.75});_a.view({zone:this.zone,library:this.library,windowBox:_b});}});}

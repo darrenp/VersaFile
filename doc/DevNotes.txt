@@ -1,0 +1,30 @@
+Content Index/Search
+======================================
+NOTE:   MySQL limits the return results: If result count > 50% of the total records in the table, MySQL will not
+        return ANY results!  Beware of this if small number of documents in library
+
+Link to MySQL 5.0 "Stop Words":
+    http://dev.mysql.com/doc/refman/5.0/en/fulltext-stopwords.html
+
+Multi-File Uploader
+======================================
+Will attempt to use HTML5 uploader 1st: Tested with:
+    - Chrome (16.0.912.75 - Windows)
+    - Chrome (16.0.912.63 - Linux)
+    - FireFox (9.0.1 - Windows)
+    - FireFox (6.0 - Linux)
+    - Safari (5.1.2 - Windows)
+
+If HTML5 not supported, then fallback to Flash uploader. Tested with:
+    Internet Explorer (9.0.8112.16421 - Windows)
+
+If HTML5 not supported AND Flash is not installed OR browser is Opera fallback to IFrame uploader. Tested with:
+    IE 9 no flash (9.0.8112.16421 - Windows)
+    IE 8 no flash (8.0.7600.16385 - Windows)
+    Opera (11.60 - Windows)
+    Opera (11.60 - Linux)
+
+NOTES:
+    - If IFrame uploader is used the user will not be able to select multiple files in the File Explorer.
+    - If IFrame uploader is used, the file size and type are not available until the upload completes
+    - Currently there is no way to remove documents from the add list

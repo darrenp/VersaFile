@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.widget.Standby"]){dojo._hasResource["bfree.widget.Standby"]=true;dojo.provide("bfree.widget.Standby");dojo.require("dojox.widget.Standby");dojo.declare("bfree.widget.Standby",[dojox.widget.Standby],{duration:1000,opacity:0.75,image:"/images/loading/loading64.gif",showOnStart:false,_scrollerWidths:function(){return {v:0,h:0};},constructor:function(_1){},_fadeIn:function(){var _2=this;var _3=(this.showOnStart)?this.opacity:0;var _4=(this.showOnStart)?10:this.duration;var _5=dojo.animateProperty({duration:_4,node:_2._underlayNode,properties:{opacity:{start:_3,end:this.opacity}}});var _6=dojo.animateProperty({duration:_4,node:_2._centerNode,properties:{opacity:{start:_3,end:1}},onEnd:function(){_2.onShow();delete _2._anim;}});this._anim=dojo.fx.combine([_5,_6]);this._anim.play();},_fadeOut:function(){var _7=this;var _8=dojo.animateProperty({duration:_7.duration,node:_7._underlayNode,properties:{opacity:{start:this.opacity,end:0}},onEnd:function(){dojo.style(this.node,{"display":"none","zIndex":"-1000"});}});var _9=dojo.animateProperty({duration:_7.duration,node:_7._centerNode,properties:{opacity:{start:1,end:0}},onEnd:function(){dojo.style(this.node,{"display":"none","zIndex":"-1000"});_7.onHide();_7._enableOverflow();delete _7._anim;}});this._anim=dojo.fx.combine([_8,_9]);this._anim.play();}});}

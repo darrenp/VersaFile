@@ -1,0 +1,46 @@
+<div class="dijitDialog" role="dialog" aria-labelledby="${id}_title">
+
+	<div data-dojo-attach-point="titleBar" class="dijitDialogTitleBar">
+	<span data-dojo-attach-point="titleNode" class="dijitDialogTitle" id="${id}_title"></span>
+	<span data-dojo-attach-point="closeButtonNode" class="dijitDialogCloseIcon" data-dojo-attach-event="ondijitclick: _onDialogCancel" title="${buttonCancel}" role="button" tabIndex="-1">
+		<span data-dojo-attach-point="closeText" class="closeText" title="${buttonCancel}">x</span>
+	</span>
+	</div>
+	<div    data-dojo-attach-point="containerNode"
+            class="dijitDialogPaneContent"
+            style="overflow:hidden;padding:0 !important;position:absolute;top:0;left:0;height:100% !important;width:100% !important;z-index:-1">
+
+        <div 	data-dojo-type="dijit.layout.BorderContainer"
+                data-dojo-props='design:"headline",gutters:false,style:"width:100%;height:100%"'>
+
+            <div 	data-dojo-type="dijit.layout.ContentPane"
+                    data-dojo-props='region:"top",splitter:false,style:"height:8px"'>
+                <!-- buffer for header -->
+			</div>
+
+            <div 	data-dojo-type="dijit.layout.BorderContainer"
+                    data-dojo-attach-point="mainWidget"
+                    data-dojo-props='region:"center",splitter:false,design:"headline",gutters:false,style:"width:100%;height:100%"'>
+
+               <div 	data-dojo-type="dijit.layout.ContentPane"
+                        data-dojo-props='region:"center",splitter:false,style:"padding:0;"'>
+                    <div data-dojo-attach-point="widgetNode" style="height:100%;width:100%;"></div>
+                </div>
+
+                <div 	data-dojo-attach-point="buttonPane"
+                        data-dojo-type="dijit.layout.ContentPane"
+                        data-dojo-props='region:"bottom",splitter:false,style:"height:36px;padding:0 8px 0 0;text-align:right"'>
+
+                    <div data-dojo-attach-point="btnOkNode"></div>
+                    <div data-dojo-attach-point="btnCancelNode"></div>
+                    <div data-dojo-attach-point="btnCloseNode"></div>
+
+                </div>
+
+             </div>
+
+        </div>
+
+	</div>
+    <div data-dojo-attach-point="standbyNode"></div>
+</div>

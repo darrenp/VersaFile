@@ -1,0 +1,44 @@
+<div align="center" style="height:68px;width:408px;position:relative">
+
+<div dojoAttachPoint="logonNode">
+<div dojoAttachPoint="logonFormNode">
+
+    <span style="position:absolute;top:24px;left:0" class="logonLabel">Username</span>
+    <div style="position:absolute;top:38px"><input dojoAttachPoint="userNameNode"/></div>
+
+    <span style="position:absolute;top:24px;left:168px" class="logonLabel">Password</span>
+    <div style="position:absolute;top:38px;left:168px;"><input dojoAttachPoint="passwordNode"/></div>
+
+    <span style="position:absolute;top:60px;left:168px" class="logonLabel">
+        <a href="javascript://" class="versaLink" dojoAttachEvent="onclick: _onResetClick">Forgot your password?</a>
+    </span>
+
+    <div style="position:absolute;top:32px;left:332px;">
+        <button dojoAttachPoint="logonButtonNode" type="submit"></button>
+    </div>
+
+</div>
+</div>
+
+<div dojoAttachPoint="resetNode" class="versaHide">
+<div dojoAttachPoint="resetFormNode">
+
+    <span style="position:absolute;top:0;left:0" class="logonLabel">Enter your username and email address to reset your password:</span>
+
+    <span style="position:absolute;top:24px;left:0" class="logonLabel">Username</span>
+    <div style="position:absolute;top:38px"><input dojoAttachPoint="resetNameNode"/></div>
+
+    <span style="position:absolute;top:24px;left:168px" class="logonLabel">Email</span>
+    <div style="position:absolute;top:38px;left:168px;"><input dojoAttachPoint="emailNode"/></div>
+
+    <span style="position:absolute;top:60px;left:168px" class="logonLabel">
+        <a href="javascript://" class="versaLink" dojoAttachEvent="onclick: _onReturnClick">Return to log in</a>
+    </span>
+
+    <div style="position:absolute;top:32px;left:332px;">
+        <button dojoAttachPoint="resetButtonNode" type="submit"></button>
+    </div>
+</div>
+
+</div>
+</div>

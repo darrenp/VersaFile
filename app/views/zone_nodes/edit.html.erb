@@ -1,0 +1,13 @@
+<h1>Editing zone_node</h1>
+
+<%= render 'form' %>
+
+<br>
+<a href="<%= "#{@zone_node.server.base_url}/zones/new?name=#{URI.escape(@zone_node.name)}&subdomain=#{@zone_node.subdomain}&fingerprint=#{@zone_node.fingerprint}" %>" target="_blank">
+  Push Zone to remote server
+</a>
+<br>
+<br>
+
+<%= link_to 'Show', @zone_node %> |
+<%= link_to 'Back', zone_nodes_path %>

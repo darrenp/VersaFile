@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+
+<link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dijit/themes/claro/claro.css"/>
+<link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/form/resources/UploaderFileList.css"/>
+
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+<script type="text/javascript">
+dojo.require('dijit.form.Form');
+dojo.require('bfree.widget.Uploader');
+dojo.require('dojox.form.uploader.FileList');
+
+var _uploader = null;
+
+function _onChange(evt){
+     _uploader.upload({
+       authenticity_token: '<%= form_authenticity_token %>',
+       upload_type: _uploader.uploadType
+   });
+}
+
+function _onComplete(evt){
+    console.log(dojo.toJson(evt));
+}
+
+function _onProgress(evt){
+    console.log(dojo.toJson(evt));
+}
+
+function doUpload(){
+
+    _uploader.upload({
+       authenticity_token: '<%= form_authenticity_token %>',
+       upload_type: _uploader.uploadType
+   });
+
+}
+
+dojo.addOnLoad(function(){
+
+    _uploader = new bfree.widget.Uploader({
+        label: 'Bfree Uploader',
+        multiple: true,
+        uploadOnSelect: false,
+        url: '/zones/nuke/upload',
+        onChange: _onChange,
+        onComplete: _onComplete,
+        onProgress: _onProgress
+    }, dojo.byId('uploaderNode'));
+    dojo.byId('typeNode').innerHTML = _uploader.uploadType;
+
+
+    new dijit.form.Button({
+        label: 'Upload',
+        onClick: doUpload
+    }, dojo.byId('btnNode'));
+
+    new dojox.form.uploader.FileList({
+        uploader: _uploader
+    }, dojo.byId('listNode'));
+
+});
+
+dojo.addOnUnload(function(){
+
+});
+
+</script>
+
+</head>
+<body class="bfree claro" sty>
+
+
+<div>
+    <div id="uploaderNode"></div>
+</div>
+
+<div id="typeNode"></div>
+<div id="btnNode"></div>
+
+<br>
+<br>
+
+<div id="listNode"></div>
+
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.widget.file.AvatarUploader"]){dojo._hasResource["bfree.widget.file.AvatarUploader"]=true;dojo.provide("bfree.widget.file.AvatarUploader");dojo.require("bfree.api.Uploader");dojo.require("bfree.widget.Uploader");dojo.require("dijit._Widget");dojo.require("dijit._Templated");dojo.declare("bfree.widget.file.AvatarUploader",bfree.widget.Uploader,{_avatarNode:null,_form:null,zone:null,_setIconNode:function(_1){if(this._avatarNode){dojo.destroy(this._avatarNode);this._avatarNode=null;}var _2=dijit.findWidgets(this.domNode);dojo.forEach(_2,function(_3,_4){this._avatarNode=dojo.create("img",{id:"avatarNode",src:_1,width:"64",height:"64"},_3.iconNode);_3.set("showLabel",false);_3.set("iconClass","avatarIcon");},this);},clean:function(){bfree.api.Uploader.clean({zone:this.zone});},constructor:function(_5){this.multiple=false;this.uploadOnSelect=false;this.url=bfree.api.Uploader.getUploadUrl({zone:_5.zone});},destroy:function(){this.inherited("destroy",arguments);},onAvatarChange:function(_6){},onAfterUpload:function(_7){dojo.forEach(_7,function(_8,_9){var _a=bfree.api.Uploader.getDownloadUrl({zone:this.zone,item:_8});this._setIconNode(_a);this.onAvatarChange(_8);},this);},postCreate:function(){this.inherited("postCreate",arguments);this._setIconNode(this.avatarUrl);},startup:function(){this.inherited("startup",arguments);}});}

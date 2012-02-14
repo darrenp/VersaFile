@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.api.Server"]){dojo._hasResource["bfree.api.Server"]=true;dojo.provide("bfree.api.Server");dojo.require("bfree.api._Object");dojo.require("dojox.validate");dojo.require("dojo.io.script");dojo.declare("bfree.api.Server",[bfree.api._Object],{constructor:function(_1){if(_1){dojo.safeMixin(this,_1);}},isValid:function(){var _2=true;if(String.isEmpty(this.name)){_2=false;}if(this.protocol!="http"&&this.protocol!="https"){_2=false;}if(String.isEmpty(this.host)){_2=false;}if(!bfree.api.Server.validateHost(this)){_2=false;}if(!bfree.api.Server.validatePort(this.port)){_2=false;}return _2;}});bfree.api.Server.validateHost=function(_3){var _4=new RegExp("^"+dojox.validate.regexp.url({allowPort:false,allowDottedHex:false,allowDottedOctal:false,allowDecimal:false,allowHex:false})+"$");var _5=_4.test(_3.host);return _5;};bfree.api.Server.validatePort=function(_6){if(_6==null||_6==""){return true;}_6=_6.toString();var i=Number(_6);if(isNaN(i)){return false;}if(_6.indexOf("e")>=0){return false;}return (i>=0&&i<=65535);};bfree.api.Server.schema={type:"object",properties:{"id":{type:"integer"},"name":{type:"string","default":""},"protocol":{type:"string","default":""},"host":{type:"string","default":""},"port":{type:"integer","default":""},"active":{type:"boolean","default":""},"current":{type:"boolean","default":""},"created_at":{type:"date",format:"date-time"},"updated_at":{type:"date",format:"date-time"}},prototype:new bfree.api.Server()};}

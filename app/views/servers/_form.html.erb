@@ -1,0 +1,26 @@
+<%= form_for(@server) do |f| %>
+  <% if @server.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@server.errors.count, "error") %> prohibited this server from being saved:</h2>
+
+      <ul>
+      <% @server.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+    <div class="field">
+      <%= f.label :name %>: <%= f.text_field :name %><br>
+      <%= f.label :protocol %>: <%= f.select :protocol, ['http', 'https'] %><br>
+      <%= f.label :host %>: <%= f.text_field :host %><br>
+      <%= f.label :port %>: <%= f.text_field :port %><br>
+      <%= f.label :active %>: <%= f.check_box :active %><br>
+      <%= f.label :current %>: <%= f.check_box :current %><br>
+    </div>
+
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

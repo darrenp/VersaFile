@@ -1,0 +1,1 @@
+{"name":"Invoice Number","description":"Provides invoice number for either AP or AR\n","data_type_id":5,"cardinality":1,"max_length":64,"created_at":"2012-02-07T18:10:31Z","created_by":"admin","updated_at":"2012-02-07T18:10:31Z","updated_by":"admin"}

@@ -1,0 +1,62 @@
+<div style="height:100%;width:100%">
+
+<div    dojoAttachPoint="mainNode"
+        dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        liveSplitters="true"
+        style="width:100%;height:100%">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            splitter="false"
+            region="top"
+            style="overflow:hidden;padding:0;height: 104px;">
+
+         <div dojoAttachPoint="formNode">
+
+            <div dojoAttachPoint="tableNode"></div>
+
+        </div>
+
+    </div>
+
+    <div    dojoType="dijit.layout.BorderContainer"
+            splitter="false"
+            region="center"
+            design="sidebar"
+            gutters="false"
+            liveSplitters="true"
+            style="width:100%;height:100%">
+
+        <div    dojoType="dijit.layout.ContentPane"
+                splitter="false"
+                region="center"
+                style="">
+
+            <div dojoAttachPoint="cellGridNode"></div>
+
+        </div>
+
+        <div    dojoType="dijit.layout.ContentPane"
+                splitter="false"
+                region="right"
+                style="overflow:hidden;padding:16px 0 0 0;width:24px">
+
+            <div dojoAttachPoint="cellBarNode"></div>
+
+        </div>
+
+    </div>
+
+    <div    dojoType="dijit.layout.ContentPane"
+            splitter="false"
+            region="bottom"
+            style="padding:0 8px 0 8px;height: 96px;">
+
+        <div dojoAttachPoint="infoNode"></div>
+
+    </div>
+
+</div>
+
+</div>

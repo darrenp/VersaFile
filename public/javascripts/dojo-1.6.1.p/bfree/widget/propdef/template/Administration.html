@@ -1,0 +1,49 @@
+<div style="height:100%;width:100%;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+     <!-- Command Bar -->
+    <div    dojoType="dijit.layout.ContentPane"
+            region="top"
+            splitter="false"
+            style="padding:0;overflow:hidden;height:27px">
+
+        <div dojoAttachPoint="commandBarNode"></div>
+
+    </div>
+
+     <div   dojoType="dijit.layout.BorderContainer"
+            region="center"
+            design="sidebar"
+            gutters="false"
+            liveSplitters="true"
+            style="padding:8px;height:100%;width:100%">
+
+
+         <div   dojoType="dijit.layout.ContentPane"
+                splitter="false"
+                region="leading"
+                style="padding:0 8px 0 0;width: 256px;">
+
+            <div dojoAttachPoint="gridNode"></div>
+
+        </div>
+
+        <div    dojoType="dijit.layout.ContentPane"
+                splitter="true"
+                region="center"
+                class="highlightPane"
+                style="padding:8px">
+
+            <div dojoAttachPoint="editorNode"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>

@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.GridHelper"]){dojo._hasResource["bfree.GridHelper"]=true;dojo.provide("bfree.GridHelper");dojo.declare("bfree.GridHelper",null,{});bfree.GridHelper.hideHeader=function(_1){var _2=_1.viewsHeaderNode.firstChild;dojo.addClass(_2,"bfreeNoHeader");};bfree.GridHelper.moveItemDown=function(_3,_4){var _5=_3.selection.getFirstSelected();if(_5==null){return;}var _6=_3.getItemIndex(_5)+1;if(_6>=_3.rowCount){}var _7=_3.getItem(_6);bfree.GridHelper.swapItemOrder(_3,_4,_5,_7);_6=_3.getItemIndex(_5);bfree.GridHelper.setSelectedIndex(_3,_6);};bfree.GridHelper.moveItemUp=function(_8,_9){var _a=_8.selection.getFirstSelected();if(_a==null){return;}var _b=_8.getItemIndex(_a)-1;if(_b<0){return;}var _c=_8.getItem(_b);bfree.GridHelper.swapItemOrder(_8,_9,_c,_a);_b=_8.getItemIndex(_a);bfree.GridHelper.setSelectedIndex(_8,_b);};bfree.GridHelper.setSelectedIndex=function(_d,_e){if(!_d){return;}_d.selection.clear();while(_e>=_d.rowCount){_e--;}if((_e<0)&&(_d.rowCount<=0)){return;}if(_e<1){_e=0;}_d.selection.select(_e);if(_d.selection.getFirstSelected()){_d.updateRow(_e);_d.scrollToRow(_e);}};bfree.GridHelper.swapItemOrder=function(_f,_10,_11,_12){_f.beginUpdate();var _13=_f.store.getValue(_11,_10);var _14=_f.store.getValue(_12,_10);_f.store.setValue(_11,_10,_14);_f.store.setValue(_12,_10,_13);_f.endUpdate();_f.sort();_f.resize();};}

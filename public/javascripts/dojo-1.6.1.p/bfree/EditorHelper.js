@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.EditorHelper"]){dojo._hasResource["bfree.EditorHelper"]=true;dojo.provide("bfree.EditorHelper");dojo.require("bfree.api.FormatHelper");dojo.declare("bfree.EditorHelper",null,{});bfree.EditorHelper.formatValueForWidget=function(_1){var _2=_1.widget;var _3=_1.value;switch(_2.declaredClass){case "bfree.widget.DateTimeBox":_3=bfree.api.FormatHelper.formatDateValue({date_value:_3});break;case "dijit.form.DateTextBox":if(_3!=null){_3=bfree.api.FormatHelper.formatDateValue({date_value:_3});}break;}return _3;};bfree.EditorHelper.formatValueFromWidget=function(_4){var _5=_4.widget;var _6=_5.attr("value");switch(_5.declaredClass){case "dijit.form.CheckBox":_6=(_6=="on");break;case "dijit.form.DateTextBox":if(_6!=null){_6=dojo.date.stamp.toISOString(_6,{zulu:true});}break;case "dijit.form.NumberSpinner":if(isNaN(_6)){_6=null;}break;}return _6;};bfree.EditorHelper.getValues=function(_7){var _8=_7.document;var _9=new Object();for(var _a in _8){if(_a){_9[_a]=_8[_a];}}return _9;};bfree.EditorHelper.previewFullScreen=function(_b){var _c=_b.document;var w=_b.w;var h=_b.h;var t=_b.t;var l=_b.l;var _d=dojo.string.substitute("width=${0},height=${1},top=${2},left=${3},toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0",[w,h,t,l]);var _e=dojo.string.substitute("/libraries/${0}/documents/${1}/download/?disposition=inline",[this.library.id,_c.id]);var _f=window.open(_e,"bfree_viewer",_d);_f.focus();};}

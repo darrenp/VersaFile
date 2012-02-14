@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.api.UploadedFiles"]){dojo._hasResource["bfree.api.UploadedFiles"]=true;dojo.provide("bfree.api.UploadedFiles");dojo.require("bfree.api.Error");dojo.require("bfree.api.XhrHelper");dojo.require("bfree.api.Utilities");dojo.declare("bfree.api.UploadedFiles",null,{});bfree.api.UploadedFiles.cleanTempFiles=function(_1){var _2=_1.library;var _3=dojo.string.substitute("/libraries/${0}/upload/clean_content.js",[_2.id]);bfree.api.XhrHelper.doGetAction({target:_3});};bfree.api.UploadedFiles.createZeroByte=function(_4){var _5=_4.library;var _6=_4.file_name;var _7=_4.client_session;var _8=dojo.string.substitute("{ file_name: ${0}, client_session: ${1} }",[_6,_7]);var _9=bfree.api.XhrHelper.doPostAction({target:dojo.string.substitute("/libraries/${0}/upload/create_zerobyte.js",[_5.id]),postData:_8});return _9;};bfree.api.UploadedFiles.fullPreview=function(_a){var _b=_a.width;var _c=_a.height;var _d=_b*0.66;var _e=_c*0.66;var _f=(_b/2)-(_d/2);var _10=(_c/2)-(_e/2);var _11=_a.library_id;var _12=_a.server_file;var _13=_a.content_type;var _14=dojo.string.substitute("/libraries/${0}/upload/serve_file?file=${1}&content_type=${2}",[_11,escape(_12),escape(_13)]);bfree.api.Utilities.viewUrl({w:_d,h:_e,t:_10,l:_f,window_name:"bfreePreview",url:_14});};bfree.api.UploadedFiles.getExtension=function(_15){var _16=_15.item;return ((_16.type)&&(_16.type.length>0))?_16.type:bfree.api.Utilities.getFileExtension({file_name:_16.name});};}

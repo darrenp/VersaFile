@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+<% if ENV['RAILS_ENV'] == 'production' %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: false,
+		parseOnLoad: true,
+		cacheBust: '<%= "%d.%02d.%02d.%04d" % [configatron.bfree.major_version, configatron.bfree.minor_version, configatron.bfree.revision_number, configatron.bfree.build_number] %>'
+	};
+
+</script>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/bfree.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: true,
+		parseOnLoad: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+
+<% end %>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/bfree/_proto.js"></script>
+<script type="text/javascript">
+
+dojo.require('dijit.layout.BorderContainer');
+dojo.require('dijit.layout.ContentPane');
+
+dojo.require('bfree.api.XhrHelper');
+dojo.require('bfree.api.Zones');
+dojo.require('bfree.widget.zone.Logon');
+dojo.require('bfree.widget.BrowserSniffer');
+
+var _sniffer = null;
+var _logon=null;
+var zones=null;
+var zone=null;
+
+bfree.api.XhrHelper.authenticity_token = '<%= form_authenticity_token %>';
+
+function _setOK(msg){
+
+    var msgNode = dojo.byId('statusMsgNode');
+    var imgNode = dojo.byId('statusImgNode');
+
+    msgNode.innerHTML = msg;
+    dojo.addClass(msgNode, 'dijitOkLabel');
+    dojo.addClass(imgNode, 'statusIcon bfreeIconOk');
+    dojo.removeClass(imgNode, 'statusIcon bfreeIconError');
+    dojo.removeClass(msgNode, 'dijitErrorLabel');
+
+    dojo.fadeIn({node: dojo.byId('statusNode'), duration: 1000}).play();
+
+}
+
+function _onError(e){
+
+    var msgNode = dojo.byId('statusMsgNode');
+    var imgNode = dojo.byId('statusImgNode');
+
+    msgNode.innerHTML = dojo.replace('ERROR: <b>{message}</b>', e);
+    dojo.removeClass(msgNode, 'dijitOkLabel');
+    dojo.removeClass(imgNode, 'statusIcon bfreeIconOk');
+    dojo.addClass(imgNode, 'statusIcon bfreeIconError');
+    dojo.addClass(msgNode, 'dijitErrorLabel');
+
+    dojo.fadeIn({node: dojo.byId('statusNode'), duration: 1000}).play();
+}
+
+function _onLogon(user){
+
+    var msg = dojo.replace('Success: <b>Logged in as username \'{name}\'.</b>', user);
+    _setOK(msg);
+
+    var cmd = 'parent.frames[\'zoneframe\'].location.reload(true)';
+    setTimeout(cmd, 1000);
+};
+
+function _onReset(username){
+    var msg = dojo.replace('Your password has been successfully reset, check your email.');
+    _setOK(msg);
+}
+
+function sniff(browsers){
+    var p = 250;
+
+    if((browsers == null) || (browsers.length < 1))
+        return;
+
+    var b = browsers.pop();
+    if(!dojo['is' + b]){
+        dojo.fadeOut({node:dojo.byId('node' + b), end: 0.15}).play();
+    }
+    else{
+        p = 0;
+    }
+
+    setTimeout(function(){sniff(browsers);}, p);
+}
+
+
+dojo.addOnLoad(function(){
+
+    zones = new bfree.api.Zones();
+    zone = zones.fetchById({
+		id: '<%= @zone.subdomain %>'
+	});
+
+    _logon = new bfree.widget.zone.Logon({
+        zone: zone,
+        onError: _onError,
+        onLogon: _onLogon,
+        onReset: _onReset,
+        onResetError: _onError,
+        style: 'position:absolute;bottom:12px;'
+	}, 'logonNode');
+    _logon.startup();
+
+    new bfree.widget.BrowserSniffer({
+    }, 'snifferNode').sniff();
+
+});
+
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return true;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="top"
+            splitter="false"
+            class="versaSplashTop"
+            style="position:relative">
+        <img src="/images/versafile-64.png" height="64" style="position:absolute;left:0;bottom:0;"/>
+
+        <div style="display:block;margin-left:auto;margin-right:auto;width:304px">
+            <div id="logonNode"></div>
+        </div>
+    </div>
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="center"
+            splitter="false"
+            class="versaSplashBottom">
+
+        <span style="position:absolute;top:8px;left:8px;font-size:1.33em;font-weight:bolder;font-variant:small-caps;color:#6F706F">
+          <%= @zone.name %>
+        </span>
+
+        <div style="display:block;margin-left:auto;margin-right:auto;width:304px">
+            <table id="statusNode" cellpadding="0" cellspacing="0" style="opacity:0;width:100%">
+              <tr>
+                <td style="vertical-align:top;">
+                  <img id="statusImgNode" src="/images/icons/16/blank.png" width="16" height="16" style="float:right;margin-right:8px"/>
+                </td>
+                <td><span id="statusMsgNode"></span></td>
+              </tr>
+            </table>
+        </div>
+
+        <div style="position:absolute;right:8px;bottom:8px;">
+            <div id="snifferNode"></div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

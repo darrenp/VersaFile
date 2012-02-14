@@ -1,0 +1,2 @@
+module BfreeDocsHelper
+end

@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.api._Securable"]){dojo._hasResource["bfree.api._Securable"]=true;dojo.provide("bfree.api._Securable");dojo.require("bfree.api.XhrHelper");dojo.declare("bfree.api._Securable",null,{securable_type:null,active_permissions:0,constructor:function(_1){if(_1){dojo.safeMixin(this,_1);}},hasRights:function(_2){return ((this.active_permissions&_2)==_2);},getAcl:function(_3){var _4=dojo.replace(bfree.api._Securable.GETACL_URL,[_3.subdomain,this.id,this.securable_type]);var _5=null;var _6=bfree.api.XhrHelper.doGetAction({target:_4,getData:_5});return new bfree.api.Acl(_6);},setAcl:function(_7,_8){var _9=dojo.replace(bfree.api._Securable.SETACL_URL,[_7.subdomain,this.id,this.securable_type]);var _a=_8;return bfree.api.XhrHelper.doPutAction({target:_9,putData:_a});}});bfree.api._Securable.types={"Library":"Library","Folder":"Folder","Document":"Document"};bfree.api._Securable.permissions={"NONE":0,"VIEW":1,"READ_METADATA":2,"WRITE_METADATA":4,"VERSION":8,"CREATE_DOCUMENTS":16,"CREATE_FOLDERS":32,"CREATE_VIEWS":64,"DELETE_ITEMS":128,"READ_ACL":256,"WRITE_ACL":512,"ADMIN":134217727};bfree.api._Securable.GETACL_URL="/zones/{0}/acls/{1}.json?securable_type={2}";bfree.api._Securable.SETACL_URL="/zones/{0}/acls/{1}.json?securable_type={2}";}

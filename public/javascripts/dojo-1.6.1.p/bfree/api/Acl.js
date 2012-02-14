@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.api.Acl"]){dojo._hasResource["bfree.api.Acl"]=true;dojo.provide("bfree.api.Acl");dojo.declare("bfree.api.Acl",null,{id:null,inherited:false,acl_entries:[],constructor:function(_1){if(_1){dojo.safeMixin(this,_1);}},getAdministrator:function(){for(var i=0;i<this.acl_entries.length;i++){var _2=this.acl_entries[i];if((_2.grantee_type.toLowerCase()=="group")&&(_2.grantee.name.toLowerCase()=="administrators")){return this.acl_entries[i];}}},getEveryone:function(){for(var i=0;i<this.acl_entries.length;i++){var _3=this.acl_entries[i];if((_3.grantee_type.toLowerCase()=="group")&&(_3.grantee.name.toLowerCase()=="everyone")){return this.acl_entries[i];}}},hasAccess:function(_4,_5){var _6=Number.NaN;var _7=Number.NaN;var _8=Number.NaN;for(var i=0;i<this.acl_entries.length;i++){var _9=this.acl_entries[i];if((_9.grantee_type.toLowerCase()=="user")&&(_9.grantee_id==_4.id)){_6=_9.role.permissions;}else{if((_9.grantee_type.toLowerCase()=="group")&&(_9.grantee_id==_5.id)){_7=_9.role.permissions;}else{if((_9.grantee_type.toLowerCase()=="group")&&(_9.grantee.name.toLowerCase()=="everyone")){_8=_9.role.permissions;}}}}if(!isNaN(_6)){return (_6>0);}if(!isNaN(_7)){return (_7>0);}if(!isNaN(_8)){return (_8>0);}return false;}});bfree.api.Acl.schema={type:"object",properties:{"id":{type:"integer"},"inherit_state":{type:"integer"},"inherited":{type:"boolean","default":false}},prototype:new bfree.api.Acl()};}

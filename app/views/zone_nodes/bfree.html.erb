@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>VersaFile - <%= @zone_node.name %></title>
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+        <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+<script type="text/javascript"></script>
+</head>
+
+<body class="versafile" oncontextmenu="return false;" style="padding:0;">
+
+    <iframe id="zoneframe" name="zoneframe" src="<%= @zone_node.zone_url %><%=params[:f]?"?f=#{params[:f]}":""%>" frameborder="0" style="border:none;width:100%;height:100%"></iframe>
+
+</body>
+
+</html>

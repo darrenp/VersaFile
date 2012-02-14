@@ -1,0 +1,150 @@
+<div style="height:100%;width:100%;position:relative">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        dojoAttachPoint="mainContainer"
+        design="sidebar"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div   dojoType="dijit.layout.ContentPane"
+           dojoAttachPoint="previewPane"
+           splitter="false"
+           region="center"
+           style="display:none">
+
+        <div dojoAttachPoint="previewNode"></div>
+
+    </div>
+
+    <div    dojoType="dijit.layout.BorderContainer"
+            design="headline"
+            gutters="false"
+            region="right"
+            splitter="false"
+            style="width:480px">
+
+        <div    dojoType="dijit.layout.ContentPane"
+                dojoAttachPoint="headerPane"
+                region="top"
+                splitter="false"
+                class="versaTopHeader"
+                style="height:12px;position:relative;">
+
+            <span dojoAttachPoint="showPreviewNode" style="position:absolute;left:8px;">
+                <a href="javascript://" class="versaLink" dojoAttachEvent="onclick: _onShowPreview">Show Preview</a>
+            </span>
+
+            <span dojoAttachPoint="hidePreviewNode" style="position:absolute;left:8px;opacity:0;display:none">
+                <a href="javascript://" class="versaLink" dojoAttachEvent="onclick: _onHidePreview">Hide Preview</a>
+            </span>
+
+            <span style="position:absolute;right:16px;">
+                File in Folder: <span dojoAttachPoint="folderNameNode" class="dijitBoldLabel"></span>
+            </span>
+
+        </div>
+
+        <div    dojoType="dijit.layout.BorderContainer"
+                design="headline"
+                gutters="false"
+                region="center"
+                splitter="false">
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    region="top"
+                    splitter="false"
+                    style="height:32px;padding:4px 0 4px 0">
+
+                <div dojoAttachPoint="uploaderNode"></div>
+
+            </div>
+
+            <div    dojoType="dijit.layout.BorderContainer"
+                    design="headline"
+                    gutters="false"
+                    region="center"
+                    splitter="false">
+
+                <div    dojoType="dijit.layout.ContentPane"
+                        region="top"
+                        splitter="false"
+                        style="height:96px;padding:0 8px 8px 8px">
+
+                        <div dojoAttachPoint="fileGridNode"></div>
+
+                    </div>
+
+                <div    dojoType="dijit.layout.BorderContainer"
+                        design="headline"
+                        gutters="false"
+                        region="center"
+                        splitter="false">
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            dojoAttachPoint="midTitlePane"
+                            region="top"
+                            splitter="false"
+                            class="versaMidHeader"
+                            style="height:16px;padding:4px 8px 4px 8px;position:relative;">
+                        Custom Properties
+                    </div>
+
+                    <div    dojoType="dijit.layout.BorderContainer"
+                            design="headline"
+                            gutters="false"
+                            region="center"
+                            splitter="false">
+
+
+                        <div    dojoType="dijit.layout.ContentPane"
+                                region="center"
+                                splitter="false"
+                                style="padding:0;">
+
+                            <div dojoAttachPoint="editorNode"></div>
+
+                        </div>
+
+                        <div    dojoType="dijit.layout.ContentPane"
+                                region="bottom"
+                                splitter="false"
+                                style="height:32px;padding:0;position:relative">
+
+                            <span style="position:absolute;top:0;left:8px">
+                            <div dojoAttachPoint="addMinorNode"></div>
+                            <span id="chkAddMinor" class="bfree dijitDarkLabel boldLabel" style="vertical-align:middle">
+                                <label for="chkAddMinor" dojoAttachPoint="lblInheritNode">Add as Minor Version</label>
+                            </span>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div    dojoType="dijit.layout.ContentPane"
+                            region="bottom"
+                            splitter="false"
+                            style="height:32px;padding:0 8px 8px 8px;position:relative">
+
+                        <div dojoAttachPoint="addButtonNode"></div>
+
+                        <span style="position:absolute;top:0;right:8px;">
+                            <img dojoAttachPoint="statusIcnNode" src="/images/icons/states/none.16.png" width="16" height="16"/>
+                            <span dojoAttachPoint="statusMsgNode" class="dijitMediumLabel dijitDarkLabel" style="position:relative;top:-2px;white-space:nowrap;"></span>
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+</div>

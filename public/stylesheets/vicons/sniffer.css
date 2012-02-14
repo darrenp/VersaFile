@@ -1,0 +1,19 @@
+.browserIcon{
+    height:32px;
+    width:32px;
+    display:table-cell;
+}
+
+.browserChrome,
+.browserFF,
+.browserOpera,
+.browserSafari,
+.browserIE{
+    background-image:url('images/browser.32.png');
+}
+
+.browserChrome { background-position: 0px; }
+.browserFF { background-position: -32px; }
+.browserOpera { background-position: -64px; }
+.browserSafari { background-position: -96px; }
+.browserIE { background-position: -128px; }

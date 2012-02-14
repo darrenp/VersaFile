@@ -1,0 +1,33 @@
+<div style="height:100%;width:100%;">
+
+<div    dojoAttachPoint="mainNode"
+        dojoType="dijit.layout.BorderContainer"
+        design="sidebar"
+        gutters="false"
+        style="height:100%;width:100%">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            splitter="false"
+            region="leading"
+            style="padding:4px 0 0 8px;width:120px;position:relative;overflow:hidden;">
+
+        <div dojoAttachPoint="formNode">
+            <input dojoAttachPoint="tokenNode"></input>
+            <input dojoAttachPoint="uploadTypeNode"></input>
+            <div dojoAttachPoint="uploaderNode" style="width:118px;height:32px;"></div>
+        </div>
+
+    </div>
+
+    <div    dojoType="dijit.layout.ContentPane"
+            splitter="false"
+            region="center"
+            style="overflow:hidden;padding:7px 12px 10px 4px">
+
+        <div dojoAttachPoint="progressNode"></div>
+
+    </div>
+
+</div>
+
+</div>
