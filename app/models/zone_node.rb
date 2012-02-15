@@ -15,8 +15,8 @@ class ZoneNode < ActiveRecord::Base
   def zone_deploy
 
     #TODO: Don't forget to change back!!!
-    #create_url = "#{self.server.base_url}/zones.json"
-    create_url = "http://www.bfreetest.com:3001/zones.json"
+    create_url = "#{self.server.base_url}/zones.json"
+    #create_url = "http://www.bfreetest.com:3001/zones.json"
 
     url = URI.parse(create_url)
     http = Net::HTTP.new(url.host, url.port)
@@ -43,7 +43,6 @@ class ZoneNode < ActiveRecord::Base
 
     response = http.request(request)
 
-    logger.debug(response.code)
     if(response.code == :created)
       self.update_attribute(:status, VersaFile::ZoneStates.Enabled)
     end
@@ -53,8 +52,8 @@ class ZoneNode < ActiveRecord::Base
   def zone_update
 
     #TODO: Don't forget to change back!!!
-    #update_url = "#{self.server.base_url}/zones.json"
-    update_url = "http://www.bfreetest.com:3001/zones/#{self.subdomain}"
+    update_url = "#{self.server.base_url}/zones.json"
+    #update_url = "http://www.bfreetest.com:3001/zones/#{self.subdomain}"
 
     logger.debug("URL:> #{update_url}")
     url = URI.parse(update_url)
@@ -80,8 +79,6 @@ class ZoneNode < ActiveRecord::Base
     logger.debug("CODE:> #{response.code}")
 
   end
-
-
 
   def zone_url
     return self.server.base_url << "/zones/#{self.subdomain}"

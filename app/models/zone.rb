@@ -107,8 +107,11 @@ class Zone < ActiveRecord::Base
   end
 
   def trial_expiry
-    trial_period days = self.configuration.configuration_settings.find_by_name('trial_period').value.to_i
+    d = self.configuration.configuration_settings.find_by_name('trial_period').value.to_i
+    created_at = self.created_at
 
+    logger.debug("#{created_at}")
+    logger.debug("#{created_at + d.days}")
 
   end
 

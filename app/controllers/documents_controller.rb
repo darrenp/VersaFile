@@ -296,6 +296,20 @@ class DocumentsController < ApplicationController
     @document = Document.find(params[:id])
   end
 
+  #post /documents/empty
+  def empty
+    @documents = @library.documents.deleted
+
+    @documents.each do |document|
+      document.destroy
+      document.acl.destroy unless document.acl.nil?
+    end
+
+    respond_to do |format|
+      format.json { render :json => "", :status => :ok }
+    end
+  end
+
   # POST /documents
   # POST /documents.json
   def create

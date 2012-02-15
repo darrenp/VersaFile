@@ -1,7 +1,10 @@
 #!/usr/bin/env ruby
 # This command will automatically be run when you run "rails" with Rails 3 gems installed from the root of your application.
 
-=begin
+if ENV['USE_SSL']
+
+begin
+
 require 'rubygems'
 require 'rails/commands/server'
 require 'rack'
@@ -12,7 +15,7 @@ module Rails
     class Server < ::Rack::Server
         def default_options
             super.merge({
-                :Port => 3000,
+                :Port => 4000,
                 :environment => (ENV['RAILS_ENV'] || "development").dup,
                 :daemonize => false,
                 :debugger => false,
@@ -27,7 +30,10 @@ module Rails
         end
     end
 end
-=end
+
+end
+
+end
 
 
 APP_PATH = File.expand_path('../../config/application',  __FILE__)

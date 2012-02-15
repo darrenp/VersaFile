@@ -138,12 +138,12 @@ class ViewDefinitionsController < ApplicationController
   # DELETE /view_definitions/1
   # DELETE /view_definitions/1.xml
   def destroy
+
     begin
+
       @library = @zone.libraries.find(params[:library_id])
       @view_definition = @library.view_definitions.find(params[:id])
-      
-      @view_definition.users.clear
-      
+            
       ViewDefinition.transaction do        
          @view_definition.destroy
       end
@@ -159,7 +159,8 @@ class ViewDefinitionsController < ApplicationController
       respond_to do |format|
         format.js { render :json => e.message, :status => :unprocessable_entity }
       end       
-    end     
+    end
+
   end   
   
 end

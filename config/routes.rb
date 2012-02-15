@@ -96,6 +96,9 @@ VersaFile::Application.routes.draw do
           put 'restore'
           put 'unfile'
         end
+        collection do
+          post 'empty'
+        end
       end
       resources :folders
       resources :property_definitions

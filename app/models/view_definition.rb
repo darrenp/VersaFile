@@ -1,6 +1,5 @@
 class ViewDefinition < ActiveRecord::Base
   belongs_to :library
-  has_many :users  
   has_many  :cell_definitions,
             :order => "column_order",
             :dependent => :destroy
