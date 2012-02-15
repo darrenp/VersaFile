@@ -304,3 +304,16 @@ zt_smb = ZoneTemplate.new(
 )
 zt_smb.id = VersaFile::ZoneTemplates.SmallBusiness
 zt_smb.save
+
+
+#TODO: Hide for deployment
+begin
+Server.create(
+  :name => 'bfreetest.dev',
+  :protocol => 'http',
+  :host => 'www.bfreetest.com',
+  :port => '3000',
+  :active => true,
+  :current => true
+)
+end
