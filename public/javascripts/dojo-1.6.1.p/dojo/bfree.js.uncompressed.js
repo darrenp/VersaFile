@@ -61643,6 +61643,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
     _onFileUploaded: function(tmpFileItem){
 
+        alert(':>' + tmpFileItem.name);
         var fileItem = this._fileGrid.store.fetchItemById(tmpFileItem.name);
 
         var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
