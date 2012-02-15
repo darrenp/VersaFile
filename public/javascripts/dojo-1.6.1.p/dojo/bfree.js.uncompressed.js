@@ -60224,6 +60224,8 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
     onComplete: function(evt){
         var uploaded_files = [];
 
+         alert('upload_complete');
+
         try{
             this.reset();
 
@@ -60254,6 +60256,8 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
             console.log(e.message);
         }
 
+        alert('done');
+        alert(uploaded_files[0].name);
         this.onAfterUpload(uploaded_files);
     },
 
