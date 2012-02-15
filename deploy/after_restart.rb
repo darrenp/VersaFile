@@ -1,1 +1,1 @@
-sudo "monit -g dj_versafile restart all"
+sudo "monit -g dj_VersaFile restart all"
