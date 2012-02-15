@@ -2518,6 +2518,22 @@ bfree.api.Utilities.viewUrl = function(args){
 	win.focus();
 };
 
+bfree.api.Utilities.formatDate= function(date){
+    //UTC month is 0 based?
+    //date and year are not
+    var monthS=(date.getUTCMonth()+1).toString();
+    var dateS=date.getUTCDate().toString();
+    var hourS=date.getUTCHours().toString();
+    monthS=monthS.length==1?"0"+monthS:monthS;
+    dateS=dateS.length==1?"0"+dateS:dateS;
+    hourS=hourS.length==1?"0"+hourS:hourS;
+
+    return date.getUTCFullYear()+'-'+
+           monthS+'-'+
+           dateS+'T'+
+           hourS+':00:00Z';
+};
+
 
 
 }
@@ -7809,7 +7825,7 @@ dojo.declare('bfree.api.User', [bfree.api._Object], {
             }
         }
 
-        if(this.is_admin&&String.isEmpty(this.email)){
+        if(String.isEmpty(this.email)){
             isValid=false;
         }
 
@@ -52546,7 +52562,6 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             sort_field: 'sort',
             structure: bfree.widget.choiceList.Editor.view1,
             formatterScope: this,
-            rowHeight:24,
             style: 'width:100%;height:100%',
             onSelectedItem: dojo.hitch(this, this._grdValues_onSelectedItem)
         }, this.valueListNode);
@@ -52579,6 +52594,14 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
 
 });
 
+bfree.widget.choiceList.Editor.valueFormatter=function(value){
+    console.log(value);
+    if(value instanceof Date){
+        return bfree.api.Utilities.formatDate(value);
+    }
+    return value;
+};
+
 bfree.widget.choiceList.Editor.view1 = [
     {
         cells: [
@@ -52596,7 +52619,8 @@ bfree.widget.choiceList.Editor.view1 = [
             {
                 field: 'value',
                 name: 'Value',
-                width: 'auto'
+                width: 'auto',
+                formatter: bfree.widget.choiceList.Editor.valueFormatter
             }
         ],
         width: 'auto'
@@ -57039,7 +57063,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
             }
 
             for(var i in parent.children){
-                if(parent.children[i].declaredClass=="bfree.api.Folder"&&parent.children[i].name==value){
+                if(parent.children[i].declaredClass=="bfree.api.Folder"&&parent.children[i].name.toLowerCase()==value.toLowerCase()){
                     alert("Duplicate folder names are not allowed");
                     this._destroyEditor();
                     this.edit();
@@ -68689,10 +68713,8 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
     _emailValidator: function(newValue){
         var group=this.groups.fetchById({id: this.activeItem.active_group});
 
-        if(this.activeItem.is_admin||group.is_admin){
-            if(newValue==""){
-                return false;
-            }
+        if(newValue==""){
+            return false;
         }
         return true;
     },

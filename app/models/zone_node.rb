@@ -15,8 +15,8 @@ class ZoneNode < ActiveRecord::Base
   def zone_deploy
 
     #TODO: Don't forget to change back!!!
-    #create_url = "#{self.server.base_url}/zones.json"
-    create_url = "http://www.bfreetest.com:3001/zones.json"
+    create_url = "#{self.server.base_url}/zones.json"
+    #create_url = "http://www.bfreetest.com:3001/zones.json"
 
     url = URI.parse(create_url)
     http = Net::HTTP.new(url.host, url.port)
