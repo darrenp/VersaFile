@@ -16,11 +16,12 @@ class ZoneNode < ActiveRecord::Base
 
     #TODO: Don't forget to change back!!!
     create_url = "#{self.server.base_url}/zones.json"
-    #create_url = "http://www.bfreetest.com:3001/zones.json"
+    #create_url = "http://www.bfreetest.com:3002/zones.json"
 
     url = URI.parse(create_url)
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = (self.server.protocol == "https")
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     form = {
       :name => self.name,
