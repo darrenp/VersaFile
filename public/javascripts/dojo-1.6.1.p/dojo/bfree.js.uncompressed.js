@@ -52544,6 +52544,7 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             disabled: true,
             required: true,
             style: 'width:100%',
+            validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
         });
         this._tblProperties.addChild(this._txtName);
@@ -52595,6 +52596,18 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
         }, this.infoNode);
 
         this._grdValues.startup();
+    },
+
+    _txtNameValidator: function(newValue){
+        var items=this.choiceLists.fetch();
+        for(var i=0;i<items.length;i++){
+            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+               items[i].__id!=this.activeItem.__id){
+                this._txtName.set('invalidMessage', 'Duplicate choice list');
+                return false;
+            }
+        }
+        return true;
     },
 
     resize: function(){
@@ -52724,6 +52737,13 @@ dojo.declare('bfree.widget.choiceList.Administration', [dijit._Widget, dijit._Te
 		for(var idx = 0; idx < this._grdChoiceLists.rowCount; idx++){
             var item = this._grdChoiceLists.getItem(idx);
             if(this._choiceLists.isDirty({item: item})){
+                var items=this._choiceLists.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                       items[i].__id!=item.__id){
+                        return false;
+                    }
+                }
                 valid &= item.isValid();
             }
 		}
@@ -57630,9 +57650,9 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
             if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
 
                 if((!this.activeFolder) || (this.activeFolder.root)){
-                    dojo.forEach(this.documents, function(document, idx){
+                    dojo.forEach(this.documents, dojo.hitch(this, function(document, idx){
                        this._documents.setValue(document, 'folder_id', 0);
-                    });
+                    }));
                 }
                 else{
                     dojo.forEach(this.documents, dojo.hitch(this, function(document, idx){
@@ -58480,7 +58500,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'width:100%',
-            value: default_value
+            value: default_value?default_value:0
         });
     }
     else if(dataType.isFloat()){
@@ -58493,7 +58513,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'width:100%',
-            value: default_value
+            value: default_value?default_value:0
         });
     }
 
@@ -58526,11 +58546,14 @@ bfree.widget.propdef.Widget.generate = function(propertyMapping, propertyDefinit
         wdg = bfree.widget.propdef.Widget.getChoiceListWidget(id, propertyDefinition.name, choiceList);
     }
     else{
-        wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name);
+        wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name, propertyMapping.default_value);
     }
 
     wdg.set('required', propertyMapping.is_required);
-    wdg.set('value', propertyMapping.default_value);
+//    if(dataType.isFloat()||dataType.isInteger()){
+//        wdg.set('value', propertyMapping.default_value?propertyMapping.default_value:0);
+//    }
+
 
     return wdg;
 }
@@ -58721,6 +58744,7 @@ dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templ
     disabled: false,
     documentTypes: null,
     propertyDefinitions: null,
+    disableDocumentType: false,
 
     _onChange: function(newValue){
 
@@ -58763,13 +58787,13 @@ dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templ
         this._cmbDocTypes.reset();
         this.activeItem = item;
         this._cmbDocTypes.set('value', item.id);
-        this._cmbDocTypes.set('disabled', (this.activeItem == null));
+        this._cmbDocTypes.set('disabled', (this.activeItem == null)||this.disableDocumentType);
     },
 
     _setDisabledAttr: function(value){
         this.disabled = value;
 
-        this._cmbDocTypes.set('disabled', this.disabled);
+        this._cmbDocTypes.set('disabled', this.disabled||this.disableDocumentType);
 
         if(this._propertyEditor)
             this._propertyEditor.set('disabled', this.disabled);
@@ -58875,6 +58899,7 @@ dojo.provide('bfree.widget.document.Editor');
 dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
     templateString: dojo.cache("bfree/widget/document", "template/Editor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:0;height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            style=\"padding:0 8px 8px 8px\">\n\n        <div dojoAttachPoint=\"docTypeEditorNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
     widgetsInTemplate: true,
+    disableDocumentType: false,
 
     _choiceLists: null,
     _documentTypes: null,
@@ -58976,6 +59001,7 @@ dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
             choiceLists: this._choiceLists,
             documentTypes: this._documentTypes,
             propertyDefinitions: this._propertyDefinitions,
+            disableDocumentType: this.disableDocumentType,
             style: 'height:100%',
             onChange: dojo.hitch(this, this._docTypeEditor_onChange),
             onValueChange: dojo.hitch(this, this._docTypeEditor_onValueChange)
@@ -60929,6 +60955,7 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
         this._editor = new bfree.widget.document.Editor({
             id: 'editor1',
             library: this.library,
+            disableDocumentType: true,
             onValidChange: dojo.hitch(this, this._onValidChange),
             onSubmit: dojo.hitch(this, this._onSubmit)
         }, this.editorNode);
@@ -61614,6 +61641,7 @@ dojo.provide('bfree.widget.document.Creator');
 
 
 
+
 dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
     templateString: dojo.cache("bfree/widget/document", "template/Creator.html", "<div style=\"height:100%;width:100%;position:relative\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n            <span style=\"position:absolute;right:16px;\">\n                File in Folder: <span dojoAttachPoint=\"folderNameNode\" class=\"dijitBoldLabel\"></span>\n            </span>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding:0 8px 8px 8px\">\n\n                        <div dojoAttachPoint=\"fileGridNode\"></div>\n\n                    </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:32px;padding:0;position:relative\">\n\n                            <span style=\"position:absolute;top:0;left:8px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:32px;padding:0 8px 8px 8px;position:relative\">\n\n                        <div dojoAttachPoint=\"addButtonNode\"></div>\n\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n\n            </div>\n\n        </div>\n\n\n    </div>\n\n</div>\n\n</div>\n"),
     widgetsInTemplate: true,
@@ -61682,8 +61710,12 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         });
 
         dojo.forEach(documentType.property_mappings, dojo.hitch(this, function(mapping, idx){
+            var def=this.library.getPropertyDefinitions().fetchById({id: mapping.property_definition_id});
+            var data=bfree.api.Application.getDataTypes().fetchById({id: def.data_type_id});
+            if(data.isFloat()||data.isInteger()){
+                this._documents.setValue(documentItem, def.column_name, 0);
+            }
             if(mapping.default_value){
-                var def=this.library.getPropertyDefinitions().fetchById({id: mapping.property_definition_id});
                 this._documents.setValue(documentItem, def.column_name, mapping.default_value);
             }
         }));
@@ -63374,6 +63406,7 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
             intermediateChanges: true,
             selectOnClick: true,
             style: 'width:100%',
+            validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
 		});
         this._tblProperties.addChild(this._txtName);
@@ -63411,6 +63444,18 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
         }, this.infoNode);
 
         this._grdUsers.startup();
+    },
+
+    _txtNameValidator: function(newValue){
+        var items=this.groups.fetch();
+        for(var i=0;i<items.length;i++){
+            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+               items[i].__id!=this.activeItem.__id){
+                this._txtName.set('invalidMessage', 'Duplicate group name');
+                return false;
+            }
+        }
+        return true;
     },
 
     resize: function(){
@@ -63633,6 +63678,13 @@ dojo.declare('bfree.widget.group.Administration', [dijit._Widget, dijit._Templat
 		for(var idx = 0; idx < this._grdGroups.rowCount; idx++){
             var item = this._grdGroups.getItem(idx);
             if(this._groups.isDirty({item: item})){
+                var items=this._groups.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                       items[i].__id!=item.__id){
+                        return false;
+                    }
+                }
                 valid &= item.isValid();
             }
 		}
@@ -65088,6 +65140,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             required: true,
             selectOnClick: true,
             style: 'width:100%',
+            validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._txtName_onChange)
         });
         this._tblProperties.addChild(this._txtName);
@@ -65126,6 +65179,18 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
         }, this.infoNode);
 
         this._grdPropertyMappings.startup();
+    },
+
+    _txtNameValidator: function(newValue){
+        var items=this.documentTypes.fetch();
+        for(var i=0;i<items.length;i++){
+            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+               items[i].__id!=this.activeItem.__id){
+                this._txtName.set('invalidMessage', 'Duplicate property definition');
+                return false;
+            }
+        }
+        return true;
     },
 
     resize: function(){
@@ -65497,6 +65562,13 @@ dojo.declare('bfree.widget.doctype.Administration', [dijit._Widget, dijit._Templ
 		for(var idx = 0; idx < this._grdDocTypes.rowCount; idx++){
             var item = this._grdDocTypes.getItem(idx);
             if(this._documentTypes.isDirty({item: item})){
+                var items=this._documentTypes.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                       items[i].__id!=item.__id){
+                        return false;
+                    }
+                }
                 valid &= item.isValid();
             }
 		}
@@ -66321,7 +66393,7 @@ dojo.declare('bfree.widget.propdef.Editor', [dijit._Widget, dijit._Templated],{
             selectOnClick: true,
             style: 'width:100%',
             required: true,
-            validator: dojo.hitch(this, this._txtName_validator),
+            validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._txtName_onChange)
         });
         this._tblProperties.addChild(this._txtName);
@@ -66362,16 +66434,18 @@ dojo.declare('bfree.widget.propdef.Editor', [dijit._Widget, dijit._Templated],{
 
     },
 
-    _txtName_validator: function(value){
+    _txtNameValidator: function(value){
         if(this.activeItem){
-            var items=this.propertyDefinitions.fetchItemsByName(this.activeItem.name);
-            if(items.length==1){
-                this._txtName.set('invalidMessage', null);
-                return true;
-            }else{
-                this._txtName.set('invalidMessage', 'Duplicate property definition name');
-                return false;
+            var items=this.propertyDefinitions.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name.toLowerCase().trim()==value.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate property definition name');
+                    return false;
+                }
             }
+            this._txtName.set('invalidMessage', null);
+            return true;
         }
     },
 
@@ -66573,8 +66647,13 @@ dojo.declare('bfree.widget.propdef.Administration', [dijit._Widget, dijit._Templ
 		for(var idx = 0; idx < this._grdPropDefs.rowCount; idx++){
             var item = this._grdPropDefs.getItem(idx);
             if(this._propertyDefinitions.isDirty({item: item})){
-                var items=this._propertyDefinitions.fetchItemsByName(item.name);
-                valid &= (items.length==1);
+                var items=this._propertyDefinitions.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                       items[i].__id!=item.__id){
+                        return false;
+                    }
+                }
                 valid &= item.isValid();
             }
 		}
@@ -68742,6 +68821,14 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
 
     _txtNameValidator: function(newValue){
         if(this._txtName){
+            var items=this.users.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate username');
+                    return false;
+                }
+            }
             if(newValue.length<4){
                 this._txtName.set('invalidMessage', 'Username must be longer than 4 characters');
                 return false;
@@ -68983,8 +69070,14 @@ dojo.declare('bfree.widget.user.Administration', [dijit._Widget, dijit._Template
 		for(var idx = 0; idx < this._grdUsers.rowCount; idx++){
             var item = this._grdUsers.getItem(idx);
             if(this._users.isDirty({item: item})){
-                var group=this._groups.fetchById({id: item.active_group});
-                if(group.is_admin&&item.email==""){
+                var items=this._users.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                       items[i].__id!=item.__id){
+                        return false;
+                    }
+                }
+                if(item.email==""){
                     valid=false;
                 }
                 valid &= item.isValid();
@@ -69877,18 +69970,6 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
                 name: 'Date'
             },
             {
-                id: bfree.api.DataTypes.types.DATETIME + ':' + bfree.api.CellDefinition.formats.date,
-                format_id: bfree.api.CellDefinition.formats.date,
-                data_type_id: bfree.api.DataTypes.types.DATETIME,
-                name: 'Date'
-            },
-            {
-                id: bfree.api.DataTypes.types.DATETIME + ':' + bfree.api.CellDefinition.formats.time,
-                format_id: bfree.api.CellDefinition.formats.date,
-                data_type_id: bfree.api.DataTypes.types.DATETIME,
-                name: 'Time'
-            },
-            {
                 id: bfree.api.DataTypes.types.FLOAT + ':' + bfree.api.CellDefinition.formats.none,
                 format_id: bfree.api.CellDefinition.formats.none,
                 data_type_id: bfree.api.DataTypes.types.FLOAT,
@@ -69990,29 +70071,29 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
 
 
     _getDefaultWidth: function(data_type_id){
-        var w = '128px'
+        var w = 128
 
         switch(data_type_id){
             case bfree.api.DataTypes.types.VOID:
-                w = '18px';
+                w = 18;
                 break;
             case bfree.api.DataTypes.types.BOOLEAN:
-                w = '18px';
+                w = 18;
                 break;
             case bfree.api.DataTypes.types.INTEGER:
-                w = '64px';
+                w = 64;
                 break;
             case bfree.api.DataTypes.types.FLOAT:
-                w = '64px';
+                w = 64;
                 break;
             case bfree.api.DataTypes.types.DATETIME:
-                w = '128px';
+                w = 128;
                 break;
             case bfree.api.DataTypes.types.STRING:
-                w = '128px';
+                w = 128;
                 break;
             case bfree.api.DataTypes.types.TEXT:
-                w = '128px';
+                w = 128;
                 break;
         }
 
@@ -70087,7 +70168,14 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
             this.returnValue = null;
         }
         else{
-
+            if(isNaN(this._txtWidth.get('value'))){
+                alert('Width must be a number');
+                return false;
+            }
+            if(this._txtWidth.get('value')<=0){
+                alert('Width must be greater than 0');
+                return false;
+            }
             var column = this._cmbColumn.item;
             var formatter = this._cmbFormatType.item;
 
@@ -70099,7 +70187,7 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
                 label: this._txtLabel.get('value'),
                 formatter: this._formatStore.getValue(formatter, 'format_id'),
                 noresize: false,
-                width: this._txtWidth.get('value'),
+                width: this._txtWidth.get('value')+'px',
                 style: ''
             }
 
@@ -70147,11 +70235,12 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
         });
         this._tblProperties.addChild(this._txtLabel);
 
-        this._txtWidth = new bfree.widget.ValidationTextBox({
+        this._txtWidth = new dijit.form.NumberSpinner({
             label: 'Width',
             selectOnClick: true,
             style: 'width:100%',
             required: true,
+            constraints: {min: 0},
             onChange: dojo.hitch(this, this._onValueChange, 'name')
         });
         this._tblProperties.addChild(this._txtWidth);
@@ -70583,6 +70672,7 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
             selectOnClick: true,
             style: 'width:100%',
             required: true,
+            validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
         });
         this._tblProperties.addChild(this._txtName);
@@ -70632,6 +70722,18 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
         }, this.infoNode);
 
         this._grdCells.startup();
+    },
+
+    _txtNameValidator: function(newValue){
+        var items=this.viewDefinitions.fetch();
+        for(var i=0;i<items.length;i++){
+            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+               items[i].__id!=this.activeItem.__id){
+                this._txtName.set('invalidMessage', 'Duplicate view definition');
+                return false;
+            }
+        }
+        return true;
     },
 
     resize: function(){
@@ -70789,6 +70891,13 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
 		for(var idx = 0; idx < this._grdViews.rowCount; idx++){
             var item = this._grdViews.getItem(idx);
             if(this._viewDefinitions.isDirty({item: item})){
+                var items=this._viewDefinitions.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                       items[i].__id!=item.__id){
+                        return false;
+                    }
+                }
                 valid &= item.isValid();
             }
 		}
@@ -70853,7 +70962,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 name: 'Title',
                 noresize: false,
                 style: '',
-                width: 'auto',
+                width: '256px',
                 formatter: bfree.api.CellDefinition.formats.none
             });
             idx++;
@@ -83848,6 +83957,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             zone: this.zone,
             library: this.activeLibrary,
             user: this.activeUser,
+            style: 'width: 100%',
             onCommand: dojo.hitch(this, this.__onCommand),
             onSelectedItem: dojo.hitch(this, this._grdDocuments_onSelectedItem),
             onSelectedItems: dojo.hitch(this, this._grdDocuments_onSelectedItems)

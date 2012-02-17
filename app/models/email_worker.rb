@@ -57,12 +57,14 @@ class EmailWorker < Struct.new(:to, :params)
     zone = params[:zone]
     user = self.params[:user]
     password = params[:password]
+    fingerprint = params[:fingerprint]
 
     email_body = IO.read(File.join(Rails.root, USER_RESET))
     email_body.gsub!('{zone_subdomain}', zone.subdomain)
     email_body.gsub!('{user_fullname}', user.full_name)
     email_body.gsub!('{user_name}', user.name)
     email_body.gsub!('{user_password}', password)
+    email_body.gsub!('{fingerprint}', fingerprint)
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.user_reset.subject

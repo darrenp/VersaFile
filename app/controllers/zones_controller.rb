@@ -222,7 +222,7 @@ class ZonesController < ApplicationController
       #TODO: This should use delayed_job so the user doesn't have
       #to wait for the email to be constructed and sent
       unless @user.email.nil?
-        @email = EmailWorker.new(@user.email, {:zone => @zone, :user => @user, :password => @tmp_password })
+        @email = EmailWorker.new(@user.email, {:zone => @zone, :user => @user, :password => @tmp_password, :fingerprint=>fngrprint })
         @email.delay.send_user_reset()
       end
 

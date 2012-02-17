@@ -9,8 +9,9 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -d "{\"username\":\"admin\",\"password\":\"admin\"}" \
-    http://$SERVER_HOST/rko_users/logon
+    https://$SERVER_HOST/rko_users/logon
 echo
 echo ================================================
 echo
@@ -25,7 +26,8 @@ auth_token=$( \
         -c cookies.txt \
         -H "Accept:application/json,application/javascript" \
         -H "Content-Type:application/json" \
-        http://$SERVER_HOST/accounts/get_token \
+        -k \
+        https://$SERVER_HOST/accounts/get_token \
 )
 echo
 echo ================================================
@@ -40,6 +42,7 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
@@ -59,7 +62,7 @@ curl \
             \"template\": 1, \
             \"subdomains\": [ { \"name\":\"rkosean\", \"user_quota\":10, \"disk_quota\": 50 } ] \
         }" \
-    http://$SERVER_HOST/accounts
+    https://$SERVER_HOST/accounts
 echo
 echo ================================================
 echo
@@ -73,8 +76,9 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -d "{\"authenticity_token\":\"$auth_token\"}" \
-    http://$SERVER_HOST/rko_users/logoff
+    https://$SERVER_HOST/rko_users/logoff
 echo
 echo ================================================
 echo

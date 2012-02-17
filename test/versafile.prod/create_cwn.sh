@@ -1,5 +1,5 @@
 #SERVER_HOST=admin.bfreetest.com:3000
-SERVER_HOST=admin.versafiledev.com
+SERVER_HOST=admin.versafile.com
 
 echo LOGON
 echo ================================================

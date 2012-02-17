@@ -832,3 +832,4 @@ Completed 201 Created in 1708ms (Views: 2.4ms | ActiveRecord: 106.1ms)
   [1m[36m (0.1ms)[0m  [1mBEGIN[0m
   [1m[35mSQL (0.4ms)[0m  DELETE FROM `delayed_jobs` WHERE `delayed_jobs`.`id` = 2
   [1m[36m (89.0ms)[0m  [1mCOMMIT[0m
+  [1m[35mSQL (1.0ms)[0m  UPDATE `delayed_jobs` SET locked_by = null, locked_at = null WHERE (locked_by = 'host:dev pid:6625')

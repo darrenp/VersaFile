@@ -7,7 +7,7 @@ require 'prawn'
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 2
-configatron.bfree.build_number = 1505
+configatron.bfree.build_number = 1701
 
 configatron.dojo.version = "1.6.1.#{Rails.env[0,1]}"
 
