@@ -271,6 +271,7 @@ class ZonesController < ApplicationController
       format.json { render :json => @zone.to_json(
           :include => {  :configuration => {:include => {:configuration_settings => {:only => [:name, :value]}},
                             :only => [:configuration_settings]}},
+          :methods => [:trial_expiry],
           :except => [:fingerprint, :zone_avatar_id]) }
     end
 

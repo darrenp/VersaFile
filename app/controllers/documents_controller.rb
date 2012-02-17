@@ -179,6 +179,8 @@ class DocumentsController < ApplicationController
   # GET /documents.json
   def index
 
+    @zone.trial_expiry
+
     @documents = []
 
     if params[:view].blank?

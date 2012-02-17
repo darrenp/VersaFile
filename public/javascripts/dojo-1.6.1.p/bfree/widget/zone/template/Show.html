@@ -26,7 +26,7 @@
                         region="left"
                         splitter="false"
                         class="versaHeadPane">
-                    <img src="/images/versafile-64.png" height="56" style="position:relative;top:-8px;left:-8px"/>
+                    <img src="/images/versafile-64-tm.png" height="56" style="position:relative;top:-8px;left:0"/>
                 </div>
 
                 <div    dojoType="dijit.layout.BorderContainer"
@@ -40,7 +40,13 @@
                             splitter="false"
                             style="padding:0;overflow:hidden;position:relative;">
 
-                        <div style="display:none;width:256px;margin-left:auto;margin-right:auto">Good Dog.</div>
+                        <div    dojoAttachPoint="trialStateNode"
+                                style="display:none;margin-left:auto;margin-right:auto;text-align: center">
+                            <span dojoAttachPoint="trialMsgNode" class="dijitMediumLabel dijitDarkLabelV" style="display:inline-block"></span>
+                            <span class="dijitMediumLabel dijitDarkLabelV" style="display:inline-block">
+                                Click <a href="http://www.versafile.com" class="dijitBoldLabel versaLink" target="_blank">here</a> to upgrade.
+                            </span>
+                        </div>
 
                         <div dojoAttachPoint="toolbarNode"></div>
 
@@ -59,9 +65,9 @@
                                 style="position:relative;text-align:right;padding:2px 0 0 0">
 
                             <table cellpadding="0" cellspacing="0" style="position:absolute;right:0"><tr>
-                                <td style="padding-right:4px; border-right: 1px solid #75787B">
+                                <td  style="padding-right:4px; border-right: 1px solid #75787B">
                                     <a href="javascript://" class="versaLink" title="Edit Profile" dojoAttachEvent="onclick: _onUserEdit">
-                                    <span dojoAttachPoint="nameNode"></span>
+                                    <span  dojoAttachPoint="nameNode"></span>
                                     </a>
                                 </td>
                                 <td style="padding-left:4px;"><a href="javascript://" class="versaLink" dojoAttachEvent="onclick: _onLogoff">Logout</a></td>

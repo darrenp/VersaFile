@@ -393,6 +393,7 @@ bfree.js:
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/DiskQuota.js
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Zone.js
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Info.js
+./../../../dojo-1.6.1.p/versa/VersaFile.js
 ./../../../dojo-1.6.1.p/bfree/widget/zone/Show.js
 ./../../../dojo-1.6.1.p/dojox/gfx/shape.js
 ./../../../dojo-1.6.1.p/dojox/gfx/path.js

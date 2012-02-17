@@ -38,8 +38,9 @@ class Zone < ActiveRecord::Base
     doc_count = self.documents.count
     ver_count = self.versions.count
     total_size = self.versions.sum(:binary_file_size)
+    trial_expiry = self.trial_expiry
 
-    return {:user_count => user_count, :folder_count => folder_count, :document_count => doc_count, :version_count => ver_count, :content_size => total_size, }
+    return {trial_expiry: trial_expiry, :user_count => user_count, :folder_count => folder_count, :document_count => doc_count, :version_count => ver_count, :content_size => total_size, }
   end
 
   def package(root_folder)
@@ -107,11 +108,17 @@ class Zone < ActiveRecord::Base
   end
 
   def trial_expiry
-    d = self.configuration.configuration_settings.find_by_name('trial_period').value.to_i
-    created_at = self.created_at
 
-    logger.debug("#{created_at}")
-    logger.debug("#{created_at + d.days}")
+    trial_period = self.configuration.configuration_settings.find_by_name('trial_period').value.to_i
+
+    return trial_period if (trial_period == VersaFile::TrialStates.NoTrial ||
+                            trial_period == VersaFile::TrialStates.Infinite)
+
+    expiry_date =  self.created_at + trial_period.days
+    days_left = ((expiry_date - Time.now) / 1.day).ceil
+    days_left = VersaFile::TrialStates.Expired if days_left < 0
+
+    return days_left
 
   end
 

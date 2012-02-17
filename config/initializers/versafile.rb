@@ -96,6 +96,25 @@ module VersaFile
 
   end
 
+  module TrialStates
+    @@_expired = 0x0000
+    @@_no_trial = -0x0001
+    @@_infinite = 0xFFFF
+
+    def self.Expired
+      @@_expired
+    end
+
+    def self.NoTrial
+      @@_no_trial
+    end
+
+    def self.Infinite
+      @@_infinite
+    end
+
+  end
+
   module ZoneStates
     @@_disabled = 0x0000
     @@_enabled =  0x0001

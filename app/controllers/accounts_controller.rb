@@ -168,7 +168,7 @@ class AccountsController < ApplicationController
 
         @account = Account.new(params[:account])
 
-        @account.trial_period = ((@account.account_type == VersaFile::AccountTypes.Trial) ? @account.trial_period : -1)
+        @account.trial_period = ((@account.account_type == VersaFile::AccountTypes.Trial) ? @account.trial_period : VersaFile::TrialStates.NoTrial)
         @account.status = VersaFile::AccountStates.Enabled
         @account.created_by = @super_user.name
         @account.updated_by = @super_user.name
@@ -311,7 +311,7 @@ class AccountsController < ApplicationController
           @account[:customer_code] = params[:customer_code] unless params[:customer_code].nil?
           @account[:billing_type] = params[:billing_type] unless params[:billing_type].nil?
           @account[:account_type] = params[:account_type] unless params[:account_type].nil?
-          @account[:trial_period] = ((@account[:account_type] == VersaFile::AccountTypes.Trial) ? params[:trial_period] : -1) unless params[:trial_period].nil?
+          @account[:trial_period] = ((@account[:account_type] == VersaFile::AccountTypes.Trial) ? params[:trial_period] : VersaFile::TrialStates.NoTrial) unless params[:trial_period].nil?
         end
 
         @account[:updated_by] = @account_user.instance_of?(RkoUser) ? @account_user.name : @account_user.email

@@ -9,6 +9,7 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -d "{\"username\":\"admin\",\"password\":\"admin\"}" \
     http://$SERVER_HOST/rko_users/logon
 echo
@@ -25,6 +26,7 @@ auth_token=$( \
         -c cookies.txt \
         -H "Accept:application/json,application/javascript" \
         -H "Content-Type:application/json" \
+        -k \
         http://$SERVER_HOST/accounts/get_token \
 )
 echo
@@ -40,15 +42,16 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
             \"email\":\"scotth@rkosolutions.com\", \
             \"password\":\"dont4get\", \
-            \"customer_code\":\"SEJH-0001\", \
-            \"name\":\"Springfield Nuclear Power Plant\", \
-            \"first_name\":\"C. Montgomery\", \
-            \"last_name\":\"Burns\", \
+            \"customer_code\":\"MOES-0001\", \
+            \"name\":\"Moe's Tavern\", \
+            \"first_name\":\"Moe\", \
+            \"last_name\":\"Szyslak\", \
             \"address\":\"55 Water Street, Suite 503\", \
             \"city\":\"Vancouver\", \
             \"province\":\"BC\", \
@@ -56,9 +59,9 @@ curl \
             \"postal_code\":\"V6B 1A1\", \
             \"account_type\":1, \
             \"billing_type\":0, \
-            \"trial_period\":60, \
+            \"trial_period\":0, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"nuke\", \"user_quota\":3, \"disk_quota\": 12 } ] \
+            \"subdomains\": [ { \"name\":\"moes\", \"user_quota\":3, \"disk_quota\": 12 } ] \
         }" \
     http://$SERVER_HOST/accounts
 echo
@@ -74,6 +77,7 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -d "{\"authenticity_token\":\"$auth_token\"}" \
     http://$SERVER_HOST/rko_users/logoff
 echo
