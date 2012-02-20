@@ -52004,6 +52004,8 @@ dojo.declare('bfree.widget.choiceList.values.Editor', [dijit._Widget, dijit._Tem
     templateString: dojo.cache("bfree/widget/choiceList/values", "template/Editor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoType=\"dijit.layout.ContentPane\"\n        style=\"padding:8px;overflow:hidden;\">\n\n<div dojoAttachPoint=\"formNode\">\n\n    <div dojoAttachPoint=\"tableNode\"></div>\n\n</div>\n\n</div>\n\n\n</div>\n"),
     widgetsInTemplate: true,
 
+    valueStore: null,
+
     _form: null,
     _txtDisplay: null,
     _txtPrevious: null,
@@ -52067,11 +52069,37 @@ dojo.declare('bfree.widget.choiceList.values.Editor', [dijit._Widget, dijit._Tem
             this.returnValue = null;
         }
         else{
+            for(var i=0;i<this.valueStore._arrayOfAllItems.length;i++){
+                if(this.valueStore._arrayOfAllItems[i]){
+                    if(this.valueStore._arrayOfAllItems[i].id[0].toLowerCase().trim()==this._txtDisplay.get('value').toLowerCase().trim()){
+                        alert("Display names must be unique");
+                        return false;
+                    }
+                }
+            }
             this.returnValue = new Object();
             this.returnValue['display'] = this._txtDisplay.get('value');
             this.returnValue['value'] = this._txtValue.get('value');
         }
 
+        return true;
+    },
+
+    _txtDisplayValidator: function(newValue){
+        if(this._txtDisplay){
+            if(newValue==""){
+                this._txtDisplay.set('invalidMessage', 'Display name cannot be blank');
+                return false;
+            }
+            for(var i=0;i<this.valueStore._arrayOfAllItems.length;i++){
+                if(this.valueStore._arrayOfAllItems[i]){
+                    if(this.valueStore._arrayOfAllItems[i].id[0].toLowerCase().trim()==newValue.toLowerCase().trim()){
+                        this._txtDisplay.set('invalidMessage', 'Display name must be unique');
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     },
 
@@ -52101,6 +52129,7 @@ dojo.declare('bfree.widget.choiceList.values.Editor', [dijit._Widget, dijit._Tem
             selectOnClick: true,
             intermediateChanges: true,
             style: 'width:100%',
+            validator: dojo.hitch(this, this._txtDisplayValidator),
             onChange: dojo.hitch(this, this._txtDisplay_onChange)
         });
         this._tblProperties.addChild(this._txtDisplay);
@@ -52151,7 +52180,8 @@ bfree.widget.choiceList.values.Editor.show = function(args){
         widgetConstructor: bfree.widget.choiceList.values.Editor,
         widgetParams: {
             choiceList: args.choiceList,
-            dataType: args.dataType
+            dataType: args.dataType,
+            valueStore: args.valueStore
         },
         noResize: true,
         height: 128,
@@ -52293,6 +52323,7 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             bfree.widget.choiceList.values.Editor.show({
                 choiceList: this.activeItem,
                 dataType: this._dataTypes.fetchById({id: this.activeItem.data_type_id}),
+                valueStore: this._valueStore,
                 onClose: dojo.hitch(this, this.__onValueDlgClose)
             });
 
@@ -52608,7 +52639,8 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
     _txtNameValidator: function(newValue){
         var items=this.choiceLists.fetch();
         for(var i=0;i<items.length;i++){
-            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+            if(items[i].name&&
+               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
                items[i].__id!=this.activeItem.__id){
                 this._txtName.set('invalidMessage', 'Duplicate choice list');
                 return false;
@@ -52746,7 +52778,8 @@ dojo.declare('bfree.widget.choiceList.Administration', [dijit._Widget, dijit._Te
             if(this._choiceLists.isDirty({item: item})){
                 var items=this._choiceLists.fetch();
                 for(var i=0;i<items.length;i++){
-                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
                        items[i].__id!=item.__id){
                         return false;
                     }
@@ -57915,6 +57948,7 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
     activeFolder: null,
     zone: null,
     dndType: "Document",
+    activeQuery: null,
 
     deleting: false,
 
@@ -57974,9 +58008,12 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
 		this.focus.findAndFocusGridCell();
 
         this.activeView=viewItem;
-		this.set('structure', viewItem);
+        this.set('structure', viewItem);
 		this.set('sortInfo', viewItem.sort_column);
-		this.onViewChange(viewItem);
+        if(this.query){
+            this.query.view=this.activeView.id;
+        }
+        this.onViewChange(viewItem);
 
 	},
 
@@ -58707,7 +58744,11 @@ dojo.declare('bfree.widget.doctype.properties.Editor', [dijit._Widget, dijit._Te
         var wdgName = bfree.widget.propdef.Widget.generateWdgName(property);
         var wdg = dijit.byId(wdgName);
         if(wdg){
-            wdg.set('value', value);
+            if(wdg.declaredClass=="bfree.widget.NumberSpinner"){
+                wdg.set('value', value?value:0);
+            }else{
+                wdg.set('value', value);
+            }
         }
 
     },
@@ -63456,7 +63497,8 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
     _txtNameValidator: function(newValue){
         var items=this.groups.fetch();
         for(var i=0;i<items.length;i++){
-            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+            if(items[i].name&&
+               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
                items[i].__id!=this.activeItem.__id){
                 this._txtName.set('invalidMessage', 'Duplicate group name');
                 return false;
@@ -63687,7 +63729,8 @@ dojo.declare('bfree.widget.group.Administration', [dijit._Widget, dijit._Templat
             if(this._groups.isDirty({item: item})){
                 var items=this._groups.fetch();
                 for(var i=0;i<items.length;i++){
-                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
                        items[i].__id!=item.__id){
                         return false;
                     }
@@ -65191,7 +65234,8 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
     _txtNameValidator: function(newValue){
         var items=this.documentTypes.fetch();
         for(var i=0;i<items.length;i++){
-            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+            if(items[i].name&&
+               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
                items[i].__id!=this.activeItem.__id){
                 this._txtName.set('invalidMessage', 'Duplicate property definition');
                 return false;
@@ -65571,7 +65615,8 @@ dojo.declare('bfree.widget.doctype.Administration', [dijit._Widget, dijit._Templ
             if(this._documentTypes.isDirty({item: item})){
                 var items=this._documentTypes.fetch();
                 for(var i=0;i<items.length;i++){
-                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
                        items[i].__id!=item.__id){
                         return false;
                     }
@@ -66445,7 +66490,8 @@ dojo.declare('bfree.widget.propdef.Editor', [dijit._Widget, dijit._Templated],{
         if(this.activeItem){
             var items=this.propertyDefinitions.fetch();
             for(var i=0;i<items.length;i++){
-                if(items[i].name.toLowerCase().trim()==value.toLowerCase().trim()&&
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==value.toLowerCase().trim()&&
                    items[i].__id!=this.activeItem.__id){
                     this._txtName.set('invalidMessage', 'Duplicate property definition name');
                     return false;
@@ -66656,7 +66702,8 @@ dojo.declare('bfree.widget.propdef.Administration', [dijit._Widget, dijit._Templ
             if(this._propertyDefinitions.isDirty({item: item})){
                 var items=this._propertyDefinitions.fetch();
                 for(var i=0;i<items.length;i++){
-                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
                        items[i].__id!=item.__id){
                         return false;
                     }
@@ -68830,7 +68877,8 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
         if(this._txtName){
             var items=this.users.fetch();
             for(var i=0;i<items.length;i++){
-                if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
                    items[i].__id!=this.activeItem.__id){
                     this._txtName.set('invalidMessage', 'Duplicate username');
                     return false;
@@ -69079,7 +69127,8 @@ dojo.declare('bfree.widget.user.Administration', [dijit._Widget, dijit._Template
             if(this._users.isDirty({item: item})){
                 var items=this._users.fetch();
                 for(var i=0;i<items.length;i++){
-                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
                        items[i].__id!=item.__id){
                         return false;
                     }
@@ -70734,7 +70783,8 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
     _txtNameValidator: function(newValue){
         var items=this.viewDefinitions.fetch();
         for(var i=0;i<items.length;i++){
-            if(items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+            if(items[i].name&&
+               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
                items[i].__id!=this.activeItem.__id){
                 this._txtName.set('invalidMessage', 'Duplicate view definition');
                 return false;
@@ -70900,7 +70950,8 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
             if(this._viewDefinitions.isDirty({item: item})){
                 var items=this._viewDefinitions.fetch();
                 for(var i=0;i<items.length;i++){
-                    if(items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==item.name.toLowerCase().trim()&&
                        items[i].__id!=item.__id){
                         return false;
                     }
