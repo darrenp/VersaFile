@@ -21,8 +21,8 @@ class IconsController < ApplicationController
     size = params[:size] unless params[:size].nil?
 
     path = Rails.root.join('public/images/mimetypes', size, file_name).to_s
-    logger.debug path
     send_file path, :type => 'image/png', :disposition =>'inline'
+
   end
 
   # GET /icons/new

@@ -1,5 +1,7 @@
 module VersaFile
 
+  SYSTEM_PATH = File.join(Rails.root, '..', 'system')
+
   configatron.versafile.mail.from = "\"VersaFile Accounts\" <accounts@versafile.com>"
   configatron.versafile.mail.account_reset.subject = "VersaFile Password Reset"
   configatron.versafile.mail.user_created.subject = "Welcome to VersaFile"
@@ -8,6 +10,8 @@ module VersaFile
   configatron.versafile.mail.zone_create_active.subject = "Welcome to VersaFile"
   configatron.versafile.mail.zone_upgrade_active.subject = "Welcome to VesaFile"
   configatron.versafile.mail.zone_upgrade_quota.subject = "VersaFile Account Upgrade Notification"
+
+
 
 
   module ZoneTemplates

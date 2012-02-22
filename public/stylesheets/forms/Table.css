@@ -33,6 +33,23 @@
 .versainfo-valueCell {
 }
 
+/* base table wo/ cell padding */
+.versathin-table{
+
+}
+.versathin-table-horiz{
+}
+
+.versathin-table-vert{
+}
+
+.versathin-labelCell {
+    color: #336699;
+    vertical-align:top;
+}
+.versathin-valueCell {
+}
+
 /* footer table */
 .versafoot-table{
     font-size:11px;

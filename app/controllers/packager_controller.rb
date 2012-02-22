@@ -7,7 +7,7 @@ class PackagerController < ApplicationController
     @package_name = params[:pkg]
 
     zip_file = "#{@package_name}.zip"
-    root_dir = File.join(Rails.root, 'system', @zone.subdomain, 'packages')
+    root_dir = File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages')
     zip_path = File.join(root_dir, zip_file)
 
     send_file zip_path, :filename => zip_file, :type => 'application/zip', :disposition => 'attachment'
@@ -21,7 +21,7 @@ class PackagerController < ApplicationController
       @host = "#{request.protocol}#{request.host_with_port}"
       @package_name = "#{Digest::SHA1.hexdigest(@zone.subdomain + Time.now.to_f.to_s)}"
 
-      root_dir = File.join(Rails.root, 'system', @zone.subdomain, 'packages', @package_name)
+      root_dir = File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages', @package_name)
       root_dir = Pathname.new(root_dir).cleanpath()
       FileUtils.mkdir_p File.join(root_dir)
 
@@ -46,8 +46,8 @@ class PackagerController < ApplicationController
   def unpack
 
     @package_name = params[:pkg]
-    zip_path = File.join(Rails.root, 'system', @zone.subdomain, 'packages', "#{@package_name}.zip")
-    dst_dir =  File.join(Rails.root, 'system', @zone.subdomain, 'packages', @package_name)
+    zip_path = File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages', "#{@package_name}.zip")
+    dst_dir =  File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages', @package_name)
 
     pkg_dir = Archive.new(zip_path).to_directory(dst_dir)
 

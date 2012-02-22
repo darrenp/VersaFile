@@ -1,8 +1,9 @@
 class Version < ActiveRecord::Base
   belongs_to :zone
+  belongs_to :library
   belongs_to :document
   has_attached_file   :binary,
-                      :path => ":rails_root/system/:subdomain/content/:binary_primary_folder/:binary_secondary_folder/:binary_storage_name",
+                      :path => ":system_path/:subdomain/content/:binary_primary_folder/:binary_secondary_folder/:binary_storage_name",
                       :restricted_characters => /[_]/
 
   has_one :content_type, :primary_key=>"binary_content_type", :foreign_key => "binary_content_type"
@@ -52,11 +53,10 @@ class Version < ActiveRecord::Base
   end
 
   def path
-    return "#{Rails.root}/system/#{zone().subdomain}/content/#{binary_primary_folder}/#{binary_secondary_folder}/#{binary_storage_name}"
+    return File.join(VersaFile::SYSTEM_PATH, self.zone.subdomain, 'content', self.binary_primary_folder, self.binary_secondary_folder, self.binary_storage_name)
   end
 
   def pre_save_actions
-    logger.debug("RC:> #{self.binary.options[:restricted_characters]}")
     self.binary_storage_name = self.generate_storage_name
     self.binary_uniqueness_key = self.generate_uniqueness_key
   end

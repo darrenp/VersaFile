@@ -1,7 +1,7 @@
 class UploaderController < ApplicationController
   before_filter :zone_required
   skip_before_filter :verify_authenticity_token, :only => [:upload]
-  #Skipping authenticity check on upload do to Flash submitting token icorrectly
+  #Skipping authenticity check on upload due to Flash submitting token incorrectly
 
   def clean
 
@@ -59,6 +59,7 @@ class UploaderController < ApplicationController
 
     begin
 
+      logger.debug("DIR:> #{VersaFile::SYSTEM_PATH}")
       is_pkg = params[:pkg].nil? ? false : (params[:pkg] == 'true')
       unique_id = params[:authenticity_token]
 

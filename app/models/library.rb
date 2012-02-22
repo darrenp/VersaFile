@@ -7,6 +7,7 @@ class Library < ActiveRecord::Base
   has_one :configuration, :as => :configurable
   has_many :folders
   has_many :documents
+  has_many :versions
   has_many :choice_lists
   has_many :view_definitions
   has_many :cell_definitions
@@ -42,6 +43,38 @@ class Library < ActiveRecord::Base
     json_obj = super.as_json(options)
     json_obj[:active_permissions] = self.acl.get_role(options[:user], options[:group]).permissions
     return json_obj
+  end
+
+  def metrics
+
+    choicelist_count = self.choice_lists.count
+    propdef_count = self.property_definitions.count
+    doctype_count = self.document_types.count
+    viewdef_count = self.view_definitions.count
+
+    folder_count = self.folders.count - 2   #remove two for search/recycle bin folders
+    document_count = self.documents.count
+    version_count = self.versions.count
+    content_size = self.versions.sum(:binary_file_size)
+
+
+    document_types = []
+    self.document_types.each do |document_type|
+      document_types.push({
+          name: document_type.name,
+          document_count: document_type.documents.count
+      })
+    end
+
+    return {  choicelist_count: choicelist_count,
+              propertydefinition_count: propdef_count,
+              documenttype_count: doctype_count,
+              viewdefinition_count: viewdef_count,
+              folder_count: folder_count,
+              document_count: document_count,
+              version_count: version_count,
+              content_size: content_size,
+              document_types: document_types  }
   end
 
   def package(root_folder)
@@ -416,7 +449,8 @@ private
     ViewDefinition.from_document_type(self, document_type, self.created_by, true).save()
 
     #create trash folder
-    trash = self.folders.create(
+    trash = self.zone.folders.create(
+      :library => self,
       :name => 'Recycle Bin',
       :is_trash => true,
       :created_by => self.created_by,
@@ -424,7 +458,8 @@ private
       :parent_id=>0
     )
     #create search folder
-    search = self.folders.create(
+    search = self.zone.folders.create(
+      :library => self,
       :name => 'Search',
       :is_search => true,
       :created_by => self.created_by,

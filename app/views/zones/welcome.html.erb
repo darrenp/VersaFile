@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
     <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
 
-<% if ENV['RAILS_ENV'] == 'production' %>
+<% if ENV['RAILS_ENV'] != 'development' %>
 
 <script type="text/javascript">
 
@@ -49,6 +49,8 @@ dojo.require('bfree.api.Zones');
 dojo.require('bfree.widget.zone.Logon');
 dojo.require('bfree.widget.BrowserSniffer');
 
+dojo.require('versa.VersaFile');
+
 var _sniffer = null;
 var _logon=null;
 var zones=null;
@@ -77,6 +79,10 @@ function _onError(e){
     var imgNode = dojo.byId('statusImgNode');
 
     msgNode.innerHTML = dojo.replace('ERROR: <b>{message}</b>', e);
+    if(e.status == 402){
+        msgNode.innerHTML += ' ' + versa.VersaFile.messages.ACTIVATE_LINK;
+    }
+
     dojo.removeClass(msgNode, 'dijitOkLabel');
     dojo.removeClass(imgNode, 'statusIcon bfreeIconOk');
     dojo.addClass(imgNode, 'statusIcon bfreeIconError');

@@ -1,25 +1,42 @@
 module UploaderHelper
 
+  def self.clean_dir(dir)
+
+    if File.exists?(dir)
+      Dir.foreach(dir) do |tmp_entry|
+        next if ['.', '..'].include?(tmp_entry)
+        if !File.directory?(tmp_entry)
+          tmp_filepath = File.join(dir, tmp_entry)
+          File.delete(tmp_filepath)
+        end
+      end
+
+      Dir.delete(dir)
+    end
+
+  end
+
   def self.clean(zone, session_id)
 
     session_id = session_id.gsub( /[^a-zA-Z0-9_\.]/, '_')
 
     tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
-    root_dir = File.join(Rails.root, 'system')
-    tmpPath = File.join(root_dir, tmp_dir)
+    tmpPath = File.join(VersaFile::SYSTEM_PATH, tmp_dir)
 
-    if File.exists?(tmpPath)
-      Dir.foreach(tmpPath) do |tmp_entry|
-        if !File.directory?(tmp_entry)
-          tmp_filepath = File.join(tmpPath, tmp_entry)
-          File.delete(tmp_filepath)
-        end
+    UploaderHelper.clean_dir(tmpPath)
+
+    #cleanup orphaned ~tmp dirs
+    tmpPath = File.join(VersaFile::SYSTEM_PATH, zone.subdomain, '~tmp')
+    Dir.foreach(tmpPath) do |tmp_entry|
+      next if ['.', '..'].include?(tmp_entry)
+      entryPath = File.join(tmpPath, tmp_entry)
+
+      if(File.mtime(entryPath).utc < 1.day.ago)
+        UploaderHelper.clean_dir(entryPath)
       end
 
-      Dir.delete(tmpPath)
     end
 
-      #TODO: cleanup orphaned ~tmp dirs
   end
 
   def self.generate_name(tmpdir)
@@ -33,17 +50,19 @@ module UploaderHelper
 
   def self.delete_file(zone, session_id, file_name)
 
+    session_id = session_id.gsub( /[^a-zA-Z0-9_\.]/, '_')
+
     tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
-    root_dir = File.join(Rails.root, 'system')
-    tmpFilePath = File.join(root_dir, tmp_dir, file_name)
+    tmpFilePath = File.join(VersaFile::SYSTEM_PATH, tmp_dir, file_name)
 
     File.delete(tmpFilePath)
+
   end
 
   def self.write_pkg_file(zone, file)
-    root_dir = File.join(Rails.root, 'system')
-    pkg_dir = File.join(root_dir, zone.subdomain, 'packages')
-    FileUtils.mkdir_p File.join(root_dir, pkg_dir)
+
+    pkg_dir = File.join(VersaFile::SYSTEM_PATH, zone.subdomain, 'packages')
+    FileUtils.mkdir_p pkg_dir
 
     tmpFileName = file.original_filename
     tmpFilePath = File.join(pkg_dir, tmpFileName)
@@ -53,16 +72,28 @@ module UploaderHelper
     return {:name => tmpFileName, :path => tmpFilePath}
   end
 
+  def self.read_file(zone, session_id, file_name)
+
+    session_id = session_id.gsub( /[^a-zA-Z0-9_\.]/, '_')
+
+    tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
+    tmpFilePath = File.join(VersaFile::SYSTEM_PATH, tmp_dir, file_name)
+
+    tmpFilePath = Pathname.new(tmpFilePath).cleanpath()
+    return File.open(tmpFilePath)
+
+  end
+
   def self.write_file(zone, session_id, file)
 
     session_id.gsub!( /[^a-zA-Z0-9_\.]/, '_')
 
     tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
-    root_dir = File.join(Rails.root, 'system')
-    FileUtils.mkdir_p File.join(root_dir, tmp_dir)
+    tmp_dir = File.join(VersaFile::SYSTEM_PATH, tmp_dir)
+    FileUtils.mkdir_p tmp_dir
 
     tmpFileName = file.original_filename #UploaderHelper.generate_name(tmp_dir)
-    tmpFilePath = File.join(root_dir, tmp_dir, tmpFileName)
+    tmpFilePath = File.join(tmp_dir, tmpFileName)
 
     tmpFilePath = Pathname.new(tmpFilePath).cleanpath()
     File.open(tmpFilePath, "wb") { |tmpFile| tmpFile.write(file.read) }
@@ -74,30 +105,18 @@ module UploaderHelper
   def self.write_zero_byte_file(zone, session_id, file_name)
 
     tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
-    root_dir = File.join(Rails.root, 'system')
-    FileUtils.mkdir_p File.join(proot_dir, tmp_dir)
+    tmp_dir = File.join(VersaFile::SYSTEM_PATH, tmp_dir)
 
-    tmpFilePath = File.join(root_dir, tmp_dir, file_name)
+    FileUtils.mkdir_p tmp_dir
 
-    tmpFilePath = File.join(Dir::tmpdir, tmp_dir, tmpFileName)
-    FileUtils.mkdir_p File.join(Dir::tmpdir, tmp_dir)
-
+    tmpFileName = file_name
+    tmpFilePath = File.join(tmp_dir, tmpFileName)
     FileUtils.touch tmpFilePath
 
-    return File.join(tmp_dir, tmpFileName)
-  end
-
-  def self.read_file(zone, session_id, file_name)
-
-    session_id = session_id.gsub( /[^a-zA-Z0-9_\.]/, '_')
-
-    tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
-    root_dir = File.join(Rails.root, 'system')
-    tmpFilePath = File.join(root_dir, tmp_dir, file_name)
-
-    tmpFilePath = Pathname.new(tmpFilePath).cleanpath()
-    return File.open(tmpFilePath)
+    return {:name => tmpFileName, :path => tmpFilePath}
 
   end
+
+
 
 end

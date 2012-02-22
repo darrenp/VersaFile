@@ -40,6 +40,14 @@ module Exceptions
 
   end
 
+  class TrialExpired < StandardError;
+
+    def message()
+      return "Your trial period has expired."
+    end
+
+  end
+
   class UserDisabled < StandardError;
     attr :username
 

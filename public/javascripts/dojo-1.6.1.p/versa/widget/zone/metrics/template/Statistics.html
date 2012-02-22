@@ -1,0 +1,55 @@
+<div style="height:100%;width:100%;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        dojoAttachPoint="mainContainer"
+        design="headline"
+        gutters="true"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.BorderContainer"
+            design="sidebar"
+            gutters="false"
+            region="center"
+            class="highlightPane"
+            style="height:100%;width:100%;">
+
+        <div    dojoType="dijit.layout.BorderContainer"
+                design="headline"
+                gutters="false"
+                region="center"
+                style="height:100%;width:100%">
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    splitter="false"
+                    region="top"
+                    style="overflow:hidden;padding:8px 8px 0 8px;position:relative">
+
+                <div class="dijitBoldLabel dijitLargeLabel dijitDarkLabel" style="">Statistics</div>
+
+            </div>
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    splitter="false"
+                    region="center"
+                    style="overflow:hidden;padding:0 8px 0 8px;position:relative">
+
+                <div dojoAttachPoint="tableNode"></div>
+
+            </div>
+
+        </div>
+
+        <div    dojoType="dijit.layout.ContentPane"
+                splitter="false"
+                region="right"
+                style="overflow:hidden;padding:0 8px 8px 8px;position:relative;width:50%">
+
+            <div dojoAttachPoint="docTypesNode"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>

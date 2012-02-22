@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
     <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
 
-<% if ENV['RAILS_ENV'] == 'production' %>
+<% if ENV['RAILS_ENV'] != 'development' %>
 
 <script type="text/javascript">
 

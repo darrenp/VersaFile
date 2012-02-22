@@ -37,7 +37,7 @@ class ZonesController < ApplicationController
 
     begin
 
-      @metrics = @zone.generateMetrics();
+      @metrics = @zone.metrics
 
       respond_to do |format|
         format.html # index.html.erb
@@ -97,10 +97,8 @@ class ZonesController < ApplicationController
 
     users=zone.users.all.count
 
-    size=`du -sb #{"#{Rails.root}/system/#{zone.subdomain}/"}`
+    size=`du -sb #{"#{VersaFile::SYSTEM_PATH}/#{zone.subdomain}/"}`
     size=size.split("\t")[0].to_i
-
-    #Find.find("#{Rails.root}/system/#{zone.subdomain}/content/") do |f| size += File.stat(f).size end
 
     x={:users=>users, :size=>size}
 
@@ -113,6 +111,8 @@ class ZonesController < ApplicationController
   def logon
 
     begin
+
+      raise Exceptions::TrialExpired if @zone.trial_expiry == VersaFile::TrialStates.Expired
 
       raise Exceptions::InvalidCredentials.new(params[:username]) if params[:username].blank?
       @user = @zone.users.find_by_name(params[:username])
@@ -131,13 +131,20 @@ class ZonesController < ApplicationController
         format.json  { render :json => @user.to_json(:except => [:password, :zone_id]) }
       end
 
+    rescue Exceptions::TrialExpired => te
+
+      session.clear
+      respond_to do |format|
+        format.json  { render :json => te.message, :status => :payment_required }
+      end
+
     rescue Exceptions::InvalidSubdomain => e
 
     rescue => e
       logger.debug 'ERROR: ' + e.message
       session.clear
       respond_to do |format|
-        format.json  { render :json => 'Logon failed: ' + e.message, :status => :unprocessable_entity }
+        format.json  { render :json => e.message, :status => :unprocessable_entity }
       end
 
     end
@@ -305,6 +312,8 @@ class ZonesController < ApplicationController
 
       Zone.transaction do
 
+        trial_period = params[:trial_period].nil? ? -1 : params[:trial_period].to_i
+
         @zone = Zone.create(
           :name => params[:name],
           :subdomain => params[:subdomain],
@@ -328,7 +337,7 @@ class ZonesController < ApplicationController
         @zone.configuration.configuration_settings.create([
           { :name => 'user_quota', :value => params[:user_quota].to_s },
           { :name => 'disk_quota', :value => params[:disk_quota].to_s },
-          { :name => 'trial_period', :value => params[:trial_period].to_s }
+          { :name => 'trial_period', :value => trial_period.to_s }
         ])
 
         unless @zone.save
@@ -345,7 +354,7 @@ class ZonesController < ApplicationController
         end
 
         @email = EmailWorker.new(@admin.email, {:zone => @zone, :user => @admin, :password => @temp_password })
-        if(params[:trial_period].to_i < 0)
+        if((trial_period < 0) || (trial_period == VersaFile::TrialStates.Infinite))
           @email.delay.send_zone_creation_active()
         else
           @email.delay.send_zone_creation_trial()

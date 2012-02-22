@@ -5,4 +5,4 @@
 */
 
 
-if(!dojo._hasResource["bfree.api.Error"]){dojo._hasResource["bfree.api.Error"]=true;dojo.provide("bfree.api.Error");dojo.declare("bfree.api.Error",null,{message:"",err:null,name:null,lineNumber:-1,fileName:null,stack:null,constructor:function(_1,_2){this.message=_1;this.err=_2;},getContent:function(_3){var _4=this.message;if(_3){_4+=":<br>"+this.err.message;}return _4;},getMessage:function(_5){var _6=this.message;if(_5){_6+=":\n"+this.err.message;}return _6;}});}
+if(!dojo._hasResource["bfree.api.Error"]){dojo._hasResource["bfree.api.Error"]=true;dojo.provide("bfree.api.Error");dojo.declare("bfree.api.Error",null,{status:400,message:"",err:null,name:null,lineNumber:-1,fileName:null,stack:null,constructor:function(_1,_2){this.message=_1;this.err=_2;},getContent:function(_3){var _4=this.message;if(_3){_4+=":<br>"+this.err.message;}return _4;},getMessage:function(_5){var _6=this.message;if(_5){_6+=":\n"+this.err.message;}return _6;}});}

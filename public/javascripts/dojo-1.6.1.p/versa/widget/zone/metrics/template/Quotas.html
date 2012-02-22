@@ -1,0 +1,56 @@
+<div style="height:100%;width:100%;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        dojoAttachPoint="mainContainer"
+        design="headline"
+        gutters="true"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.BorderContainer"
+            design="headline"
+            gutters="false"
+            region="center"
+            class="highlightPane"
+            style="height:100%;width:100%;">
+
+        <div    dojoType="dijit.layout.ContentPane"
+                splitter="false"
+                region="top"
+                style="overflow:hidden;padding:8px 8px 0 8px;position:relative">
+
+            <div class="dijitBoldLabel dijitLargeLabel dijitDarkLabel" style="">Quotas</div>
+
+        </div>
+
+        <div    dojoType="dijit.layout.BorderContainer"
+                design="sidebar"
+                gutters="false"
+                splitter="false"
+                region="center"
+                style="width:100%;height:100%">
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    splitter="false"
+                    region="center"
+                    style="overflow:hidden;padding:0;position:relative">
+
+                <div dojoAttachPoint="userQuotaNode"></div>
+
+            </div>
+
+            <div    dojoType="dijit.layout.ContentPane"
+                    splitter="false"
+                    region="right"
+                    style="overflow:hidden;padding:0;position:relative;width:272px">
+
+                <div dojoAttachPoint="diskQuotaNode"></div>
+
+            </div>
+
+         </div>
+
+    </div>
+
+</div>
+
+</div>

@@ -15,6 +15,7 @@ class EmailWorker < Struct.new(:to, :params)
     email_body.gsub!('{account_fullname}', account.full_name)
     email_body.gsub!('{account_email}', account.email)
     email_body.gsub!('{account_password}', self.params[:password])
+    email_body.gsub!('{domain}', ENV['location'])
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.account_reset.subject
@@ -39,6 +40,7 @@ class EmailWorker < Struct.new(:to, :params)
     email_body.gsub!('{user_fullname}', user.full_name)
     email_body.gsub!('{user_name}', user.name)
     email_body.gsub!('{user_password}', password)
+    email_body.gsub!('{domain}', ENV['location'])
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.user_created.subject
@@ -65,6 +67,7 @@ class EmailWorker < Struct.new(:to, :params)
     email_body.gsub!('{user_name}', user.name)
     email_body.gsub!('{user_password}', password)
     email_body.gsub!('{fingerprint}', fingerprint)
+    email_body.gsub!('{domain}', ENV['location'])
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.user_reset.subject
@@ -89,6 +92,7 @@ class EmailWorker < Struct.new(:to, :params)
     email_body.gsub!('{zone_subdomain}', zone.subdomain)
     email_body.gsub!('{user_name}', user.name)
     email_body.gsub!('{user_password}', password)
+    email_body.gsub!('{domain}', ENV['location'])
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.zone_create_active.subject
@@ -115,6 +119,7 @@ class EmailWorker < Struct.new(:to, :params)
     email_body.gsub!('{user_name}', user.name)
     email_body.gsub!('{user_password}',password)
     email_body.gsub!('{trial_period}', trial_period)
+    email_body.gsub!('{domain}', ENV['location'])
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.zone_create_trial.subject.gsub('{trial_period}', trial_period)
@@ -135,6 +140,7 @@ class EmailWorker < Struct.new(:to, :params)
     email_body = IO.read(File.join(Rails.root, ZONE_UPGRADE_ACTIVE))
     email_body.gsub!('{zone_name}', zone.name)
     email_body.gsub!('{zone_subdomain}', zone.subdomain)
+    email_body.gsub!('{domain}', ENV['location'])
 
     email_from = configatron.versafile.mail.from
     email_subject = configatron.versafile.mail.zone_upgrade_active.subject

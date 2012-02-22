@@ -31,16 +31,35 @@ class Zone < ActiveRecord::Base
     return "/zones/#{self.subdomain}"
   end
 
-  def generateMetrics()
+  def metrics()
 
+    group_count = self.groups.count
     user_count = self.users.count
-    folder_count = self.folders.count
-    doc_count = self.documents.count
-    ver_count = self.versions.count
-    total_size = self.versions.sum(:binary_file_size)
     trial_expiry = self.trial_expiry
+    libraries = []
 
-    return {trial_expiry: trial_expiry, :user_count => user_count, :folder_count => folder_count, :document_count => doc_count, :version_count => ver_count, :content_size => total_size, }
+    self.libraries.each do |library|
+      metrics = library.metrics
+      libraries.push({
+        name: library.name,
+        choicelist_count: metrics[:choicelist_count],
+        propertydefinition_count: metrics[:propertydefinition_count],
+        documenttype_count: metrics[:documenttype_count],
+        viewdefinition_count: metrics[:viewdefinition_count],
+        folder_count: metrics[:folder_count],
+        document_count: metrics[:document_count],
+        version_count: metrics[:version_count],
+        content_size: metrics[:content_size],
+        document_types: metrics[:document_types]
+      })
+    end
+
+    return {
+        :group_count => group_count,
+        :user_count => user_count,
+        :trial_expiry => trial_expiry,
+        :libraries => libraries
+    }
   end
 
   def package(root_folder)

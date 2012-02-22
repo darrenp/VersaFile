@@ -1,1 +1,825 @@
 New Relic Agent not running.
+Migrating to CreateCellDefinitions (20100223221132)
+Migrating to CreateViewDefinitions (20100223225009)
+Migrating to CreateChoiceLists (20100419210504)
+Migrating to CreateChoiceValues (20100419211116)
+Migrating to CreateAccounts (20111027162634)
+Migrating to CreateServers (20111027162958)
+Migrating to CreateZoneNodes (20111027173150)
+Migrating to CreateZones (20111027213220)
+Migrating to CreateAvatars (20111027220502)
+Migrating to CreateUsers (20111027232324)
+Migrating to CreateGroupsUsers (20111027232610)
+Migrating to CreateGroups (20111027232731)
+Migrating to CreateRoles (20111027232749)
+Migrating to CreateConfigurations (20111027233142)
+Migrating to CreateConfigurationSettings (20111027233225)
+Migrating to CreateAcls (20111028161034)
+Migrating to CreateAclEntries (20111028161117)
+Migrating to CreateLibraries (20111028161545)
+Migrating to CreateFolders (20111028181755)
+Migrating to CreateDocuments (20111028181907)
+Migrating to CreateVersions (20111028182016)
+Migrating to CreateIcons (20111028182344)
+Migrating to CreateDataTypes (20111103232654)
+Migrating to CreatePropertyColumns (20111103233123)
+Migrating to CreatePropertyDefinitions (20111104173417)
+Migrating to CreateDocumentTypes (20111109000825)
+Migrating to CreatePropertyMappings (20111109001347)
+Migrating to CreateDelayedJobs (20111118173915)
+Migrating to CreateOperators (20111122043137)
+Migrating to CreateRkoUsers (20111206212331)
+Migrating to CreatePreviewElements (20120113014214)
+Migrating to CreateContentTypes (20120125175056)
+Migrating to CreateZoneTemplates (20120209044243)
+Migrating to UpdateVersions (20120221232820)
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 09:59:15 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered admin/show.html.erb (50.2ms)
+Completed 200 OK in 510ms (Views: 211.1ms | ActiveRecord: 36.4ms)
+
+
+Started GET "/rko_users/1" for 5.211.232.94 at 2012-02-22 09:59:19 -0800
+  Processing by RkoUsersController#show as JSON
+  Parameters: {"id"=>"1", "rko_user"=>{"id"=>"1"}}
+Completed 200 OK in 11ms (Views: 1.5ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/servers/" for 5.211.232.94 at 2012-02-22 09:59:20 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"server"=>{}}
+Completed 200 OK in 2ms (Views: 0.7ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 09:59:20 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 16ms (Views: 0.2ms | ActiveRecord: 14.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 09:59:22 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 09:59:22 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 2ms (Views: 0.6ms | ActiveRecord: 0.5ms)
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 10:02:40 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered admin/show.html.erb (0.5ms)
+Completed 200 OK in 4ms (Views: 1.0ms | ActiveRecord: 0.8ms)
+
+
+Started GET "/rko_users/1" for 5.211.232.94 at 2012-02-22 10:02:42 -0800
+  Processing by RkoUsersController#show as JSON
+  Parameters: {"id"=>"1", "rko_user"=>{"id"=>"1"}}
+Completed 200 OK in 3ms (Views: 0.3ms | ActiveRecord: 1.1ms)
+
+
+Started GET "/servers/" for 5.211.232.94 at 2012-02-22 10:02:42 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"server"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:02:42 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:03:15 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:03:16 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+New Relic Agent not running.
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 10:05:31 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered admin/show.html.erb (0.4ms)
+Completed 200 OK in 4ms (Views: 0.9ms | ActiveRecord: 0.7ms)
+
+
+Started GET "/rko_users/1" for 5.211.232.94 at 2012-02-22 10:05:33 -0800
+  Processing by RkoUsersController#show as JSON
+  Parameters: {"id"=>"1", "rko_user"=>{"id"=>"1"}}
+Completed 200 OK in 3ms (Views: 0.2ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/servers/" for 5.211.232.94 at 2012-02-22 10:05:34 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"server"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:05:34 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 3ms (Views: 0.6ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:06:10 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:06:10 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:06:11 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:06:12 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:06:13 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 2ms (Views: 0.6ms | ActiveRecord: 0.5ms)
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 10:08:29 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered admin/show.html.erb (0.4ms)
+Completed 200 OK in 4ms (Views: 0.9ms | ActiveRecord: 0.8ms)
+
+
+Started GET "/rko_users/1" for 5.211.232.94 at 2012-02-22 10:08:32 -0800
+  Processing by RkoUsersController#show as JSON
+  Parameters: {"id"=>"1", "rko_user"=>{"id"=>"1"}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/" for 5.211.232.94 at 2012-02-22 10:08:32 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"server"=>{}}
+Completed 200 OK in 35ms (Views: 29.9ms | ActiveRecord: 3.8ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:08:32 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:08:35 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 4ms (Views: 1.7ms | ActiveRecord: 0.7ms)
+
+
+Started GET "/servers/?sort(+name)" for 5.211.232.94 at 2012-02-22 10:08:35 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "server"=>{}}
+Completed 200 OK in 4ms (Views: 1.8ms | ActiveRecord: 0.6ms)
+
+
+Started POST "/rko_users/logon" for 5.6.79.23 at 2012-02-22 10:14:13 -0800
+  Processing by RkoUsersController#logon as JSON
+  Parameters: {"username"=>"admin", "password"=>"[FILTERED]", "rko_user"=>{"password"=>"[FILTERED]"}}
+Completed 200 OK in 4ms (Views: 1.5ms | ActiveRecord: 0.5ms)
+
+
+Started GET "/accounts/get_token" for 5.6.79.23 at 2012-02-22 10:14:13 -0800
+  Processing by AccountsController#get_token as JSON
+  Parameters: {"account"=>{}}
+Rendered text template (0.0ms)
+Completed 200 OK in 50ms (Views: 33.0ms | ActiveRecord: 13.5ms)
+
+
+Started POST "/accounts" for 5.6.79.23 at 2012-02-22 10:14:13 -0800
+  Processing by AccountsController#create as JSON
+  Parameters: {"authenticity_token"=>"W0D5kUpSbqH08YEkS0tud/ePEgsNAgHZzMJXng2t7CI=", "email"=>"scotth@rkosolutions.com", "password"=>"[FILTERED]", "name"=>"RKO Business Solutions", "first_name"=>"John", "last_name"=>"Smith", "address"=>"55 Water Street, Suite 503", "city"=>"Vancouver", "province"=>"BC", "country"=>"CA", "postal_code"=>"V6B 1A1", "account_type"=>0, "billing_type"=>0, "trial_period"=>60, "template"=>0, "subdomains"=>[{"name"=>"rko", "user_quota"=>10, "disk_quota"=>50}], "account"=>{"email"=>"scotth@rkosolutions.com", "name"=>"RKO Business Solutions", "first_name"=>"John", "last_name"=>"Smith", "address"=>"55 Water Street, Suite 503", "city"=>"Vancouver", "postal_code"=>"V6B 1A1", "province"=>"BC", "country"=>"CA", "billing_type"=>0, "account_type"=>0, "trial_period"=>60, "password"=>"[FILTERED]"}}
+Completed 201 Created in 596ms (Views: 1.8ms | ActiveRecord: 113.3ms)
+
+
+Started POST "/rko_users/logoff" for 5.6.79.23 at 2012-02-22 10:14:14 -0800
+  Processing by RkoUsersController#logoff as JSON
+  Parameters: {"authenticity_token"=>"W0D5kUpSbqH08YEkS0tud/ePEgsNAgHZzMJXng2t7CI=", "rko_user"=>{}}
+Completed 200 OK in 4ms (Views: 0.3ms | ActiveRecord: 1.0ms)
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+Migrating to CreateCellDefinitions (20100223221132)
+Migrating to CreateViewDefinitions (20100223225009)
+Migrating to CreateChoiceLists (20100419210504)
+Migrating to CreateChoiceValues (20100419211116)
+Migrating to CreateAccounts (20111027162634)
+Migrating to CreateServers (20111027162958)
+Migrating to CreateZoneNodes (20111027173150)
+Migrating to CreateZones (20111027213220)
+Migrating to CreateAvatars (20111027220502)
+Migrating to CreateUsers (20111027232324)
+Migrating to CreateGroupsUsers (20111027232610)
+Migrating to CreateGroups (20111027232731)
+Migrating to CreateRoles (20111027232749)
+Migrating to CreateConfigurations (20111027233142)
+Migrating to CreateConfigurationSettings (20111027233225)
+Migrating to CreateAcls (20111028161034)
+Migrating to CreateAclEntries (20111028161117)
+Migrating to CreateLibraries (20111028161545)
+Migrating to CreateFolders (20111028181755)
+Migrating to CreateDocuments (20111028181907)
+Migrating to CreateVersions (20111028182016)
+Migrating to CreateIcons (20111028182344)
+Migrating to CreateDataTypes (20111103232654)
+Migrating to CreatePropertyColumns (20111103233123)
+Migrating to CreatePropertyDefinitions (20111104173417)
+Migrating to CreateDocumentTypes (20111109000825)
+Migrating to CreatePropertyMappings (20111109001347)
+Migrating to CreateDelayedJobs (20111118173915)
+Migrating to CreateOperators (20111122043137)
+Migrating to CreateRkoUsers (20111206212331)
+Migrating to CreatePreviewElements (20120113014214)
+Migrating to CreateContentTypes (20120125175056)
+Migrating to CreateZoneTemplates (20120209044243)
+Migrating to UpdateVersions (20120221232820)
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+
+
+Started POST "/rko_users/logon" for 5.6.79.23 at 2012-02-22 10:32:20 -0800
+  Processing by RkoUsersController#logon as JSON
+  Parameters: {"username"=>"admin", "password"=>"[FILTERED]", "rko_user"=>{"password"=>"[FILTERED]"}}
+Completed 200 OK in 2ms (Views: 0.8ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/accounts/get_token" for 5.6.79.23 at 2012-02-22 10:32:20 -0800
+  Processing by AccountsController#get_token as JSON
+  Parameters: {"account"=>{}}
+Rendered text template (0.0ms)
+Completed 200 OK in 15ms (Views: 0.6ms | ActiveRecord: 3.1ms)
+
+
+Started POST "/accounts" for 5.6.79.23 at 2012-02-22 10:32:20 -0800
+  Processing by AccountsController#create as JSON
+  Parameters: {"authenticity_token"=>"IwwltQVrytmsRyM7Cc8/pjzVmy4jwgkmZWdsuq6kDw0=", "email"=>"scotth@rkosolutions.com", "password"=>"[FILTERED]", "name"=>"RKO Business Solutions", "first_name"=>"John", "last_name"=>"Smith", "address"=>"55 Water Street, Suite 503", "city"=>"Vancouver", "province"=>"BC", "country"=>"CA", "postal_code"=>"V6B 1A1", "account_type"=>0, "billing_type"=>0, "trial_period"=>60, "template"=>0, "subdomains"=>[{"name"=>"rko", "user_quota"=>10, "disk_quota"=>50}], "account"=>{"email"=>"scotth@rkosolutions.com", "name"=>"RKO Business Solutions", "first_name"=>"John", "last_name"=>"Smith", "address"=>"55 Water Street, Suite 503", "city"=>"Vancouver", "postal_code"=>"V6B 1A1", "province"=>"BC", "country"=>"CA", "billing_type"=>0, "account_type"=>0, "trial_period"=>60, "password"=>"[FILTERED]"}}
+Completed 201 Created in 130ms (Views: 1.1ms | ActiveRecord: 93.2ms)
+
+
+Started POST "/rko_users/logoff" for 5.6.79.23 at 2012-02-22 10:32:20 -0800
+  Processing by RkoUsersController#logoff as JSON
+  Parameters: {"authenticity_token"=>"IwwltQVrytmsRyM7Cc8/pjzVmy4jwgkmZWdsuq6kDw0=", "rko_user"=>{}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.5ms)
+
+
+Started POST "/zones.json" for 5.6.79.23 at 2012-02-22 10:32:26 -0800
+  Processing by ZonesController#create as JSON
+  Parameters: {"name"=>"RKO Business Solutions", "subdomain"=>"rko", "fingerprint"=>"05f5eb1aa08f76876935bc4ea3a5ba0feecb9075", "email"=>"scotth@rkosolutions.com", "first_name"=>"John", "last_name"=>"Smith", "created_by"=>"admin", "user_quota"=>"10", "disk_quota"=>"53687091200", "trial_period"=>"60", "template_id"=>"0"}
+Completed 201 Created in 1507ms (Views: 2.2ms | ActiveRecord: 141.3ms)
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 10:33:35 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered zone_nodes/bfree.html.erb (2.1ms)
+Completed 200 OK in 18ms (Views: 16.2ms | ActiveRecord: 0.9ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 10:33:39 -0800
+  Processing by ZonesController#show as HTML
+  Parameters: {"id"=>"rko"}
+Redirected to https://www.bfreetest.com:4001/zones/rko/expired
+Completed 302 Found in 9ms
+
+
+Started GET "/zones/rko/expired" for 5.211.232.94 at 2012-02-22 10:33:39 -0800
+  Processing by ZonesController#expired as HTML
+  Parameters: {"id"=>"rko"}
+Rendered zones/expired.html.erb within layouts/application (43.1ms)
+Completed 200 OK in 249ms (Views: 242.4ms | ActiveRecord: 1.2ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 10:33:42 -0800
+  Processing by ZonesController#show as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 7ms (Views: 0.3ms | ActiveRecord: 1.3ms)
+
+
+Started GET "/zones/rko/users/1" for 5.211.232.94 at 2012-02-22 10:33:42 -0800
+  Processing by UsersController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "user"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 8ms (Views: 0.7ms | ActiveRecord: 1.4ms)
+
+
+Started PUT "/zones/rko/users/1" for 5.211.232.94 at 2012-02-22 10:33:49 -0800
+  Processing by UsersController#update as JSON
+  Parameters: {"created_at"=>"2012-02-22T18:32:27Z", "created_by"=>"admin", "email"=>"scotth@rkosolutions.com", "first_name"=>"John", "id"=>"1", "is_admin"=>true, "last_name"=>"Smith", "name"=>"admin", "password_expires"=>"[FILTERED]", "reset_fingerprint"=>nil, "reset_password"=>"[FILTERED]", "state"=>nil, "updated_at"=>"2012-02-22T18:32:27Z", "updated_by"=>"admin", "disabled"=>false, "active_group"=>1, "old_password"=>"[FILTERED]", "new_password"=>"[FILTERED]", "authenticity_token"=>"4z1WU0LOOZcPPkhznyIEypCEOBesn+EvpxqB+SVep5A=", "zone_id"=>"rko", "user"=>{"id"=>"1", "zone_id"=>"rko", "name"=>"admin", "is_admin"=>true, "email"=>"scotth@rkosolutions.com", "first_name"=>"John", "last_name"=>"Smith", "state"=>nil, "created_by"=>"admin", "updated_by"=>"admin", "password_expires"=>"[FILTERED]", "reset_fingerprint"=>nil, "reset_password"=>"[FILTERED]", "created_at"=>"2012-02-22T18:32:27Z", "updated_at"=>"2012-02-22T18:32:27Z"}}
+Completed 200 OK in 153ms (Views: 0.3ms | ActiveRecord: 103.2ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 10:33:51 -0800
+  Processing by ZonesController#show as HTML
+  Parameters: {"id"=>"rko"}
+Rendered zones/show.html.erb (2.3ms)
+Completed 200 OK in 12ms (Views: 3.6ms | ActiveRecord: 1.6ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 10:33:53 -0800
+  Processing by ZonesController#show as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 9ms (Views: 0.3ms | ActiveRecord: 1.7ms)
+
+
+Started GET "/zones/rko/users/1" for 5.211.232.94 at 2012-02-22 10:33:54 -0800
+  Processing by UsersController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "user"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 7ms (Views: 0.2ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/zones/rko/groups/1" for 5.211.232.94 at 2012-02-22 10:33:54 -0800
+  Processing by GroupsController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "group"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 7ms (Views: 0.7ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/zones/rko/libraries/1" for 5.211.232.94 at 2012-02-22 10:33:54 -0800
+  Processing by LibrariesController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "library"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 14ms (Views: 0.8ms | ActiveRecord: 3.1ms)
+
+
+Started GET "/data_types/" for 5.211.232.94 at 2012-02-22 10:33:54 -0800
+  Processing by DataTypesController#index as JSON
+  Parameters: {"data_type"=>{}}
+Completed 200 OK in 3ms (Views: 1.8ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/operators/" for 5.211.232.94 at 2012-02-22 10:33:55 -0800
+  Processing by OperatorsController#index as JSON
+  Parameters: {"operator"=>{}}
+Completed 200 OK in 17ms (Views: 13.5ms | ActiveRecord: 1.6ms)
+
+
+Started GET "/zones/rko/libraries/1/property_definitions/" for 5.211.232.94 at 2012-02-22 10:33:55 -0800
+  Processing by PropertyDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "property_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 24ms (Views: 0.8ms | ActiveRecord: 3.7ms)
+
+
+Started GET "/zones/rko/libraries/1/document_types/" for 5.211.232.94 at 2012-02-22 10:33:55 -0800
+  Processing by DocumentTypesController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "document_type"=>{"library_id"=>"1"}}
+Completed 200 OK in 10ms (Views: 0.8ms | ActiveRecord: 1.9ms)
+
+
+Started GET "/zones/rko/libraries/1/view_definitions/" for 5.211.232.94 at 2012-02-22 10:33:55 -0800
+  Processing by ViewDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "view_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 10ms (Views: 0.8ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/zones/rko/libraries/1/folders/?parent_id=0" for 5.211.232.94 at 2012-02-22 10:33:55 -0800
+  Processing by FoldersController#index as JSON
+  Parameters: {"parent_id"=>"0", "zone_id"=>"rko", "library_id"=>"1", "folder"=>{"zone_id"=>"rko", "library_id"=>"1", "parent_id"=>"0"}}
+Completed 200 OK in 149ms (Views: 0.8ms | ActiveRecord: 50.5ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=0&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:33:56 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"0", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 33ms (Views: 0.8ms | ActiveRecord: 19.8ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:33:56 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 22ms (Views: 0.2ms | ActiveRecord: 5.6ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=0&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:33:56 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"0", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 13ms (Views: 0.2ms | ActiveRecord: 3.5ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:33:56 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 19ms (Views: 0.2ms | ActiveRecord: 5.1ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 10:36:53 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 20ms (Views: 0.9ms | ActiveRecord: 3.3ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:39:09 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 20ms (Views: 0.2ms | ActiveRecord: 5.1ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=1&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:39:09 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"1", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 17ms (Views: 0.2ms | ActiveRecord: 4.5ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:39:10 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 57ms (Views: 0.6ms | ActiveRecord: 14.1ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=1&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:39:11 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"1", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 16ms (Views: 0.2ms | ActiveRecord: 4.3ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 10:39:12 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 19ms (Views: 0.2ms | ActiveRecord: 5.1ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 10:39:16 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 14ms (Views: 0.8ms | ActiveRecord: 3.1ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 10:40:27 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 13ms (Views: 0.8ms | ActiveRecord: 2.9ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 10:48:28 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 13ms (Views: 0.9ms | ActiveRecord: 2.9ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 10:49:08 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 21ms (Views: 1.3ms | ActiveRecord: 4.5ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 10:49:28 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 13ms (Views: 0.8ms | ActiveRecord: 3.0ms)
+
+
+Started GET "/zones/rko/metrics.json" for 5.211.232.94 at 2012-02-22 11:04:12 -0800
+  Processing by ZonesController#metrics as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 15ms (Views: 1.1ms | ActiveRecord: 3.2ms)
+
+
+Started GET "/zones/rko/libraries/1/property_definitions/" for 5.211.232.94 at 2012-02-22 11:04:18 -0800
+  Processing by PropertyDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "property_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 19ms (Views: 0.3ms | ActiveRecord: 3.6ms)
+
+
+Started GET "/zones/rko/libraries/1/view_definitions/" for 5.211.232.94 at 2012-02-22 11:04:19 -0800
+  Processing by ViewDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "view_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 9ms (Views: 0.2ms | ActiveRecord: 1.7ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:04:40 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 21ms (Views: 0.2ms | ActiveRecord: 5.2ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:04:40 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 19ms (Views: 0.2ms | ActiveRecord: 5.2ms)
+
+
+Started GET "/zones/rko/libraries/1/property_definitions/" for 5.211.232.94 at 2012-02-22 11:05:58 -0800
+  Processing by PropertyDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "property_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 19ms (Views: 0.3ms | ActiveRecord: 3.6ms)
+
+
+Started GET "/zones/rko/libraries/1/view_definitions/" for 5.211.232.94 at 2012-02-22 11:05:58 -0800
+  Processing by ViewDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "view_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 8ms (Views: 0.2ms | ActiveRecord: 1.3ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:06:01 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 61ms (Views: 0.2ms | ActiveRecord: 22.3ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:06:02 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 46ms (Views: 0.7ms | ActiveRecord: 16.5ms)
+New Relic Agent not running.
+New Relic Agent not running.
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 11:20:46 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered admin/show.html.erb (74.4ms)
+Completed 200 OK in 685ms (Views: 292.2ms | ActiveRecord: 34.5ms)
+
+
+Started GET "/rko_users/1" for 5.211.232.94 at 2012-02-22 11:20:50 -0800
+  Processing by RkoUsersController#show as JSON
+  Parameters: {"id"=>"1", "rko_user"=>{"id"=>"1"}}
+Completed 200 OK in 33ms (Views: 1.7ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/servers/" for 5.211.232.94 at 2012-02-22 11:20:51 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"server"=>{}}
+Completed 200 OK in 40ms (Views: 12.8ms | ActiveRecord: 25.1ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 11:20:51 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 11:20:56 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered admin/show.html.erb (0.4ms)
+Completed 200 OK in 26ms (Views: 1.1ms | ActiveRecord: 18.6ms)
+
+
+Started GET "/rko_users/1" for 5.211.232.94 at 2012-02-22 11:21:00 -0800
+  Processing by RkoUsersController#show as JSON
+  Parameters: {"id"=>"1", "rko_user"=>{"id"=>"1"}}
+Completed 200 OK in 2ms (Views: 0.2ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/servers/" for 5.211.232.94 at 2012-02-22 11:21:00 -0800
+  Processing by ServersController#index as JSON
+  Parameters: {"server"=>{}}
+Completed 200 OK in 2ms (Views: 0.6ms | ActiveRecord: 0.3ms)
+
+
+Started GET "/rko_users/?sort(+name)" for 5.211.232.94 at 2012-02-22 11:21:01 -0800
+  Processing by RkoUsersController#index as JSON
+  Parameters: {"sort( name)"=>nil, "rko_user"=>{}}
+Completed 200 OK in 6ms (Views: 0.7ms | ActiveRecord: 0.8ms)
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+New Relic Agent not running.
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 11:35:00 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Completed 500 Internal Server Error in 145ms
+
+Exceptions::InvalidSubdomain (Invalid subdomain: 'nuke'):
+  app/controllers/application_controller.rb:121:in `get_zone_node'
+  app/controllers/application_controller.rb:131:in `zone_node_required'
+
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 11:35:05 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Completed 500 Internal Server Error in 1ms
+
+Exceptions::InvalidSubdomain (Invalid subdomain: 'nuke'):
+  app/controllers/application_controller.rb:121:in `get_zone_node'
+  app/controllers/application_controller.rb:131:in `zone_node_required'
+
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 11:35:09 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered zone_nodes/bfree.html.erb (338.5ms)
+Completed 200 OK in 592ms (Views: 562.6ms | ActiveRecord: 3.6ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 11:35:10 -0800
+  Processing by ZonesController#show as HTML
+  Parameters: {"id"=>"rko"}
+Rendered zones/show.html.erb (112.0ms)
+Completed 200 OK in 986ms (Views: 320.7ms | ActiveRecord: 20.1ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 11:35:15 -0800
+  Processing by ZonesController#show as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 94ms (Views: 1.7ms | ActiveRecord: 5.6ms)
+
+
+Started GET "/zones/rko/users/1" for 5.211.232.94 at 2012-02-22 11:35:15 -0800
+  Processing by UsersController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "user"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 8ms (Views: 0.7ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/zones/rko/groups/1" for 5.211.232.94 at 2012-02-22 11:35:16 -0800
+  Processing by GroupsController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "group"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 8ms (Views: 0.7ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/zones/rko/libraries/1" for 5.211.232.94 at 2012-02-22 11:35:16 -0800
+  Processing by LibrariesController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "library"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 120ms (Views: 0.7ms | ActiveRecord: 6.6ms)
+
+
+Started GET "/data_types/" for 5.211.232.94 at 2012-02-22 11:35:16 -0800
+  Processing by DataTypesController#index as JSON
+  Parameters: {"data_type"=>{}}
+Completed 200 OK in 10ms (Views: 6.4ms | ActiveRecord: 2.4ms)
+
+
+Started GET "/operators/" for 5.211.232.94 at 2012-02-22 11:35:17 -0800
+  Processing by OperatorsController#index as JSON
+  Parameters: {"operator"=>{}}
+Completed 200 OK in 20ms (Views: 16.4ms | ActiveRecord: 1.5ms)
+
+
+Started GET "/zones/rko/libraries/1/property_definitions/" for 5.211.232.94 at 2012-02-22 11:35:17 -0800
+  Processing by PropertyDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "property_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 128ms (Views: 0.8ms | ActiveRecord: 7.3ms)
+
+
+Started GET "/zones/rko/libraries/1/document_types/" for 5.211.232.94 at 2012-02-22 11:35:17 -0800
+  Processing by DocumentTypesController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "document_type"=>{"library_id"=>"1"}}
+Completed 200 OK in 32ms (Views: 0.8ms | ActiveRecord: 3.0ms)
+
+
+Started GET "/zones/rko/libraries/1/view_definitions/" for 5.211.232.94 at 2012-02-22 11:35:17 -0800
+  Processing by ViewDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "view_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 41ms (Views: 0.8ms | ActiveRecord: 3.7ms)
+
+
+Started GET "/zones/rko/libraries/1/folders/?parent_id=0" for 5.211.232.94 at 2012-02-22 11:35:17 -0800
+  Processing by FoldersController#index as JSON
+  Parameters: {"parent_id"=>"0", "zone_id"=>"rko", "library_id"=>"1", "folder"=>{"zone_id"=>"rko", "library_id"=>"1", "parent_id"=>"0"}}
+Completed 200 OK in 70ms (Views: 0.8ms | ActiveRecord: 24.2ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=0&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:35:18 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"0", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 20ms (Views: 0.7ms | ActiveRecord: 8.3ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:35:18 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 21ms (Views: 0.2ms | ActiveRecord: 5.2ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=0&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:35:18 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"0", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 17ms (Views: 0.2ms | ActiveRecord: 4.9ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:35:18 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 55ms (Views: 0.6ms | ActiveRecord: 13.4ms)
+New Relic Agent not running.
+New Relic Agent not running.
+
+
+Started GET "/" for 5.211.232.94 at 2012-02-22 11:42:07 -0800
+  Processing by ZoneNodesController#bfree as HTML
+Rendered zone_nodes/bfree.html.erb (271.0ms)
+Completed 200 OK in 552ms (Views: 432.2ms | ActiveRecord: 2.9ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 11:42:08 -0800
+  Processing by ZonesController#show as HTML
+  Parameters: {"id"=>"rko"}
+Rendered zones/show.html.erb (110.9ms)
+Completed 200 OK in 828ms (Views: 278.2ms | ActiveRecord: 7.3ms)
+
+
+Started GET "/zones/rko" for 5.211.232.94 at 2012-02-22 11:42:12 -0800
+  Processing by ZonesController#show as JSON
+  Parameters: {"id"=>"rko", "zone"=>{"id"=>"rko"}}
+Completed 200 OK in 74ms (Views: 1.6ms | ActiveRecord: 5.0ms)
+
+
+Started GET "/zones/rko/users/1" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by UsersController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "user"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 9ms (Views: 0.7ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/zones/rko/groups/1" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by GroupsController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "group"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 10ms (Views: 0.7ms | ActiveRecord: 1.6ms)
+
+
+Started GET "/zones/rko/libraries/1" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by LibrariesController#show as JSON
+  Parameters: {"zone_id"=>"rko", "id"=>"1", "library"=>{"id"=>"1", "zone_id"=>"rko"}}
+Completed 200 OK in 130ms (Views: 1.0ms | ActiveRecord: 6.8ms)
+
+
+Started GET "/data_types/" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by DataTypesController#index as JSON
+  Parameters: {"data_type"=>{}}
+Completed 200 OK in 8ms (Views: 6.3ms | ActiveRecord: 0.4ms)
+
+
+Started GET "/operators/" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by OperatorsController#index as JSON
+  Parameters: {"operator"=>{}}
+Completed 200 OK in 22ms (Views: 16.8ms | ActiveRecord: 1.7ms)
+
+
+Started GET "/zones/rko/libraries/1/property_definitions/" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by PropertyDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "property_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 88ms (Views: 0.9ms | ActiveRecord: 6.6ms)
+
+
+Started GET "/zones/rko/libraries/1/document_types/" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by DocumentTypesController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "document_type"=>{"library_id"=>"1"}}
+Completed 200 OK in 102ms (Views: 0.8ms | ActiveRecord: 11.0ms)
+
+
+Started GET "/zones/rko/libraries/1/view_definitions/" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by ViewDefinitionsController#index as JSON
+  Parameters: {"zone_id"=>"rko", "library_id"=>"1", "view_definition"=>{"library_id"=>"1"}}
+Completed 200 OK in 44ms (Views: 0.8ms | ActiveRecord: 3.7ms)
+
+
+Started GET "/zones/rko/libraries/1/folders/?parent_id=0" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by FoldersController#index as JSON
+  Parameters: {"parent_id"=>"0", "zone_id"=>"rko", "library_id"=>"1", "folder"=>{"zone_id"=>"rko", "library_id"=>"1", "parent_id"=>"0"}}
+Completed 200 OK in 81ms (Views: 0.8ms | ActiveRecord: 17.0ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=0&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:42:13 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"0", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 19ms (Views: 0.7ms | ActiveRecord: 6.4ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:42:14 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 25ms (Views: 0.3ms | ActiveRecord: 6.4ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=0&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:42:14 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"0", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 15ms (Views: 0.2ms | ActiveRecord: 4.3ms)
+
+
+Started GET "/zones/rko/libraries/1/documents/?type=1&query=0&view=1&sort(+documents.name)" for 5.211.232.94 at 2012-02-22 11:42:14 -0800
+  Processing by DocumentsController#index as JSON
+  Parameters: {"type"=>"1", "query"=>"0", "view"=>"1", "sort( documents.name)"=>nil, "zone_id"=>"rko", "library_id"=>"1", "document"=>{"zone_id"=>"rko", "library_id"=>"1"}}
+Completed 200 OK in 28ms (Views: 0.2ms | ActiveRecord: 7.1ms)

@@ -1,6 +1,9 @@
 module Paperclip
 
   module Interpolations
+    def system_path attachemnt, style_name
+      VersaFile::SYSTEM_PATH
+    end
     def subdomain attachment, style_name
       attachment.instance.zone.subdomain
     end

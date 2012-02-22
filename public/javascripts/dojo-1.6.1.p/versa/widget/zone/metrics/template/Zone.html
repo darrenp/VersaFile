@@ -1,7 +1,31 @@
-<div style="height:256px;width:100%;">
+<div style="height:100%;width:100%;">
 
-    <div dojoAttachPoint="userQuotaNode"></div>
-    <div dojoAttachPoint="diskQuotaNode"></div>
-    <div dojoAttachPoint="docTypesNode"></div>
+<div    dojoType="dijit.layout.BorderContainer"
+        dojoAttachPoint="mainContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            splitter="false"
+            region="top"
+            style="overflow:hidden;padding:8px 8px 0 8px;position:relative;height:172px">
+
+         <div dojoAttachPoint="quotasNode"></div>
+
+    </div>
+
+
+    <div    dojoType="dijit.layout.ContentPane"
+            splitter="false"
+            region="center"
+            style="overflow:hidden;padding:0 8px 0 8px;position:relative">
+
+        <div dojoAttachPoint="statsNode"></div>
+
+    </div>
+
+
+</div>
 
 </div>

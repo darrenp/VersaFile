@@ -1,24 +1,9 @@
-<div style="height:120px;width:100%;">
+<div style="height:128px;width:100%;position:relative;">
 
-<div    dojoType="dijit.layout.BorderContainer"
-        design="headline"
-        gutters="false"
-        style="padding:4px 8px 4px 8px;height:100%;width:100%;">
-
-    <div    dojoType="dijit.layout.ContentPane"
-                splitter="false"
-                region="center"
-                splitter="true"
-                style="overflow:hidden;padding:8px;position:relative"
-                class="highlightPane">
-
-        <div class="dijitBoldLabel dijitLargeLabel dijitDarkLabel" style="">Disk Quota</div>
+    <div dojoAttachPoint="chartNode" style="height:128px;width:128px;"></div>
+    <div style="position:absolute;left:128px;top:0;width:144px;height:100%;margin-bottom:24px">
         <div dojoAttachPoint="tableNode"></div>
-
-        <div dojoAttachPoint="chartNode" style="height:96px;width:96px;position:absolute;left:144px;top:4px"></div>
-        <div dojoAttachPoint="legendNode"></div>
     </div>
-
-</div>
+    <div class="dijitMediumLabel dijitDarkLabel" style="position:absolute;bottom:0;left:0;width:128px;text-align:center;margin-right:24px">Disk Quota</div>
 
 </div>
