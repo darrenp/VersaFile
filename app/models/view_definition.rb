@@ -4,6 +4,8 @@ class ViewDefinition < ActiveRecord::Base
             :order => "column_order",
             :dependent => :destroy
 
+  attr_accessor :sort_id
+
   def dojo_url
     return "/zones/#{self.library.zone.subdomain}/libraries/#{self.library.id}/view_definitions/#{self.id}"
   end
@@ -235,5 +237,4 @@ private
     end
 
   end
-             
 end

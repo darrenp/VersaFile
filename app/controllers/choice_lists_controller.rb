@@ -30,16 +30,23 @@ class ChoiceListsController < ApplicationController
   # GET /choice_lists.xml
   def index
 
-    sort = ChoiceListsHelper::generate_sort(params)
+    @choice_lists = @library.choice_lists.all
 
-    @choice_lists = @library.choice_lists.all(
-        :order => sort
-    )
+    @choice_lists.sort! do |a,b|
+      String.natcmp(a.name, b.name, true)
+    end
+    if(params.has_key?("sort(-name)"))
+      @choice_lists.revert!
+    end
+
+    for i in (0..@choice_lists.length-1)
+      @choice_lists[i].sort_id=i
+    end
 
     respond_to do |format|
       format.html { redirect_to @library }
       format.xml  { render :xml => @choice_lists }
-      format.json  { render :json => @choice_lists.to_json(:include => {:choice_values=> {:except => [:id, :library_id, :choice_list_id ] } }, :except => [:library_id]) }
+      format.json  { render :json => @choice_lists.to_json(:methods=>[:sort_id], :include => {:choice_values=> {:except => [:id, :library_id, :choice_list_id ] } }, :except => [:library_id]) }
     end
   end
 

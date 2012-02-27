@@ -5,6 +5,8 @@ class ChoiceList < ActiveRecord::Base
   has_many  :property_mappings
   has_many  :choice_values, :dependent => :destroy
 
+  attr_accessor :sort_id
+
   def dojo_url
     return "/zones/#{self.library.zone.subdomain}/libraries/#{self.library.id}/choice_lists/#{self.id}"
   end

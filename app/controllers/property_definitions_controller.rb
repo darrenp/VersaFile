@@ -6,15 +6,22 @@ class PropertyDefinitionsController < ApplicationController
   # GET /property_definitions.json
   def index
 
-    sort = PropertyDefinitionsHelper::generate_sort(params)
+    @property_definitions = @library.property_definitions.all
 
-    @property_definitions = @library.property_definitions.all(
-        :order => sort
-    )
+    @property_definitions.sort! do |a,b|
+      String.natcmp(a.name, b.name, true)
+    end
+    if(params.has_key?("sort(-name)"))
+      @property_definitions.revert!
+    end
+
+    for i in (0..@property_definitions.length-1)
+      @property_definitions[i].sort_id=i
+    end
 
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: @property_definitions.to_json({:methods=>:document_types_count}) }
+      format.json { render json: @property_definitions.to_json({:methods=>[:document_types_count, :sort_id]}) }
     end
   end
 

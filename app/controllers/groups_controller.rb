@@ -5,21 +5,28 @@ class GroupsController < ApplicationController
   # GET /groups
   # GET /groups.json
   def index
-    order="name"
-    if(params.has_key?("sort(-name)"))
-      order="name DESC"
+    if(params[:name]&&params[:name]!="*")
+      @groups = @zone.groups.find_by_name(params[:name])
+    else
+      @groups = @zone.groups.all
     end
 
-    if(params[:name]&&params[:name]!="*")
-      @groups = @zone.groups.find_by_name(params[:name], :order=>order)
-    else
-      @groups = @zone.groups.all(:order => order)
+    @groups.sort! do |a,b|
+      String.natcmp(a.name, b.name, true)
+    end
+    if(params.has_key?("sort(-name)"))
+      @groups.revert!
+    end
+
+    for i in (0..@groups.length-1)
+      @group=@groups[i]
+      @group.sort_id=i
     end
 
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @groups }
-      format.json  { render :json => @groups.to_json(:methods => [:active_users] ) }
+      format.json  { render :json => @groups.to_json(:methods => [:active_users, :sort_id] ) }
     end
   end
 

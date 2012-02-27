@@ -39,9 +39,20 @@ class DocumentTypesController < ApplicationController
 
     @document_types = @library.document_types.all
 
+    @document_types.sort! do |a,b|
+      String.natcmp(a.name, b.name, true)
+    end
+    if(params.has_key?("sort(-name)"))
+      @document_types.revert!
+    end
+
+    for i in (0..@document_types.length-1)
+      @document_types[i].sort_id=i
+    end
+
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: @document_types.to_json(:include => {:property_mappings => {:except => [:id, :document_type_id ] } }) }
+      format.json { render json: @document_types.to_json(:methods=>[:sort_id], :include => {:property_mappings => {:except => [:id, :document_type_id ] } }) }
     end
 
   end

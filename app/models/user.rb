@@ -4,7 +4,9 @@ class User < ActiveRecord::Base
   has_one :avatar, :as => :imageable
   after_create :after_create
 
-   scope :admins, lambda {
+  attr_accessor :sort_id
+
+  scope :admins, lambda {
     where(:is_admin => 1)
   }
 

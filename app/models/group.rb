@@ -2,6 +2,8 @@ class Group < ActiveRecord::Base
   belongs_to :zone
   has_and_belongs_to_many :users
 
+  attr_accessor :sort_id
+
   scope :admins, lambda {
     where(:is_admin => true)
   }
@@ -9,6 +11,10 @@ class Group < ActiveRecord::Base
   scope :everyones, lambda {
     where(:is_everyone => true)
   }
+
+  def sort
+    return self.sort_id
+  end
 
   def active_users
 

@@ -1,0 +1,301 @@
+New Relic Agent not running.
+New Relic Agent not running.
+  [1m[36m (118.2ms)[0m  [1mCREATE TABLE `schema_migrations` (`version` varchar(255) NOT NULL) ENGINE=InnoDB[0m
+  [1m[35m (225.4ms)[0m  CREATE UNIQUE INDEX `unique_schema_migrations` ON `schema_migrations` (`version`)
+  [1m[36m (0.2ms)[0m  [1mSELECT `schema_migrations`.`version` FROM `schema_migrations` [0m
+Migrating to CreateCellDefinitions (20100223221132)
+  [1m[35m (125.6ms)[0m  CREATE TABLE `cell_definitions` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `library_id` int(11), `view_definition_id` int(11), `table_name` varchar(255), `column_name` varchar(255), `name` varchar(255), `label` varchar(255), `formatter` int(11), `noresize` tinyint(1), `width` varchar(255), `style` varchar(255), `column_order` int(11), `date_format` varchar(255)) ENGINE=InnoDB
+  [1m[36m (47.2ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20100223221132')[0m
+Migrating to CreateViewDefinitions (20100223225009)
+  [1m[35m (99.2ms)[0m  CREATE TABLE `view_definitions` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `library_id` int(11), `name` varchar(255), `description` varchar(255), `scope` varchar(255), `sort_by` varchar(255), `is_system` tinyint(1) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (54.1ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20100223225009')[0m
+Migrating to CreateChoiceLists (20100419210504)
+  [1m[35m (105.4ms)[0m  CREATE TABLE `choice_lists` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `library_id` int(11), `name` varchar(255), `description` varchar(255), `data_type_id` int(11), `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (54.3ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20100419210504')[0m
+Migrating to CreateChoiceValues (20100419211116)
+  [1m[35m (129.2ms)[0m  CREATE TABLE `choice_values` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `choice_list_id` int(11), `value` varchar(255), `name` varchar(255), `sort_order` int(11)) ENGINE=InnoDB
+  [1m[36m (55.1ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20100419211116')[0m
+Migrating to CreateAccounts (20111027162634)
+  [1m[35m (106.0ms)[0m  CREATE TABLE `accounts` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `email` varchar(255) NOT NULL, `customer_code` varchar(255), `name` varchar(255) NOT NULL, `first_name` varchar(255), `last_name` varchar(255), `address` varchar(255), `city` varchar(255), `postal_code` varchar(32), `province` varchar(8), `country` varchar(8), `phone` varchar(32), `billing_type` int(11), `account_type` int(11), `trial_period` int(11), `password` varchar(64), `status` int(11) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (44.0ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027162634')[0m
+Migrating to CreateServers (20111027162958)
+  [1m[35m (94.7ms)[0m  CREATE TABLE `servers` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `name` varchar(255), `protocol` varchar(255), `host` varchar(255), `port` int(11), `active` tinyint(1) DEFAULT 0, `current` tinyint(1) DEFAULT 0, `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (43.3ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027162958')[0m
+Migrating to CreateZoneNodes (20111027173150)
+  [1m[35m (102.5ms)[0m  CREATE TABLE `zone_nodes` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `account_id` int(11), `server_id` int(11), `name` varchar(255), `subdomain` varchar(255), `fingerprint` varchar(255), `status` varchar(255), `current_users` int(11) DEFAULT 0, `max_users` int(11), `current_disk_space` bigint DEFAULT 0, `max_disk_space` bigint, `deployed` tinyint(1), `template_id` int(11), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (43.7ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027173150')[0m
+Migrating to CreateZones (20111027213220)
+  [1m[35m (108.5ms)[0m  CREATE TABLE `zones` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `subdomain` varchar(255), `name` varchar(255), `fingerprint` varchar(255), `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (44.1ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027213220')[0m
+Migrating to CreateAvatars (20111027220502)
+  [1m[35m (95.8ms)[0m  CREATE TABLE `avatars` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11) NOT NULL, `imageable_id` int(11), `imageable_type` varchar(255), `image_file_name` varchar(255) NOT NULL, `image_storage_name` varchar(255) NOT NULL, `image_content_type` varchar(255), `image_file_size` int(11), `image_updated_at` datetime, `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (44.0ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027220502')[0m
+Migrating to CreateUsers (20111027232324)
+  [1m[35m (95.4ms)[0m  CREATE TABLE `users` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `name` varchar(255) NOT NULL, `is_admin` tinyint(1) DEFAULT 0, `password` varchar(255) NOT NULL, `email` varchar(255), `first_name` varchar(255), `last_name` varchar(255), `state` int(11), `created_by` varchar(255), `updated_by` varchar(255), `password_expires` datetime, `reset_fingerprint` varchar(255), `reset_password` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (43.8ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027232324')[0m
+Migrating to CreateGroupsUsers (20111027232610)
+  [1m[35m (164.8ms)[0m  CREATE TABLE `groups_users` (`group_id` int(11), `user_id` int(11)) ENGINE=InnoDB
+  [1m[36m (42.2ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027232610')[0m
+Migrating to CreateGroups (20111027232731)
+  [1m[35m (84.5ms)[0m  CREATE TABLE `groups` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `name` varchar(255), `description` varchar(255), `is_admin` tinyint(1) DEFAULT 0, `is_everyone` tinyint(1) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (31.9ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027232731')[0m
+Migrating to CreateRoles (20111027232749)
+  [1m[35m (84.8ms)[0m  CREATE TABLE `roles` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11) NOT NULL, `name` varchar(255) NOT NULL, `permissions` bigint NOT NULL, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (32.1ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027232749')[0m
+Migrating to CreateConfigurations (20111027233142)
+  [1m[35m (85.2ms)[0m  CREATE TABLE `configurations` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11) NOT NULL, `configurable_id` int(11), `configurable_type` varchar(255)) ENGINE=InnoDB
+  [1m[36m (33.0ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027233142')[0m
+Migrating to CreateConfigurationSettings (20111027233225)
+  [1m[35m (86.0ms)[0m  CREATE TABLE `configuration_settings` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `configuration_id` int(11), `name` varchar(255), `value` varchar(255)) ENGINE=InnoDB
+  [1m[36m (33.0ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111027233225')[0m
+Migrating to CreateAcls (20111028161034)
+  [1m[35m (84.9ms)[0m  CREATE TABLE `acls` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11) NOT NULL, `securable_id` int(11), `securable_type` varchar(255), `inherits` tinyint(1)) ENGINE=InnoDB
+  [1m[36m (44.1ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111028161034')[0m
+Migrating to CreateAclEntries (20111028161117)
+  [1m[35m (97.6ms)[0m  CREATE TABLE `acl_entries` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `acl_id` int(11), `role_id` int(11), `grantee_id` int(11), `grantee_type` varchar(255), `precedence` int(11)) ENGINE=InnoDB
+  [1m[36m (44.0ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111028161117')[0m
+Migrating to CreateLibraries (20111028161545)
+  [1m[35m (95.7ms)[0m  CREATE TABLE `libraries` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `name` varchar(255), `description` varchar(255), `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (43.2ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111028161545')[0m
+Migrating to CreateFolders (20111028181755)
+  [1m[35m (89.1ms)[0m  CREATE TABLE `folders` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `library_id` int(11), `parent_id` int(11), `name` varchar(255) NOT NULL, `is_trash` tinyint(1) DEFAULT 0, `is_search` tinyint(1) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (44.1ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111028181755')[0m
+Migrating to CreateDocuments (20111028181907)
+  [1m[35m (49.5ms)[0m  CREATE TABLE `documents` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `library_id` int(11), `folder_id` int(11), `name` varchar(255) NOT NULL, `document_type_id` int(11) NOT NULL, `checked_out_by` varchar(255), `created_by` varchar(255), `updated_by` varchar(255), `state` bigint unsigned DEFAULT 0, `description` text, `body` longtext, `metadata` text, `custom_metadata` text, `prp_str001` varchar(255), `prp_str002` varchar(255), `prp_str003` varchar(255), `prp_str004` varchar(255), `prp_str005` varchar(255), `prp_str006` varchar(255), `prp_str007` varchar(255), `prp_str008` varchar(255), `prp_str009` varchar(255), `prp_str010` varchar(255), `prp_str011` varchar(255), `prp_str012` varchar(255), `prp_str013` varchar(255), `prp_str014` varchar(255), `prp_str015` varchar(255), `prp_str016` varchar(255), `prp_str017` varchar(255), `prp_str018` varchar(255), `prp_str019` varchar(255), `prp_str020` varchar(255), `prp_str021` varchar(255), `prp_str022` varchar(255), `prp_str023` varchar(255), `prp_str024` varchar(255), `prp_str025` varchar(255), `prp_str026` varchar(255), `prp_str027` varchar(255), `prp_str028` varchar(255), `prp_str029` varchar(255), `prp_str030` varchar(255), `prp_str031` varchar(255), `prp_str032` varchar(255), `prp_str033` varchar(255), `prp_str034` varchar(255), `prp_str035` varchar(255), `prp_str036` varchar(255), `prp_str037` varchar(255), `prp_str038` varchar(255), `prp_str039` varchar(255), `prp_str040` varchar(255), `prp_str041` varchar(255), `prp_str042` varchar(255), `prp_str043` varchar(255), `prp_str044` varchar(255), `prp_str045` varchar(255), `prp_str046` varchar(255), `prp_str047` varchar(255), `prp_str048` varchar(255), `prp_str049` varchar(255), `prp_str050` varchar(255), `prp_str051` varchar(255), `prp_str052` varchar(255), `prp_str053` varchar(255), `prp_str054` varchar(255), `prp_str055` varchar(255), `prp_str056` varchar(255), `prp_str057` varchar(255), `prp_str058` varchar(255), `prp_str059` varchar(255), `prp_str060` varchar(255), `prp_str061` varchar(255), `prp_str062` varchar(255), `prp_str063` varchar(255), `prp_str064` varchar(255), `prp_bln001` tinyint(1), `prp_bln002` tinyint(1), `prp_bln003` tinyint(1), `prp_bln004` tinyint(1), `prp_bln005` tinyint(1), `prp_bln006` tinyint(1), `prp_bln007` tinyint(1), `prp_bln008` tinyint(1), `prp_int001` int(11), `prp_int002` int(11), `prp_int003` int(11), `prp_int004` int(11), `prp_int005` int(11), `prp_int006` int(11), `prp_int007` int(11), `prp_int008` int(11), `prp_flt001` float, `prp_flt002` float, `prp_flt003` float, `prp_flt004` float, `prp_flt005` float, `prp_flt006` float, `prp_flt007` float, `prp_flt008` float, `prp_dtt001` datetime, `prp_dtt002` datetime, `prp_dtt003` datetime, `prp_dtt004` datetime, `prp_dtt005` datetime, `prp_dtt006` datetime, `prp_dtt007` datetime, `prp_dtt008` datetime, `prp_dtt009` datetime, `prp_dtt010` datetime, `prp_dtt011` datetime, `prp_dtt012` datetime, `prp_dtt013` datetime, `prp_dtt014` datetime, `prp_dtt015` datetime, `prp_dtt016` datetime, `prp_txt001` text, `prp_txt002` text, `prp_txt003` text, `prp_txt004` text, `prp_txt005` text, `prp_txt006` text, `prp_txt007` text, `prp_txt008` text, `created_at` datetime, `updated_at` datetime) ENGINE=MyISAM
+  [1m[36m (56.4ms)[0m  [1mCREATE FULLTEXT INDEX fulltext_document ON documents (body,metadata,custom_metadata)[0m
+  [1m[35m (32.3ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20111028181907')
+Migrating to CreateVersions (20111028182016)
+  [1m[36m (83.8ms)[0m  [1mCREATE TABLE `versions` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `document_id` int(11), `binary_file_name` varchar(255), `binary_storage_name` varchar(255), `binary_content_type` varchar(255), `binary_file_size` int(11), `binary_uniqueness_key` varchar(255), `is_current_version` tinyint(1), `major_version_number` int(11), `minor_version_number` int(11)) ENGINE=InnoDB[0m
+  [1m[35m (32.8ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20111028182016')
+Migrating to CreateIcons (20111028182344)
+  [1m[36m (84.6ms)[0m  [1mCREATE TABLE `icons` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `content_type` varchar(255), `file_name` varchar(255)) ENGINE=InnoDB[0m
+  [1m[35m (32.6ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20111028182344')
+Migrating to CreateDataTypes (20111103232654)
+  [1m[36m (84.7ms)[0m  [1mCREATE TABLE `data_types` (`id` int(11), `name` varchar(255), `prefix` varchar(255), `allow_choice_list` tinyint(1) DEFAULT 0) ENGINE=InnoDB[0m
+  [1m[35m (226.0ms)[0m  ALTER TABLE data_types ADD PRIMARY KEY (id);
+  [1m[36m (44.0ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111103232654')[0m
+Migrating to CreatePropertyColumns (20111103233123)
+  [1m[35m (86.7ms)[0m  CREATE TABLE `property_columns` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `library_id` int(11), `data_type_id` int(11), `column_mask` bigint DEFAULT 0, `max_columns` int(11)) ENGINE=InnoDB
+  [1m[36m (43.9ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111103233123')[0m
+Migrating to CreatePropertyDefinitions (20111104173417)
+  [1m[35m (85.0ms)[0m  CREATE TABLE `property_definitions` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `library_id` int(11), `data_type_id` int(11), `name` varchar(255), `description` text, `table_name` varchar(255), `column_name` varchar(255), `cardinality` int(11), `max_length` int(11), `is_system` tinyint(1), `is_readonly` tinyint(1), `is_name` tinyint(1) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (32.7ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111104173417')[0m
+Migrating to CreateDocumentTypes (20111109000825)
+  [1m[35m (85.1ms)[0m  CREATE TABLE `document_types` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `library_id` int(11), `name` varchar(255), `description` text, `is_system` tinyint(1) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (32.8ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111109000825')[0m
+Migrating to CreatePropertyMappings (20111109001347)
+  [1m[35m (84.0ms)[0m  CREATE TABLE `property_mappings` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `document_type_id` int(11), `property_definition_id` int(11), `sort_order` int(11), `is_required` tinyint(1), `default_value` varchar(255), `choice_list_id` int(11)) ENGINE=InnoDB
+  [1m[36m (32.9ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20111109001347')[0m
+Migrating to CreateDelayedJobs (20111118173915)
+  [1m[35m (83.2ms)[0m  CREATE TABLE `delayed_jobs` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `priority` int(11) DEFAULT 0, `attempts` int(11) DEFAULT 0, `handler` text, `last_error` text, `run_at` datetime, `locked_at` datetime, `failed_at` datetime, `locked_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB
+  [1m[36m (190.2ms)[0m  [1mCREATE INDEX `delayed_jobs_priority` ON `delayed_jobs` (`priority`, `run_at`)[0m
+  [1m[35m (43.9ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20111118173915')
+Migrating to CreateOperators (20111122043137)
+  [1m[36m (95.9ms)[0m  [1mCREATE TABLE `operators` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `data_type_id` int(11), `name` varchar(255), `value` varchar(255), `template` varchar(255), `no_rhs` tinyint(1) DEFAULT 0) ENGINE=InnoDB[0m
+  [1m[35m (44.0ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20111122043137')
+Migrating to CreateRkoUsers (20111206212331)
+  [1m[36m (96.0ms)[0m  [1mCREATE TABLE `rko_users` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `name` varchar(255), `first_name` varchar(255), `last_name` varchar(255), `password` varchar(255), `email` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB[0m
+  [1m[35m (44.1ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20111206212331')
+Migrating to CreatePreviewElements (20120113014214)
+  [1m[36m (84.9ms)[0m  [1mCREATE TABLE `preview_elements` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `zone_id` int(11), `content_type` varchar(255), `element_template` text, `maintain_aspect_ratio` tinyint(1) DEFAULT 0, `created_by` varchar(255), `updated_by` varchar(255), `created_at` datetime, `updated_at` datetime) ENGINE=InnoDB[0m
+  [1m[35m (32.9ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20120113014214')
+Migrating to CreateContentTypes (20120125175056)
+  [1m[36m (85.5ms)[0m  [1mCREATE TABLE `content_types` (`id` int(11) DEFAULT NULL auto_increment PRIMARY KEY, `binary_content_type` varchar(255), `open_as` varchar(255)) ENGINE=InnoDB[0m
+  [1m[35m (32.8ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20120125175056')
+Migrating to CreateZoneTemplates (20120209044243)
+  [1m[36m (85.7ms)[0m  [1mCREATE TABLE `zone_templates` (`id` int(11), `name` varchar(255), `folder_name` varchar(255)) ENGINE=InnoDB[0m
+  [1m[35m (191.0ms)[0m  ALTER TABLE zone_templates ADD PRIMARY KEY (id);
+  [1m[36m (32.8ms)[0m  [1mINSERT INTO `schema_migrations` (`version`) VALUES ('20120209044243')[0m
+Migrating to UpdateVersions (20120221232820)
+  [1m[35m (208.8ms)[0m  ALTER TABLE `versions` ADD `library_id` int(11)
+  [1m[36mVersion Load (0.2ms)[0m  [1mSELECT `versions`.* FROM `versions` [0m
+  [1m[35m (40.5ms)[0m  INSERT INTO `schema_migrations` (`version`) VALUES ('20120221232820')
+  [1m[36m (0.2ms)[0m  [1mSELECT `schema_migrations`.`version` FROM `schema_migrations` [0m
+New Relic Agent not running.
+  [1m[36m (0.2ms)[0m  [1mSELECT `schema_migrations`.`version` FROM `schema_migrations` [0m
+  [1m[35mSQL (0.2ms)[0m  DELETE FROM `data_types`
+WARNING: Can't mass-assign protected attributes: id
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `data_types` (`allow_choice_list`, `id`, `name`, `prefix`) VALUES (0, 1, 'Boolean', 'bln')
+  [1m[36m (80.4ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `data_types` (`allow_choice_list`, `id`, `name`, `prefix`) VALUES (1, 2, 'Integer', 'int')[0m
+  [1m[35m (65.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `data_types` (`allow_choice_list`, `id`, `name`, `prefix`) VALUES (1, 3, 'Float', 'flt')
+  [1m[36m (65.1ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `data_types` (`allow_choice_list`, `id`, `name`, `prefix`) VALUES (1, 4, 'Date', 'dtt')[0m
+  [1m[35m (65.3ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `data_types` (`allow_choice_list`, `id`, `name`, `prefix`) VALUES (1, 5, 'String', 'str')
+  [1m[36m (54.0ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `data_types` (`allow_choice_list`, `id`, `name`, `prefix`) VALUES (0, 6, 'Text', 'txt')[0m
+  [1m[35m (42.6ms)[0m  COMMIT
+  [1m[36mSQL (0.2ms)[0m  [1mDELETE FROM `operators`[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (NULL, 'and', 0, '%s AND %s', 'AND')[0m
+  [1m[35m (34.8ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (NULL, 'or', 0, '%s OR %s', 'OR')
+  [1m[36m (42.9ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (NULL, 'not', 0, 'NOT %s', 'NOT')[0m
+  [1m[35m (43.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (1, 'is', 0, '%{lhs} = %{rhs}', '=')
+  [1m[36m (42.4ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (4, 'before', 0, '%{lhs} < \'%{rhs}\'', '<')[0m
+  [1m[35m (43.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (4, 'after', 0, '%{lhs} > \'%{rhs}\'', '>')
+  [1m[36m (42.8ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (4, 'on', 0, '%{lhs} >= %{rhs}', '>=')[0m
+  [1m[35m (42.9ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (3, '>', 0, '%{lhs} > %{rhs}', '>')
+  [1m[36m (42.8ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (3, '<', 0, '%{lhs} < %{rhs}', '<')[0m
+  [1m[35m (43.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (3, '>=', 0, '%{lhs} >= %{rhs}', '>=')
+  [1m[36m (43.1ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.3ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (3, '<=', 0, '%{lhs} <= %{rhs}', '<=')[0m
+  [1m[35m (41.9ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (3, '=', 0, '%{lhs} = %{rhs}', '=')
+  [1m[36m (42.9ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (2, '>', 0, '%{lhs} > %{rhs}', '>')[0m
+  [1m[35m (42.9ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (2, '<', 0, '%{lhs} < %{rhs}', '<')
+  [1m[36m (42.9ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.2ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (2, '>=', 0, '%{lhs} >= %{rhs}', '>=')[0m
+  [1m[35m (42.0ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (2, '<=', 0, '%{lhs} <= %{rhs}', '<=')
+  [1m[36m (42.9ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (2, '=', 0, '%{lhs} = %{rhs}', '=')[0m
+  [1m[35m (43.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (5, 'contains', 0, '%{lhs} LIKE \'%%%{rhs}%%\'', 'LIKE')
+  [1m[36m (42.9ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (5, 'does not contain', 0, '%{lhs} NOT LIKE \'%%%{rhs}%%\'', 'NOT LIKE')[0m
+  [1m[35m (43.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (5, 'equals', 0, '%{lhs} = \'%{rhs}\'', '=')
+  [1m[36m (43.1ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (5, 'not equal', 0, '%{lhs} <> \'%{rhs}\'', '!=')[0m
+  [1m[35m (32.0ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (5, 'is blank', 1, '(%{lhs} IS NULL OR %{lhs}=\'\')', '=')
+  [1m[36m (43.0ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.2ms)[0m  BEGIN
+  [1m[36mSQL (0.4ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (6, 'contains', 0, '%{lhs} LIKE \'%%%{rhs}%%\'', 'LIKE')[0m
+  [1m[35m (28.8ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (6, 'does not contain', 0, '%{lhs} NOT LIKE \'%%%{rhs}%%\'', 'NOT LIKE')
+  [1m[36m (32.0ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (6, 'equals', 0, '%{lhs} = \'%{rhs}\'', '=')[0m
+  [1m[35m (32.1ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (6, 'not equal', 0, '%{lhs} <> \'%{rhs}\'', '!=')
+  [1m[36m (32.1ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `operators` (`data_type_id`, `name`, `no_rhs`, `template`, `value`) VALUES (6, 'is blank', 1, '(%{lhs} IS NULL OR %{lhs}=\'\')', '=')[0m
+  [1m[35m (32.1ms)[0m  COMMIT
+  [1m[36mSQL (0.2ms)[0m  [1mDELETE FROM `icons`[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.bmp', 'image.bmp.png')[0m
+  [1m[35m (30.0ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('image/bmp', 'image.bmp.png')
+  [1m[36m (33.9ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.doc', 'application.msword.png')[0m
+  [1m[35m (32.5ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.docx', 'application.msword.png')
+  [1m[36m (32.3ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/msword', 'application.msword.png')[0m
+  [1m[35m (32.5ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application.msword.png')
+  [1m[36m (32.2ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.gif', 'image.gif.png')[0m
+  [1m[35m (43.6ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('image/gif', 'image.gif.png')
+  [1m[36m (43.6ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.jpg', 'image.jpeg.png')[0m
+  [1m[35m (43.3ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.jpeg', 'image.jpeg.png')
+  [1m[36m (43.6ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('image/jpeg', 'image.gif.png')[0m
+  [1m[35m (43.6ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.pdf', 'application.pdf.png')
+  [1m[36m (43.6ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/pdf', 'application.pdf.png')[0m
+  [1m[35m (43.5ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.ppt', 'application.vnd.ms-powerpoint.png')
+  [1m[36m (43.5ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.2ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.pptx', 'application.vnd.ms-powerpoint.png')[0m
+  [1m[35m (42.4ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/vnd.ms-powerpoint', 'application.vnd.ms-powerpoint.png')
+  [1m[36m (43.5ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application.vnd.ms-powerpoint.png')[0m
+  [1m[35m (43.6ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.1ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.xls', 'application.vnd.ms-excel.png')
+  [1m[36m (43.5ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.xlsx', 'application.vnd.ms-excel.png')[0m
+  [1m[35m (43.5ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/vnd.ms-excel', 'application.vnd.ms-excel.png')
+  [1m[36m (43.4ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application.vnd.ms-excel.png')[0m
+  [1m[35m (43.6ms)[0m  COMMIT
+  [1m[36m (0.1ms)[0m  [1mBEGIN[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO `icons` (`content_type`, `file_name`) VALUES ('.zip', 'application.zip.png')
+  [1m[36m (43.5ms)[0m  [1mCOMMIT[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO `icons` (`content_type`, `file_name`) VALUES ('application/zip', 'application.zip.png')[0m
+  [1m[35m (43.6ms)[0m  COMMIT
+  [1m[36mSQL (0.2ms)[0m  [1mDELETE FROM `rko_users`[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.3ms)[0m  [1mINSERT INTO `rko_users` (`created_at`, `email`, `first_name`, `last_name`, `name`, `password`, `updated_at`) VALUES ('2012-02-27 17:29:35', NULL, 'admin', 'admin', 'admin', 'd033e22ae348aeb5660fc2140aec35850c4da997', '2012-02-27 17:29:35')[0m
+  [1m[35m (36.5ms)[0m  COMMIT
+  [1m[36mSQL (0.2ms)[0m  [1mDELETE FROM `content_types`[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `content_types` (`binary_content_type`, `open_as`) VALUES ('application/x-msdos-program', 'text/plain')[0m
+  [1m[35m (41.0ms)[0m  COMMIT
+  [1m[36mSQL (0.2ms)[0m  [1mDELETE FROM `zone_templates`[0m
+  [1m[35m (0.1ms)[0m  BEGIN
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO `zone_templates` (`folder_name`, `id`, `name`) VALUES ('smb', 1, 'Small Business Template')[0m
+  [1m[35m (29.9ms)[0m  COMMIT
+New Relic Agent not running.
+New Relic Agent not running.

@@ -7,6 +7,8 @@ class DocumentType < ActiveRecord::Base
             :through => :property_mappings,
             :order => "sort_order"
 
+  attr_accessor :sort_id
+
   def dojo_url
     return "/zones/#{self.library.zone.subdomain}/libraries/#{self.library.id}/document_types/#{self.id}"
   end

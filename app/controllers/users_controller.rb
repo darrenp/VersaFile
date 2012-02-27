@@ -63,25 +63,24 @@ dont think this is needed
   # GET /users
   # GET /users.json
   def index
-    if(params[:none]!=nil)
-      respond_to do |format|
-        format.json{render :json=>"[]"}
-      end
-      return
-    end
-
-    order="name"
-    if(params.has_key?("sort(-name)"))
-      order="name DESC"
-    end
-
     if(params[:search] != nil)
       @search="%"+params[:search].upcase+"%"
-      @users = @zone.users.find_by_sql ["SELECT `users`.* from `users` WHERE UPPER(name) LIKE(?) OR UPPER(FIRST_NAME) LIKE(?) OR UPPER(LAST_NAME) LIKE(?) OR UPPER(CONCAT(FIRST_NAME,' ',LAST_NAME)) LIKE(?) ORDER BY ?", @search, @search, @search, @search, order]
+      @users = @zone.users.find_by_sql ["SELECT `users`.* from `users` WHERE UPPER(name) LIKE(?) OR UPPER(FIRST_NAME) LIKE(?) OR UPPER(LAST_NAME) LIKE(?) OR UPPER(CONCAT(FIRST_NAME,' ',LAST_NAME)) LIKE(?) ORDER BY ?", @search, @search, @search, @search]
     elsif(params[:group_id])
-      @users = @zone.groups.find_by_id(params[:group_id]).users.find(:all, :order=>order)
+      @users = @zone.groups.find_by_id(params[:group_id]).users.find(:all)
     else
-      @users = @zone.users.all(:order=>order)
+      @users = @zone.users.all
+    end
+
+    @users.sort! do |a,b|
+      String.natcmp(a.name, b.name, true)
+    end
+    if(params.has_key?("sort(-name)"))
+      @users.revert!
+    end
+
+    for i in (0..@users.length-1)
+      @users[i].sort_id=i
     end
 
     respond_to do |format|
@@ -89,7 +88,7 @@ dont think this is needed
       format.xml  { render :xml => @users }
       format.js{
         ActiveRecord::Base.include_root_in_json = false
-        render :json => @users.to_json( :except => [:password, :zone_id], :methods => [:disabled, :active_group] )
+        render :json => @users.to_json( :except => [:password, :zone_id], :methods => [:disabled, :active_group, :sort_id] )
       }
     end
   end

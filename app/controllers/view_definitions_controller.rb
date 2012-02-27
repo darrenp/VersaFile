@@ -7,10 +7,21 @@ class ViewDefinitionsController < ApplicationController
     @library = @zone.libraries.find(params[:library_id])
     @view_definitions = @library.view_definitions.all(:order => "name")
 
+    @view_definitions.sort! do |a,b|
+      String.natcmp(a.name, b.name, true)
+    end
+    if(params.has_key?("sort(-name)"))
+      @view_definitions.revert!
+    end
+
+    for i in (0..@view_definitions.length-1)
+      @view_definitions[i].sort_id=i
+    end
+
     respond_to do |format|
       format.html { redirect_to @library }
       format.xml  { render :xml => @view_definitions }
-      format.json { render json: @view_definitions.to_json(:include => {:cell_definitions => {:except => [:id, :library_id, :view_definition_id]}}) }
+      format.json { render json: @view_definitions.to_json(:methods=>[:sort_id], :include => {:cell_definitions => {:except => [:id, :library_id, :view_definition_id]}}) }
     end
   end
 

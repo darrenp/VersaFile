@@ -5,6 +5,8 @@ class PropertyDefinition < ActiveRecord::Base
   has_many  :document_types,
             :through => :property_mappings
 
+  attr_accessor :sort_id
+
   def document_types_count
     return self.document_types.length
   end

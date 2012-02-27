@@ -2649,14 +2649,17 @@ dojo.declare('bfree.api._Collection', null,{
 
     destroy: function(args){
         var no_save = (args) ? args.no_save : false;
-        var onComplete=args&&args.onComplete?args.onComplete:function(){};
 
         try{
 
             //this.store.changing(args.item);
             this.store.deleteItem(args.item);
             if(!no_save)
-                this.save({onComplete: onComplete});
+                this.save({
+                    alwaysPostNewItems: true,
+                    onComplete: ((args) && (args.onComplete)) ? args.onComplete : function () { },
+                    scope: ((args) && (args.scope)) ? args.scope : this
+                });
 
         }
         finally{
@@ -51255,7 +51258,7 @@ dojo.declare('bfree.widget.choiceList.Grid', [bfree.widget._Grid], {
 		this.clientSort = false;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Choice Lists found';
-        this.sortInfo = 2;
+        this.sortInfo = 3;
 
 	},
 
@@ -51321,6 +51324,11 @@ bfree.widget.choiceList.Grid.view = [
                 field: 'name',
                 name: 'Name',
                 width: 'auto'
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
             }
         ],
         width: 'auto'
@@ -52384,6 +52392,7 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             var item = this._grdValues.selection.getFirstSelected();
             idx = this._grdValues.getItemIndex(item);
             this._valueStore.deleteItem(item);
+            this._valueStore.save();
 
         }
         catch(e){
@@ -52617,6 +52626,7 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             sort_field: 'sort',
             structure: bfree.widget.choiceList.Editor.view1,
             formatterScope: this,
+            rowsPerPage: 1000,
             style: 'width:100%;height:100%',
             onSelectedItem: dojo.hitch(this, this._grdValues_onSelectedItem)
         }, this.valueListNode);
@@ -53654,7 +53664,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         this.addChild(this._btnFldACL);
 
         this._btnEmptyTrash = new dijit.MenuItem({
-            label: 'Empty Recycling',
+            label: 'Empty Recycle Bin',
             disabled: false,
             iconClass: 'menuIcon bfreeTrashFolder',
             onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.EMPTY)
@@ -57434,8 +57444,8 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             return 'folderIcon bfreeSearchFolder';
 
         return (!item || this.model.mayHaveChildren(item)) ?
-                    (opened ? 'dijitFolderOpened' : 'dijitFolderClosed') :
-                    ((this.selectedItem === item) ? 'dijitFolderOpened' : 'dijitFolderClosed');
+                    (opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : 'dijitFolderClosed';
+//                    ((this.selectedItem === item) ? 'dijitFolderOpened' : 'dijitFolderClosed');
 
     },
 
@@ -57957,6 +57967,8 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
     dndType: "Document",
     activeQuery: null,
 
+    minWidth: 256,
+
     deleting: false,
 
     _canSort: function(columnIndex){
@@ -57967,6 +57979,13 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
     		return true;
 		}
 	},
+
+    _setStructureAttr: function(newValue){
+        this.inherited("_setStructureAttr", arguments);
+        if(this._isLoaded){
+            this.auto();
+        }
+    },
 
     _onCommand: function(cmdId, option, params){
         this.onCommand(cmdId, option, params);
@@ -58020,9 +58039,28 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
         if(this.query){
             this.query.view=this.activeView.id;
         }
-        this.onViewChange(viewItem);
 
+        this.onViewChange(viewItem);
 	},
+
+    render: function(){
+        console.log('render');
+        this.inherited('render', arguments);
+    },
+
+    auto: function(){
+        var cell=this.getCell(2);
+        var node=cell.getHeaderNode();
+        if(node.offsetWidth<this.minWidth){
+            if(this.structure.cells[2].width=='auto'){
+                this.structure.cells[2].width=this.minWidth+'px';
+                this.set('structure', this.structure);
+    //            cell.unitWidth='512px';
+    //            this.render();
+    //            cell.setValue('unitWidth', '512px');
+            }
+        }
+    },
 
 	_onViewNew: function(evt){
 		this.onViewNew(evt);
@@ -63483,6 +63521,7 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
             structure: bfree.widget.group.Editor.view1,
             formatterScope: this,
             sortInfo: 2,
+            rowsPerPage: 1000,
             style: 'width:100%;height:100%',
             onSelectedItem: dojo.hitch(this, this._grdUsers_onSelectedItem)
         }, this.userGridNode);
@@ -63590,7 +63629,7 @@ dojo.declare('bfree.widget.group.Grid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Groups found';
-        this.sortInfo = 2;
+        this.sortInfo = 3;
 
 	},
 
@@ -63654,6 +63693,11 @@ bfree.widget.group.Grid.view = [
                 field: 'name',
                 name: 'Name',
                 width: 'auto'
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
             }
         ],
         width: 'auto'
@@ -65054,6 +65098,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             var item = this._grdPropertyMappings.selection.getFirstSelected();
             idx = this._grdPropertyMappings.getItemIndex(item);
             this._propMapStore.deleteItem(item);
+            this._propMapStore.save();
         }
         catch(e){
             var err = new bfree.api.Error('Failed to remove Property Mapping', e);
@@ -65229,7 +65274,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             sort_field: 'sort',
             structure: bfree.widget.doctype.Editor.view1,
             formatterScope: this,
-//            rowHeight:24,
+            rowsPerPage: 1000,
             style: 'width:100%;height:100%',
             onSelectedItem: dojo.hitch(this, this._grdPropMap_onSelectedItem)
         }, this.propertyMappingsNode);
@@ -65470,7 +65515,7 @@ dojo.declare('bfree.widget.doctype.Grid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Document Types found';
-        this.sortInfo = 2;
+        this.sortInfo = 3;
 
 	},
 
@@ -65535,6 +65580,11 @@ bfree.widget.doctype.Grid.view = [
                 field: 'name',
                 name: 'Name',
                 width: 'auto'
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
             }
         ],
         width: 'auto'
@@ -66585,7 +66635,7 @@ dojo.declare('bfree.widget.propdef.Grid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Property Definitions found';
-        this.sortInfo = 2;
+        this.sortInfo = 3;
 
 	},
 
@@ -66649,6 +66699,11 @@ bfree.widget.propdef.Grid.view = [
                 field: 'name',
                 name: 'Name',
                 width: 'auto'
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
             }
         ],
         width: 'auto'
@@ -69015,7 +69070,7 @@ dojo.declare('bfree.widget.user.Grid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Users found';
-        this.sortInfo = 2;
+        this.sortInfo = 3;
 
 	},
 
@@ -69080,6 +69135,11 @@ bfree.widget.user.Grid.view = [
                 name: 'Name',
                 width: 'auto',
                 get: function(idx, item){ return (item) ? item.getFullName() : ''; }
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
             }
         ],
         width: 'auto'
@@ -69231,10 +69291,7 @@ dojo.declare('bfree.widget.user.Administration', [dijit._Widget, dijit._Template
 
                 var idx = this._grdUsers.getItemIndex(item);
 
-                this._users.destroy({item: item});
-
-                this._grdUsers.setSelectedIndex(idx);
-                this._editor.focus();
+                this._users.destroy({item: item, onComplete: dojo.hitch(this, this.deleteOnComplete, idx)})
             }
         }
         catch(e){
@@ -69246,6 +69303,10 @@ dojo.declare('bfree.widget.user.Administration', [dijit._Widget, dijit._Template
 
     },
 
+    deleteOnComplete: function(idx){
+        this._grdUsers.setSelectedIndex(idx);
+        this._editor.focus();
+    },
 
 
     destroy: function(){
@@ -69629,7 +69690,7 @@ dojo.declare('bfree.widget.view.Grid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No View Definitions found';
-        this.sortInfo = 2;
+        this.sortInfo = 3;
 
 	},
 
@@ -69695,6 +69756,11 @@ bfree.widget.view.Grid.view1 = [
                 field: 'name',
                 name: 'Name',
                 width: 'auto'
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
             }
         ],
         width: 'auto'
@@ -70510,6 +70576,15 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
                 currentFilter.push(cell_id);
             },this);
 
+            var propDef=this.propertyDefinitions.fetch();
+
+            //4 definitions are special and not included in the propdef table
+            //state, content type, version, size and document type
+            if(currentFilter.length>=(propDef.length+5)){
+                alert('No property definitions left to add');
+                return;
+            }
+
             bfree.widget.view.cell.Editor.show({
                 filter: currentFilter,
                 propertyDefinitions: this.propertyDefinitions,
@@ -70586,6 +70661,7 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
                 this._cmbSort.reset();
                 this._cmbSort.validate();
             }
+            this._cellStore.save();
         }
         catch(e){
             var err = new bfree.api.Error('Failed to remove Cell Definition', e);
@@ -70806,7 +70882,7 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
             sort_field: 'sort',
             structure: bfree.widget.view.Editor.view1,
             formatterScope: this,
-            rowHeight:24,
+            rowsPerPage: 1000,
             style: 'width:100%;height:100%',
             onSelectedItem: dojo.hitch(this, this._grdCells_onSelectedItem)
         }, this.cellGridNode);
@@ -84308,7 +84384,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             else{
                  this.trialMsgNode.innerHTML = versa.VersaFile.messages.TRIAL_EXPIRED;
             }
-            this.activateMsgNode.innerHTML = versa.VersaFile.messages.ACTIVATE_LINK;
             dojo.style(this.trialStateNode, {display: 'block'});
         }
 
@@ -84402,6 +84477,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         this.inherited('startup', arguments);
         this._tvwFolders.startup();
+
+        this._grdDocuments.auto();
     }
 
 });
