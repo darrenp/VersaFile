@@ -1,7 +1,7 @@
 
 class ZonesController < ApplicationController
   before_filter :zone_required, :except => [:missing,:index,:new,:create, :usage, :exists]
-  before_filter(:only => :show) do |controller|
+  before_filter(:only => [:show, :main]) do |controller|
     authorization_required() unless controller.request.format.json?
   end
   skip_before_filter :verify_authenticity_token, :only => [:create, :update]
@@ -189,7 +189,7 @@ class ZonesController < ApplicationController
         if @zone.nil? || active_user.nil?
           render :layout => false
         else
-          redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'show'
+          redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'main'
         end
 
       } # welcome.html.erb
@@ -226,7 +226,6 @@ class ZonesController < ApplicationController
         raise @user.errors
       end
 
-      #TODO: This should use delayed_job so the user doesn't have
       #to wait for the email to be constructed and sent
       unless @user.email.nil?
         @email = EmailWorker.new(@user.email, {:zone => @zone, :user => @user, :password => @tmp_password, :fingerprint=>fngrprint })
@@ -283,6 +282,28 @@ class ZonesController < ApplicationController
     end
 
   end
+
+
+  # GET /zones/1
+  # GET /zones/1.json
+  def main
+
+    @library = @zone.libraries.first
+
+    respond_to do |format|
+      format.html {
+        @user = active_user
+        if(@user != nil && @user.password_expires !=nil && @user.password_expires < Time.now)
+          redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'expired'
+          return
+        else
+          render :action=>'show', :layout => false
+        end
+      }
+    end
+
+  end
+
 
   # GET /zones/new
   # GET /zones/new.json

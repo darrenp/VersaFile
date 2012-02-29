@@ -166,10 +166,10 @@ class AccountsController < ApplicationController
         @server = Server.where(:current => true).first
         raise "A VersaFile server has not been defined" if @server.nil?
 
+        #1) Create account => set status to "Pending"
         @account = Account.new(params[:account])
-
         @account.trial_period = ((@account.account_type == VersaFile::AccountTypes.Trial) ? @account.trial_period : VersaFile::TrialStates.NoTrial)
-        @account.status = VersaFile::AccountStates.Enabled
+        @account.status = VersaFile::AccountStates.Pending
         @account.created_by = @super_user.name
         @account.updated_by = @super_user.name
 
@@ -177,9 +177,8 @@ class AccountsController < ApplicationController
           raise_errors(@account.errors)
         end
 
+        #2) Create ZoneNode(s) - don't deploy it yet
         params[:subdomains].each do |subdomain|
-
-          logger.debug("SUBDOMAIN:> #{subdomain[:name]}")
 
           @zone_node = @account.zone_nodes.create(
             :server => @server,
@@ -198,10 +197,10 @@ class AccountsController < ApplicationController
             raise_errors( @zone_node.errors)
           end
 
-        end
+          #Auto-deploy only if it is a trial -- if not wait for update.
+          @zone_node.delay.zone_deploy if @account.account_type == VersaFile::AccountTypes.Trial
 
-        #Auto Deploy!!!
-        @zone_node.delay.zone_deploy
+        end
 
       end
 
@@ -274,6 +273,7 @@ class AccountsController < ApplicationController
     begin
 
       update_zone = false
+      deploy_zone = false
 
       @account = Account.active.find_by_email(params[:id])
       @account = Account.active.find(params[:id]) if @account.nil?
@@ -312,6 +312,8 @@ class AccountsController < ApplicationController
           @account[:billing_type] = params[:billing_type] unless params[:billing_type].nil?
           @account[:account_type] = params[:account_type] unless params[:account_type].nil?
           @account[:trial_period] = ((@account[:account_type] == VersaFile::AccountTypes.Trial) ? params[:trial_period] : VersaFile::TrialStates.NoTrial) unless params[:trial_period].nil?
+
+          deploy_zone = ( (!@account.customer_code.nil?)  && (@account.customer_code_changed?) && (@account.status == VersaFile::AccountStates.Pending))
         end
 
         @account[:updated_by] = @account_user.instance_of?(RkoUser) ? @account_user.name : @account_user.email
@@ -338,20 +340,24 @@ class AccountsController < ApplicationController
             unless @zone_node.save
               raise_errors(@zone_node.errors)
             end
-
           end
 
         end
 
         #Update remote zone information
-        logger.debug("UPDATE:> #{update_zone}")
         if update_zone
           @account.zone_nodes.each do |zone_node|
                zone_node.delay.zone_update
           end
         end
 
+      end
 
+      if deploy_zone
+        @account.zone_nodes.each do |zn|
+          #Auto-deploy
+          zn.delay.zone_deploy if deploy_zone
+        end
       end
 
       respond_to do |format|

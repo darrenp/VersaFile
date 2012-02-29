@@ -9,7 +9,7 @@
 DataType.delete_all
 dt = DataType.new(
   :id => Bfree::DataTypes.Boolean,
-  :name => 'Boolean',
+  :name => 'Checkbox',
   :prefix => 'bln',
   :allow_choice_list => false
 )
@@ -17,7 +17,7 @@ dt.id = Bfree::DataTypes.Boolean;
 dt.save
 
 dt = DataType.new(
-  :name => 'Integer',
+  :name => 'Number (1234)',
   :prefix => 'int',
   :allow_choice_list => true
 )
@@ -25,7 +25,7 @@ dt.id = Bfree::DataTypes.Integer;
 dt.save
 
 dt = DataType.new(
-  :name => 'Float',
+  :name => 'Decimal (12.34)',
   :prefix => 'flt',
   :allow_choice_list => true
 )
@@ -41,7 +41,7 @@ dt.id = Bfree::DataTypes.DateTime;
 dt.save
 
 dt = DataType.new(
-  :name => 'String',
+  :name => 'Text (Max 255 characters)',
   :prefix => 'str',
   :allow_choice_list => true
 )
@@ -49,7 +49,7 @@ dt.id = Bfree::DataTypes.String;
 dt.save
 
 dt = DataType.new(
-  :name => 'Text',
+  :name => 'Text Block (Max 4096 characters)',
   :prefix => 'txt',
   :allow_choice_list => false
 )
@@ -98,7 +98,7 @@ Operator.create([
       :data_type_id => Bfree::DataTypes.DateTime,
       :name => 'on',
       :value => '>=',
-      :template => '%{lhs} >= %{rhs}',
+      :template => '%{lhs} >= \'%{rhs}\'',
       :no_rhs => false
     },
     {

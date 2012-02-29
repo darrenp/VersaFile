@@ -64,6 +64,7 @@ VersaFile::Application.routes.draw do
       post 'reset'
       get 'expired'
       get 'metrics'
+      get 'main'
     end
     collection do
       post 'usage'

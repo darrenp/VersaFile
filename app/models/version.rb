@@ -9,7 +9,7 @@ class Version < ActiveRecord::Base
   has_one :content_type, :primary_key=>"binary_content_type", :foreign_key => "binary_content_type"
   before_save :pre_save_actions
 
-  def self.supersede(zone, current_version, temp_file, as_minor)
+  def self.supersede(library, current_version, temp_file, as_minor)
 
     unless(current_version.nil?)
 
@@ -30,7 +30,8 @@ class Version < ActiveRecord::Base
       minor_version = as_minor ? 1 : 0
     end
 
-    version = zone.versions.new(
+    version = library.zone.versions.new(
+        :library => library,
         :binary => temp_file,
         :major_version_number => major_version,
         :minor_version_number => minor_version,
@@ -109,7 +110,6 @@ class Version < ActiveRecord::Base
   def self.unpackage(document, root_dir)
 
     import_json = ActiveSupport::JSON.decode(IO.read(File.join(root_dir, '_version.json')))
-
 
     file_path = File.join(root_dir, import_json['binary_file_name'])
     logger.debug(":> #{file_path}")

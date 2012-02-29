@@ -42,17 +42,22 @@ class ZoneNode < ActiveRecord::Base
 
     response = http.request(request)
 
-    if(response.code == :created)
-      self.update_attribute(:status, VersaFile::ZoneStates.Enabled)
+    case response
+      when Net::HTTPCreated
+         self.update_attributes(
+          :deployed => true,
+          :status => VersaFile::ZoneStates.Enabled
+        )
+        self.account.update_attribute(:status, VersaFile::AccountStates.Enabled)
+      else
+        raise "Zone creation failed"
     end
 
   end
 
   def zone_update
 
-    #TODO: Don't forget to change back!!!
     update_url = "#{self.server.base_url}/zones.json"
-    #update_url = "http://www.bfreetest.com:3001/zones/#{self.subdomain}"
 
     logger.debug("URL:> #{update_url}")
     url = URI.parse(update_url)
@@ -80,7 +85,7 @@ class ZoneNode < ActiveRecord::Base
   end
 
   def zone_url
-    return self.server.base_url << "/zones/#{self.subdomain}"
+    return self.server.base_url << "/zones/#{self.subdomain}/main"
   end
 
   def url

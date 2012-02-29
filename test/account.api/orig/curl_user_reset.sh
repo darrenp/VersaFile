@@ -1,5 +1,5 @@
-#SERVER_HOST=admin.bfreetest.com:3000
-SERVER_HOST=https://admin.versafiledev.com
+SERVER_HOST=admin.bfreetest.com:3000
+#SERVER_HOST=admin.versafiledev.com
 
 echo LOGON
 echo ================================================
@@ -9,9 +9,8 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
-    -k \
-    -d "{\"username\":\"admin\",\"password\":\"admin\"}" \
-    $SERVER_HOST/rko_users/logon
+    -d "{\"email\":\"cmburns@snpp.com\",\"password\":\"bobo\"}" \
+    http://$SERVER_HOST/accounts/logon
 echo
 echo ================================================
 echo
@@ -26,43 +25,40 @@ auth_token=$( \
         -c cookies.txt \
         -H "Accept:application/json,application/javascript" \
         -H "Content-Type:application/json" \
-        -k \
-        $SERVER_HOST/accounts/get_token \
+        http://$SERVER_HOST/accounts/get_token \
 )
 echo
 echo ================================================
 echo
 echo
 
-echo CREATE
-echo ================================================
+echo RESET PASSWORD - OK
+echo =============================================
 curl \
     -v \
     -b cookies.txt \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
-    -k \
     -X POST \
-    -d "{ \
-            \"authenticity_token\":\"$auth_token\",
-            \"email\":\"scotth@rkosolutions.com\", \
-            \"password\":\"dont4get\", \
-            \"name\":\"RKO Business Solutions\", \
-            \"first_name\":\"Sean\", \
-            \"last_name\":\"Fitzpatrick\", \
-            \"address\":\"55 Water Street, Suite 503\", \
-            \"city\":\"Vancouver\", \
-            \"province\":\"BC\", \
-            \"country\":\"CA\", \
-            \"postal_code\":\"V6B 1A1\", \
-            \"account_type\":0, \
-            \"billing_type\":0, \
-            \"trial_period\":65535, \
-            \"template\": 1, \
-            \"subdomains\": [ { \"name\":\"rkosean\", \"user_quota\":10, \"disk_quota\": 50 } ] \
-        }" \
-    $SERVER_HOST/accounts
+    -d "{ \"authenticity_token\":\"$auth_token\" }" \
+    http://$SERVER_HOST/accounts/cmburns@snpp.com/reset_password
+echo
+echo ================================================
+echo
+echo
+
+echo RESET PASSWORD - NO ACCESS
+echo =============================================
+curl \
+    -v \
+    -b cookies.txt \
+    -c cookies.txt \
+    -H "Accept:application/json,application/javascript" \
+    -H "Content-Type:application/json" \
+    -X POST \
+    -d "{ \"authenticity_token\":\"$auth_token\" }" \
+    http://$SERVER_HOST/accounts/anahasapeemapetilon@kwikemart.com/reset_password
 echo
 echo ================================================
 echo
@@ -76,9 +72,8 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
-    -k \
     -d "{\"authenticity_token\":\"$auth_token\"}" \
-    $SERVER_HOST/rko_users/logoff
+    http://$SERVER_HOST/accounts/logoff
 echo
 echo ================================================
 echo

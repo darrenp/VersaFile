@@ -203,9 +203,7 @@ class ZoneNodesController < ApplicationController
     @zone_node.server.active=1
 
     #TODO: CHANGE TO ACTIVE SERVER!!!!
-    u="#{@zone_node.server.base_url}/zones.json"
-
-    url = URI.parse(u)
+    url = URI.parse("#{@zone_node.server.base_url}/zones.json")
 
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = @zone_node.server.protocol=="https"

@@ -1,5 +1,7 @@
-#SERVER_HOST=admin.bfreetest.com:3000
-SERVER_HOST=https://admin.versafiledev.com
+SERVER_HOST=admin.bfreetest.com:3000
+#SERVER_HOST=admin.versafiledev.com
+
+curr_date=$( date +"%y%m%d%H%M%S" )
 
 echo LOGON
 echo ================================================
@@ -11,7 +13,7 @@ curl \
     -H "Content-Type:application/json" \
     -k \
     -d "{\"username\":\"admin\",\"password\":\"admin\"}" \
-    $SERVER_HOST/rko_users/logon
+    http://$SERVER_HOST/rko_users/logon
 echo
 echo ================================================
 echo
@@ -27,7 +29,7 @@ auth_token=$( \
         -H "Accept:application/json,application/javascript" \
         -H "Content-Type:application/json" \
         -k \
-        $SERVER_HOST/accounts/get_token \
+        http://$SERVER_HOST/accounts/get_token \
 )
 echo
 echo ================================================
@@ -48,21 +50,40 @@ curl \
             \"authenticity_token\":\"$auth_token\",
             \"email\":\"scotth@rkosolutions.com\", \
             \"password\":\"dont4get\", \
-            \"name\":\"RKO Business Solutions\", \
-            \"first_name\":\"Sean\", \
-            \"last_name\":\"Fitzpatrick\", \
+            \"name\":\"Moe's Tavern\", \
+            \"first_name\":\"Moe\", \
+            \"last_name\":\"Szyslak\", \
             \"address\":\"55 Water Street, Suite 503\", \
             \"city\":\"Vancouver\", \
             \"province\":\"BC\", \
             \"country\":\"CA\", \
             \"postal_code\":\"V6B 1A1\", \
-            \"account_type\":0, \
+            \"account_type\":1, \
             \"billing_type\":0, \
-            \"trial_period\":65535, \
-            \"template\": 1, \
-            \"subdomains\": [ { \"name\":\"rkosean\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"trial_period\":0, \
+            \"template\": 0, \
+            \"subdomains\": [ { \"name\":\"moes3\", \"user_quota\":3, \"disk_quota\": 12 } ] \
         }" \
-    $SERVER_HOST/accounts
+    http://$SERVER_HOST/accounts
+echo
+echo ================================================
+echo
+echo
+
+echo UPDATE - OK
+echo ================================================
+curl \
+    -v \
+    -b cookies.txt \
+    -c cookies.txt \
+    -H "Accept:application/json,application/javascript" \
+    -H "Content-Type:application/json" \
+    -X PUT \
+    -d "{ \
+            \"authenticity_token\":\"$auth_token\",
+            \"customer_code\":\"$curr_date\"
+        }" \
+    http://$SERVER_HOST/accounts/scotth@rkosolutions.com
 echo
 echo ================================================
 echo
@@ -78,7 +99,7 @@ curl \
     -H "Content-Type:application/json" \
     -k \
     -d "{\"authenticity_token\":\"$auth_token\"}" \
-    $SERVER_HOST/rko_users/logoff
+    http://$SERVER_HOST/rko_users/logoff
 echo
 echo ================================================
 echo

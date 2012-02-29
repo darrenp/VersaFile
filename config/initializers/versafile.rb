@@ -63,9 +63,10 @@ module VersaFile
   end
 
   module AccountStates
-    @@_disabled =   0x0000
+    @@_pending =   0x0000
     @@_enabled =    0x0001
     @@_reset =      0x0002
+    @@_disabled =   0x4000
     @@_deleted =    0x8000
 
     def self.Deleted
@@ -78,6 +79,10 @@ module VersaFile
 
     def self.Enabled
       @@_enabled
+    end
+
+    def self.Pending
+      @@_pending
     end
 
     def self.Reset

@@ -1,5 +1,5 @@
-SERVER_HOST=admin.bfreetest.com:3000
-#SERVER_HOST=admin.versafiledev.com
+#SERVER_HOST=admin.bfreetest.com:3000
+SERVER_HOST=https://admin.versafiledev.com
 
 echo LOGON
 echo ================================================
@@ -11,7 +11,7 @@ curl \
     -H "Content-Type:application/json" \
     -k \
     -d "{\"username\":\"admin\",\"password\":\"admin\"}" \
-    http://$SERVER_HOST/rko_users/logon
+    $SERVER_HOST/rko_users/logon
 echo
 echo ================================================
 echo
@@ -27,7 +27,7 @@ auth_token=$( \
         -H "Accept:application/json,application/javascript" \
         -H "Content-Type:application/json" \
         -k \
-        http://$SERVER_HOST/accounts/get_token \
+        $SERVER_HOST/accounts/get_token \
 )
 echo
 echo ================================================
@@ -46,7 +46,7 @@ curl \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"aarons@rkosolutions.com\", \
+            \"email\":\"scotth@rkosolutions.com\", \
             \"password\":\"dont4get\", \
             \"name\":\"RKO Business Solutions\", \
             \"first_name\":\"John\", \
@@ -60,9 +60,9 @@ curl \
             \"billing_type\":0, \
             \"trial_period\":0, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"test\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"subdomains\": [ { \"name\":\"rko\", \"user_quota\":10, \"disk_quota\": 50 } ] \
         }" \
-    http://$SERVER_HOST/accounts
+    $SERVER_HOST/accounts
 echo
 echo ================================================
 echo
@@ -78,7 +78,7 @@ curl \
     -H "Content-Type:application/json" \
     -k \
     -d "{\"authenticity_token\":\"$auth_token\"}" \
-    http://$SERVER_HOST/rko_users/logoff
+    $SERVER_HOST/rko_users/logoff
 echo
 echo ================================================
 echo

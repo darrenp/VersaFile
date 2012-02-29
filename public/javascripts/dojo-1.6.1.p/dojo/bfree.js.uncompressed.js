@@ -2534,6 +2534,31 @@ bfree.api.Utilities.formatDate= function(date){
            hourS+':00:00Z';
 };
 
+bfree.api.Utilities.validateEmail=function(str){
+    // These comments use the following terms from RFC2822:
+    // local-part, domain, domain-literal and dot-atom.
+    // Does the address contain a local-part followed an @ followed by a domain?
+    // Note the use of lastIndexOf to find the last @ in the address
+    // since a valid email address may have a quoted @ in the local-part.
+    // Does the domain name have at least two parts, i.e. at least one dot,
+    // after the @? If not, is it a domain-literal?
+    // This will accept some invalid email addresses
+    // BUT it doesn't reject valid ones.
+    var atSym = str.lastIndexOf("@");
+    if (atSym < 1) { return false; } // no local-part
+    if (atSym == str.length - 1) { return false; } // no domain
+    if (atSym > 64) { return false; } // there may only be 64 octets in the local-part
+    if (str.length - atSym > 255) { return false; } // there may only be 255 octets in the domain
+
+    // Is the domain plausible?
+    var lastDot = str.lastIndexOf(".");
+    // Check if it is a dot-atom such as example.com
+    if (lastDot > atSym + 1 && lastDot < str.length - 1) { return true; }
+    //  Check if could be a domain-literal.
+    if (str.charAt(atSym + 1) == '[' &&  str.charAt(str.length - 1) == ']') { return true; }
+    return false;
+};
+
 
 
 }
@@ -5433,7 +5458,7 @@ dojo.declare('bfree.api.Group', [bfree.api._Object], {
     isValid: function(){
         var isValid = true;
 
-		if (String.isEmpty(this.name)) {
+		if (String.isEmpty(this.name.trim())) {
             isValid = false;
 		}
 
@@ -5654,7 +5679,7 @@ dojo.declare('bfree.api.ChoiceList', [bfree.api._Object],{
     isValid: function(){
         var isValid = true;
 
-		if (String.isEmpty(this.name)) {
+		if (String.isEmpty(this.name.trim())) {
             isValid = false;
 		}
 
@@ -6789,7 +6814,7 @@ dojo.declare('bfree.api.DocumentType', [bfree.api._Object], {
     isValid: function(){
         var isValid = true;
 
-		if (String.isEmpty(this.name)) {
+		if (String.isEmpty(this.name.trim())) {
             isValid = false;
 		}
 
@@ -7314,7 +7339,7 @@ dojo.declare('bfree.api.PropertyDefinition', [bfree.api._Object], {
     isValid: function(){
         var isValid = true;
 
-		if (String.isEmpty(this.name)) {
+		if (String.isEmpty(this.name.trim())) {
             isValid = false;
 		}
 
@@ -7830,6 +7855,10 @@ dojo.declare('bfree.api.User', [bfree.api._Object], {
             isValid = false;
         }
 
+        if(!bfree.api.Utilities.validateEmail(this.email)){
+            isValid=false;
+        }
+
         var password=this.reset_password;
         if(this.isNew()){
             if(password.length<8){
@@ -8169,8 +8198,8 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
     isValid: function(){
         var isValid = true;
 
-		if (String.isEmpty(this.name)) {
-            isValid = false;;
+		if (String.isEmpty(this.name.trim())) {
+            isValid = false;
 		}
 
         if (String.isEmpty(this.sort_by)){
@@ -50335,6 +50364,11 @@ dojo.declare('bfree.widget.FilteringSelect', [dijit.form.FilteringSelect],
         this._hasBeenBlurred = true;
         this.inherited('startup', arguments);
         this.validate();
+    },
+
+    _openResultList: function(/*Object*/ results, /*Object*/ dataObject){
+        this.focusNode.focus();
+        this.inherited('_openResultList', arguments);
     }
 
 
@@ -52590,6 +52624,7 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             intermediateChanges: true,
             disabled: true,
             required: true,
+            trim: true,
             style: 'width:100%',
             validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
@@ -52647,13 +52682,19 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
     },
 
     _txtNameValidator: function(newValue){
-        var items=this.choiceLists.fetch();
-        for(var i=0;i<items.length;i++){
-            if(items[i].name&&
-               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
-               items[i].__id!=this.activeItem.__id){
-                this._txtName.set('invalidMessage', 'Duplicate choice list');
+        if(this._txtName){
+            if(newValue.trim()==''){
+                this._txtName.set('invalidMessage', 'Choice list name cannot be blank');
                 return false;
+            }
+            var items=this.choiceLists.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate choice list');
+                    return false;
+                }
             }
         }
         return true;
@@ -62108,7 +62149,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
         try{
             if(this.filesLoaded){
-                if(!confirm("Files have not been added to Varsafile, closing this dialog will cause them to be lost")){
+                if(!confirm("Files have not been added to VarsaFile, closing this dialog will cause them to be lost")){
                     return false;
                 }
             }
@@ -63499,6 +63540,7 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
             intermediateChanges: true,
             selectOnClick: true,
             style: 'width:100%',
+            trim: true,
             validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
 		});
@@ -63541,13 +63583,19 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     _txtNameValidator: function(newValue){
-        var items=this.groups.fetch();
-        for(var i=0;i<items.length;i++){
-            if(items[i].name&&
-               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
-               items[i].__id!=this.activeItem.__id){
-                this._txtName.set('invalidMessage', 'Duplicate group name');
+        if(this._txtName){
+            if(newValue.trim()==''){
+                this._txtName.set('invalidMessage', 'Name cannot be blank');
                 return false;
+            }
+            var items=this.groups.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate group name');
+                    return false;
+                }
             }
         }
         return true;
@@ -65252,6 +65300,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             required: true,
             selectOnClick: true,
             style: 'width:100%',
+            trim: true,
             validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._txtName_onChange)
         });
@@ -65294,13 +65343,19 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     _txtNameValidator: function(newValue){
-        var items=this.documentTypes.fetch();
-        for(var i=0;i<items.length;i++){
-            if(items[i].name&&
-               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
-               items[i].__id!=this.activeItem.__id){
-                this._txtName.set('invalidMessage', 'Duplicate document type');
+        if(this._txtName){
+            if(newValue.trim()==''){
+                this._txtName.set('invalidMessage', 'Document type name cannot be blank');
                 return false;
+            }
+            var items=this.documentTypes.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate document type');
+                    return false;
+                }
             }
         }
         return true;
@@ -66524,6 +66579,7 @@ dojo.declare('bfree.widget.propdef.Editor', [dijit._Widget, dijit._Templated],{
             selectOnClick: true,
             style: 'width:100%',
             required: true,
+            trim: true,
             validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._txtName_onChange)
         });
@@ -66566,19 +66622,26 @@ dojo.declare('bfree.widget.propdef.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     _txtNameValidator: function(value){
-        if(this.activeItem){
-            var items=this.propertyDefinitions.fetch();
-            for(var i=0;i<items.length;i++){
-                if(items[i].name&&
-                   items[i].name.toLowerCase().trim()==value.toLowerCase().trim()&&
-                   items[i].__id!=this.activeItem.__id){
-                    this._txtName.set('invalidMessage', 'Duplicate property definition name');
-                    return false;
-                }
+        if(this._txtName){
+            if(value.trim()==''){
+                this._txtName.set('invalidMessage', 'Property definition name cannot be blank');
+                return false;
             }
-            this._txtName.set('invalidMessage', null);
-            return true;
+            if(this.activeItem){
+                var items=this.propertyDefinitions.fetch();
+                for(var i=0;i<items.length;i++){
+                    if(items[i].name&&
+                       items[i].name.toLowerCase().trim()==value.toLowerCase().trim()&&
+                       items[i].__id!=this.activeItem.__id){
+                        this._txtName.set('invalidMessage', 'Duplicate property definition name');
+                        return false;
+                    }
+                }
+                this._txtName.set('invalidMessage', null);
+
+            }
         }
+        return true;
     },
 
     resize: function(){
@@ -68896,6 +68959,7 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
             intermediateChanges: true,
             selectOnClick: true,
             style: 'width:100%',
+            trim: true,
             validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
 		});
@@ -69007,10 +69071,16 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     _emailValidator: function(newValue){
-        var group=this.groups.fetchById({id: this.activeItem.active_group});
+        if(this._txtEmail){
+            if(newValue.trim()==""){
+                this._txtEmail.set('invalidMessage', 'Email cannot be blank');
+                return false;
+            }
 
-        if(newValue==""){
-            return false;
+            if(!bfree.api.Utilities.validateEmail(newValue)){
+                this._txtEmail.set('invalidMessage', 'You must enter a valid email');
+                return false;
+            }
         }
         return true;
     },
@@ -70850,6 +70920,7 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
             selectOnClick: true,
             style: 'width:100%',
             required: true,
+            trim: true,
             validator: dojo.hitch(this, this._txtNameValidator),
             onChange: dojo.hitch(this, this._onValueChange, 'name')
         });
@@ -70903,13 +70974,19 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     _txtNameValidator: function(newValue){
-        var items=this.viewDefinitions.fetch();
-        for(var i=0;i<items.length;i++){
-            if(items[i].name&&
-               items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
-               items[i].__id!=this.activeItem.__id){
-                this._txtName.set('invalidMessage', 'Duplicate view definition');
+        if(this._txtName){
+            if(newValue.trim()==''){
+                this._txtName.set('invalidMessage', 'View definition name cannot be blank');
                 return false;
+            }
+            var items=this.viewDefinitions.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate view definition');
+                    return false;
+                }
             }
         }
         return true;
@@ -71144,7 +71221,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 name: 'Title',
                 noresize: false,
                 style: '',
-                width: '512px',
+                width: 'auto',
                 formatter: bfree.api.CellDefinition.formats.none
             });
             idx++;
@@ -72736,6 +72813,8 @@ dojo.provide('bfree.widget.folder.DndSource');
 
 
 dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
+    singular: true,
+
     onDndDrop: function(source, nodes, copy){
 //        this.tree.folders.loadItem({item: this.targetAnchor.item});
 
@@ -72857,6 +72936,16 @@ dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
 
         if(source.anchor.item&&targetNode.item.id==source.anchor.item.parent_id){
             return false;
+        }
+
+        var children=targetNode.getChildren();
+
+        for(var i in children){
+            if(children[i].item&&
+               children[i].item.name&&
+               children[i].item.name==source.anchor.item.name){
+                return false;
+            }
         }
 
         if(targetNode.item.is_search||targetNode.item.is_trash){
@@ -83579,6 +83668,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             });
             accessor.doCancelCheckout(item);
 
+            this._grdDocuments_onSelectedItems(this._grdDocuments.selection.getSelected());
+
         }
         catch(e){
             var err = new bfree.api.Error('Failed to cancel checkout of document', e);
@@ -83599,11 +83690,14 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             };
 
             function __onClose(dlgResult, retValue){
-               this._grdDocuments.endUpdate();
-               var idx = this._grdDocuments.getItemIndex(item);
-               this._grdDocuments.updateRow(idx);
-               this._cmdBar.set('activeDocument', this.activeDocument);
-               return true;
+                this._grdDocuments.endUpdate();
+                var idx = this._grdDocuments.getItemIndex(item);
+                this._grdDocuments.updateRow(idx);
+                this._cmdBar.set('activeDocument', this.activeDocument);
+
+                this._grdDocuments_onSelectedItems(this._grdDocuments.selection.getSelected());
+
+                return true;
             }
 
             if(!item)
@@ -83643,6 +83737,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             this._grdDocuments.setBusy(item);
             accessor.doCheckout(item);
             accessor.doCopyLocal(item);
+
+            this._grdDocuments_onSelectedItems(this._grdDocuments.selection.getSelected());
 
         }
         catch(e){

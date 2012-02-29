@@ -50,7 +50,7 @@ class DocumentsController < ApplicationController
           @document.update_metadata(params)
           @document.custom_metadata = @document.generate_custom_metadata()
 
-          @version = Version.supersede(@zone, @document.current_version, @temp_file, isMinorVersion)
+          @version = Version.supersede(@library, @document.current_version, @temp_file, isMinorVersion)
           if(@version.binary_content_type.blank?)
             @version.binary_content_type = params[:temp_file][:content_type]
           end
@@ -179,7 +179,7 @@ class DocumentsController < ApplicationController
   # GET /documents.json
   def index
 
-    @zone.trial_expiry
+
 
     @documents = []
 
@@ -232,9 +232,9 @@ class DocumentsController < ApplicationController
       end
     end
 
-
-
     headers['Content-Range'] = "#{range['offset']}-#{range['offset'] + range['row_count']}/#{@count}"
+
+    logger.debug("#{ Net::HTTPCreated } == #{ ( Net::HTTPCreated == 201) }")
 
     respond_to do |format|
       format.csv  {
@@ -327,7 +327,7 @@ class DocumentsController < ApplicationController
 
         tmp_file = UploaderHelper.read_file(@zone, unique_id, params[:current_version][:binary_file_name])
         logger.debug("FILE:> #{tmp_file.path}")
-        @version = Version.supersede(@zone, nil, tmp_file, isMinorVersion)
+        @version = Version.supersede(@library, nil, tmp_file, isMinorVersion)
         logger.debug("FILE:> #{@version.binary_file_name}")
 
         @document = @zone.documents.new({
