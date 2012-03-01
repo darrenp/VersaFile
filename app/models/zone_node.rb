@@ -57,12 +57,13 @@ class ZoneNode < ActiveRecord::Base
 
   def zone_update
 
-    update_url = "#{self.server.base_url}/zones.json"
+    update_url = "#{self.server.base_url}/zones/#{self.subdomain}"
 
     logger.debug("URL:> #{update_url}")
     url = URI.parse(update_url)
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = (self.server.protocol == "https")
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     form = {
       :name => self.name,

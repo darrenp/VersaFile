@@ -4,7 +4,6 @@ SERVER_HOST=admin.bfreetest.com:3000
 echo LOGON
 echo ================================================
 curl \
-    -v \
     -b cookies.txt \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
@@ -14,14 +13,12 @@ curl \
 echo
 echo ================================================
 echo
-echo                                                ls
-
+echo
 
 echo GET TOKEN
 echo ================================================
 auth_token=$( \
     curl \
-        -v \
         -b cookies.txt \
         -c cookies.txt \
         -H "Accept:application/json,application/javascript" \
@@ -33,7 +30,9 @@ echo ================================================
 echo
 echo
 
-echo CREATE
+curr_date=$( date +"%y%m%d%H%M%S" )
+
+echo UPDATE - OK
 echo ================================================
 curl \
     -v \
@@ -41,26 +40,14 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
-    -X POST \
+    -X PUT \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"scotth@rkosolutions.com\", \
-            \"password\":\"password\", \
-            \"name\":\"Springfield Nuclear Power Plant\", \
-            \"first_name\":\"C. Montgomery\", \
-            \"last_name\":\"Burns\", \
-            \"address\":\"55 Water Street, Suite 503\", \
-            \"city\":\"Vancouver\", \
-            \"province\":\"BC\", \
-            \"country\":\"CA\", \
-            \"postal_code\":\"V6B 1A1\", \
-            \"account_type\":0, \
+            \"account_type\":1, \
             \"billing_type\":0, \
-            \"trial_period\":60, \
-            \"template\": 1, \
-            \"subdomains\": [ { \"name\":\"nuke\", \"user_quota\":3, \"disk_quota\": 12 } ] \
+            \"trial_period\":-1 \
         }" \
-    http://$SERVER_HOST/accounts
+    http://$SERVER_HOST/accounts/scotth@rkosolutions.com
 echo
 echo ================================================
 echo
@@ -69,7 +56,6 @@ echo
 echo LOGOFF
 echo ================================================
 curl \
-    -v \
     -b cookies.txt \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \

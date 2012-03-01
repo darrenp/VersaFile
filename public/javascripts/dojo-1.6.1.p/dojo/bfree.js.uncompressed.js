@@ -62149,7 +62149,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
         try{
             if(this.filesLoaded){
-                if(!confirm("Files have not been added to VarsaFile, closing this dialog will cause them to be lost")){
+                if(!confirm("Files have not been added to VersaFile, closing this dialog will cause them to be lost")){
                     return false;
                 }
             }
@@ -67249,6 +67249,7 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
 
     _cmdBar: null,
     _onChangeHndl: null,
+    _onChangeHndl2: null,
     _cmbOperators: null,
     _cmbProperties: null,
     _wdgValue: null,
@@ -67292,7 +67293,15 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
             this._onChangeHndl = null;
         }
 
+        if(this._onChangeHndl2){
+            dojo.disconnect(this._onChangeHndl2);
+            this._onChangeHndl2 = null;
+        }
+
         this._onChangeHndl = dojo.connect(this._wdgValue, 'onKeyUp', this, this._onChange);
+        if(dataType.isDateTime()){
+            this._onChangeHndl2 = dojo.connect(this._wdgValue, 'onChange', this, this._onChange);
+        }
 
         //Delete old widget
         if(oldWidget){
@@ -68198,7 +68207,11 @@ dojo.declare('bfree.widget.user.ProfileEditor', [dijit._Widget, dijit._Templated
         if(this._chkEditPassword.checked){
             isValid = (this._txtOldPassword.isValid() && this._txtNewPassword.isValid() && this._txtConfirmPassword.isValid());
         }
-        if(this.user.is_admin && String.isBlank(this.user.email)){
+        if(String.isBlank(this.user.email)){
+            isValid = false;
+        }
+
+        if(!bfree.api.Utilities.validateEmail(this.user.email)){
             isValid = false;
         }
 
@@ -68305,7 +68318,6 @@ dojo.declare('bfree.widget.user.ProfileEditor', [dijit._Widget, dijit._Templated
             label: 'Email',
             selectOnClick: true,
             value: this.user.email,
-            required: this.user.is_admin,
             style: 'width:100%',
             onChange: dojo.hitch(this, this._onValueChange, 'email')
 		});

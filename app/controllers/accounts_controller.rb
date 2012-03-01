@@ -345,6 +345,7 @@ class AccountsController < ApplicationController
         end
 
         #Update remote zone information
+        logger.debug("UPDATE ZONE???? :> #{update_zone}")
         if update_zone
           @account.zone_nodes.each do |zone_node|
                zone_node.delay.zone_update

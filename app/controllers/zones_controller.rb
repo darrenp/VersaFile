@@ -418,7 +418,7 @@ class ZonesController < ApplicationController
         cfg_trial_period.value = params[:trial_period] unless params[:trial_period].nil?
 
         send_email_active = (cfg_trial_period.value_changed? && (cfg_trial_period.value.to_i < 0))
-        send_email_upgrade = (cfg_user_quota.value_changed? || cfg_disk_quota.value_changed?)
+        send_email_upgrade = ((cfg_trial_period.value_changed? && (cfg_trial_period.value.to_i >= 0)) || cfg_user_quota.value_changed? || cfg_disk_quota.value_changed?)
 
         @zone.updated_by = params[:updated_by] unless params[:updated_by].nil?
         unless @zone.save

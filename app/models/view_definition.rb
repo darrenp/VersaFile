@@ -61,7 +61,7 @@ class ViewDefinition < ActiveRecord::Base
       next if pd.data_type_id == Bfree::DataTypes.Text
       
       width = "128px"
-      width = "256px" if icust < 1
+      width = "auto" if icust < 1
        
       cell_def = view_definition.cell_definitions.new(
         :library_id => library.id,
