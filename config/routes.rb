@@ -88,6 +88,11 @@ VersaFile::Application.routes.draw do
 
       resources :cell_definitions
       resources :documents do
+        resources :versions do
+          member do
+            get 'download'
+          end
+        end
         member do
           get 'download'
           put 'checkin'

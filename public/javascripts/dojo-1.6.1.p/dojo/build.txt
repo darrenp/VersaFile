@@ -67,6 +67,7 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/api/Versions.js
 ./../../../dojo-1.6.1.p/bfree/api/Document.js
 ./../../../dojo-1.6.1.p/bfree/api/Documents.js
+./../../../dojo-1.6.1.p/bfree/api/PropertyMapping.js
 ./../../../dojo-1.6.1.p/bfree/api/DocumentType.js
 ./../../../dojo-1.6.1.p/bfree/api/DocumentTypes.js
 ./../../../dojo-1.6.1.p/bfree/api/Search.js
@@ -80,7 +81,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/api/Roles.js
 ./../../../dojo-1.6.1.p/bfree/api/User.js
 ./../../../dojo-1.6.1.p/bfree/api/Users.js
-./../../../dojo-1.6.1.p/bfree/api/PropertyMapping.js
 ./../../../dojo-1.6.1.p/bfree/api/PropertyMappings.js
 ./../../../dojo-1.6.1.p/bfree/api/ViewDefinition.js
 ./../../../dojo-1.6.1.p/dojo/dnd/common.js
@@ -249,6 +249,7 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/choiceList/Editor.js
 ./../../../dojo-1.6.1.p/bfree/widget/choiceList/Administration.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/Accessor.js
+./../../../dojo-1.6.1.p/bfree/widget/document/version/Accessor.js
 ./../../../dojo-1.6.1.p/bfree/widget/Utils.js
 ./../../../dojo-1.6.1.p/bfree/widget/HeaderMenu.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/ContextMenu.js
@@ -287,6 +288,9 @@ bfree.js:
 ./../../../dojo-1.6.1.p/dojox/fx/_base.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/Creator.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/PropertyEditor.js
+./../../../dojo-1.6.1.p/bfree/widget/document/version/ContextMenu.js
+./../../../dojo-1.6.1.p/bfree/widget/document/version/Grid.js
+./../../../dojo-1.6.1.p/bfree/widget/document/version/Versions.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/CommandBar.js
 ./../../../dojo-1.6.1.p/bfree/widget/SortGrid.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Info.js

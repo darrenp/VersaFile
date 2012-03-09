@@ -9,6 +9,8 @@ class Version < ActiveRecord::Base
   has_one :content_type, :primary_key=>"binary_content_type", :foreign_key => "binary_content_type"
   before_save :pre_save_actions
 
+  attr_accessor :sort_id
+
   def self.supersede(library, current_version, temp_file, as_minor)
 
     unless(current_version.nil?)

@@ -218,17 +218,15 @@ class ZonesController < ApplicationController
 
       o =  [('a'..'z'),('A'..'Z')].map{|i| i.to_a}.flatten
       fngrprint  =  (0..20).map{ o[rand(o.length)]  }.join
-      @tmp_password=(0..8).map{o[rand(o.length)]}.join
 
       unless @user.update_attributes(
-        :reset_fingerprint => fngrprint,
-        :reset_password => @tmp_password)
+        :reset_fingerprint => fngrprint)
         raise @user.errors
       end
 
       #to wait for the email to be constructed and sent
       unless @user.email.nil?
-        @email = EmailWorker.new(@user.email, {:zone => @zone, :user => @user, :password => @tmp_password, :fingerprint=>fngrprint })
+        @email = EmailWorker.new(@user.email, {:zone => @zone, :user => @user, :fingerprint=>fngrprint })
         @email.delay.send_user_reset()
       end
 
@@ -432,8 +430,7 @@ class ZonesController < ApplicationController
         if(send_email_active)
           @email = EmailWorker.new(@admin.email, {:zone => @zone })
           @email.delay.send_zone_upgrade_active()
-        end
-        if(send_email_upgrade)
+        elsif(send_email_upgrade)
           user_quota_str = cfg_user_quota.value
           disk_quota_str = Object.new.extend(ActionView::Helpers::NumberHelper).number_to_human_size(cfg_disk_quota.value.to_i)
           @email = EmailWorker.new(@admin.email, {:zone => @zone, :user_quota => user_quota_str, :disk_quota => disk_quota_str })

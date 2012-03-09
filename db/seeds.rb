@@ -97,8 +97,8 @@ Operator.create([
     {
       :data_type_id => Bfree::DataTypes.DateTime,
       :name => 'on',
-      :value => '>=',
-      :template => '%{lhs} >= \'%{rhs}\'',
+      :value => '=',
+      :template => '%{lhs} between %{rhs}',
       :no_rhs => false
     },
     {

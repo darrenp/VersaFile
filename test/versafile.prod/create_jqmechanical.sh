@@ -1,5 +1,4 @@
-SERVER_HOST=admin.bfreetest.com:3000
-#SERVER_HOST=admin.versafiledev.com
+SERVER_HOST=https://admin.versafile.com
 
 echo LOGON
 echo ================================================
@@ -9,8 +8,9 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -d "{\"username\":\"admin\",\"password\":\"admin\"}" \
-    http://$SERVER_HOST/rko_users/logon
+    $SERVER_HOST/rko_users/logon
 echo
 echo ================================================
 echo
@@ -25,7 +25,8 @@ auth_token=$( \
         -c cookies.txt \
         -H "Accept:application/json,application/javascript" \
         -H "Content-Type:application/json" \
-        http://$SERVER_HOST/accounts/get_token \
+        -k \
+        $SERVER_HOST/accounts/get_token \
 )
 echo
 echo ================================================
@@ -40,26 +41,28 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"scotth@rkosolutions.com\", \
+            \"email\":\"mikes@rkosolutions.com\", \
             \"password\":\"dont4get\", \
-            \"name\":\"CWN Capital Inc.\", \
-            \"first_name\":\"Mike\", \
-            \"last_name\":\"Skelton\", \
-            \"address\":\"55 Water Street, Suite 503\", \
+            \"name\":\"JQ Mechanical\", \
+            \"first_name\":\"Jason\", \
+            \"last_name\":\"Hartley\", \
+            \"address\":\"\", \
             \"city\":\"Vancouver\", \
             \"province\":\"BC\", \
             \"country\":\"CA\", \
-            \"postal_code\":\"V6B 1A1\", \
+            \"postal_code\":\"\", \
+            \"phone\": \"604-326-6001\", \
             \"account_type\":0, \
             \"billing_type\":0, \
-            \"trial_period\":60, \
+            \"trial_period\":65535, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"cwn\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"subdomains\": [ { \"name\":\"jqmechanical\", \"user_quota\":3, \"disk_quota\": 10 } ] \
         }" \
-    http://$SERVER_HOST/accounts
+    $SERVER_HOST/accounts
 echo
 echo ================================================
 echo
@@ -73,8 +76,9 @@ curl \
     -c cookies.txt \
     -H "Accept:application/json,application/javascript" \
     -H "Content-Type:application/json" \
+    -k \
     -d "{\"authenticity_token\":\"$auth_token\"}" \
-    http://$SERVER_HOST/rko_users/logoff
+    $SERVER_HOST/rko_users/logoff
 echo
 echo ================================================
 echo

@@ -5,11 +5,17 @@ class VersionsController < ApplicationController
   # GET /versions
   # GET /versions.json
   def index
-    @versions = Version.all
+
+    @versions = @library.documents.find_by_id(params[:document_id]).versions.all(:order=>'major_version_number DESC, minor_version_number DESC')
+
+    for i in (0..@versions.length-1)
+      @version=@versions[i]
+      @version.sort_id=i
+    end
 
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: @versions }
+      format.json { render json: @versions.to_json(:methods=>[:sort_id]) }
     end
   end
 
@@ -124,5 +130,40 @@ class VersionsController < ApplicationController
       format.html { redirect_to versions_url }
       format.json { head :ok }
     end
+  end
+
+  # POST /versions/1/download.js
+  def download
+
+    begin
+
+    @document = @library.documents.viewable(@active_user, @active_group).find(params[:document_id])
+    logger.info "Preparing '#{@document.name}' for download..."
+
+    version=@document.versions.find_by_id(params[:id])
+
+    local_filepath = version.path
+    orig_filename = version.binary_file_name
+    type = version.content_type&&params[:disposition]=='inline' ? version.content_type.open_as : version.binary_content_type
+
+    send_file local_filepath, :filename => orig_filename, :type => type, :disposition => params[:disposition]
+
+    rescue ActiveRecord::RecordNotFound=>e
+      #Better error message that doesn't expose database'
+      logger.error "Document download failed => #{e.message}"
+      @errMsg = "Download failed: Couldn't find specified document"
+      respond_to do |format|
+        format.html { render :layout => false, :template => 'documents/missing' }
+        format.json { render :json => @errMsg, :status => :unprocessable_entity }
+      end
+    rescue => e
+      logger.error "Document download failed => #{e.message}"
+      @errMsg = "Download failed: #{e.message}"
+      respond_to do |format|
+        format.html { render :layout => false, :template => 'documents/missing' }
+        format.json { render :json => e.message, :status => :unprocessable_entity }
+      end
+    end
+
   end
 end

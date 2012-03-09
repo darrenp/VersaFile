@@ -245,6 +245,13 @@ dont think this is needed
           end
         end
 
+        unless @user.password_expires.nil?
+          @user.update_attributes(
+            :password => params[:new_password],
+            :password_expires => nil
+          )
+        end
+
         unless @user.save
           raise @user.errors
         end
@@ -270,16 +277,10 @@ dont think this is needed
   def reset
     begin
       user=@zone.users.find_by_reset_fingerprint(params[:f])
-      if(!user||!user.verify_reset_password(params[:oldPassword]))
-        raise "Invalid credentials"
-      else
-      #@zone.authorize(user, params[:oldPassword], user.groups.first)
-
-        user.password=params[:newPassword]
-        user.reset_fingerprint=nil
-        user.reset_password=nil
-        user.save
-      end
+      user.password=params[:newPassword]
+      user.reset_fingerprint=nil
+      user.reset_password=nil
+      user.save
       respond_to do |format|
         format.json { render :json => "", :status => :ok}
       end

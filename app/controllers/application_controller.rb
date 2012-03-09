@@ -65,7 +65,7 @@ class ApplicationController < ActionController::Base
   def authorization_required()
     if(params[:f])
       @user=@zone.users.find_by_reset_fingerprint(params[:f])
-      if(@user)
+      unless(@user.nil?)
         redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'expired', :f=>params[:f]
         return
       end

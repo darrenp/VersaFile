@@ -1,5 +1,5 @@
-#SERVER_HOST=admin.bfreetest.com:3000
-SERVER_HOST=https://admin.versafiledev.com
+SERVER_HOST=admin.bfreetest.com:3000
+#SERVER_HOST=https://admin.versafiledev.com
 
 echo LOGON
 echo ================================================
@@ -46,7 +46,7 @@ curl \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"scotth@rkosolutions.com\", \
+            \"email\":\"aarons@rkosolutions.com\", \
             \"password\":\"dont4get\", \
             \"name\":\"RKO Business Solutions\", \
             \"first_name\":\"John\", \
@@ -60,7 +60,7 @@ curl \
             \"billing_type\":0, \
             \"trial_period\":0, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"rko\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"subdomains\": [ { \"name\":\"test2\", \"user_quota\":10, \"disk_quota\": 50 } ] \
         }" \
     $SERVER_HOST/accounts
 echo

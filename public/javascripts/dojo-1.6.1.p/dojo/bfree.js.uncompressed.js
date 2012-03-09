@@ -6197,9 +6197,40 @@ dojo.declare('bfree.api.Version', [bfree.api._Object], {
 
     constructor: function(args){
         if(args) dojo.safeMixin(this, args);
-    }
+    },
+
+    copyLocal: function(args){
+        var zone = args.zone;
+        var library = args.library;
+        var document = args.document;
+
+        var url = dojo.replace(bfree.api.Version.CP_TRGT, [zone.subdomain, library.id, document.id, this.id]);
+        bfree.api.Utilities.saveUrl({
+            url: url,
+            window_name: 'versa_save'
+        });
+
+	},
+
+    view: function(args){
+        var zone = args.zone;
+        var library = args.library;
+        var document = args.document;
+
+        var url = dojo.replace(bfree.api.Version.VW_TRGT, [zone.subdomain, library.id, document.id, this.id]);
+
+        bfree.api.Utilities.viewUrl({
+            windowBox: args.windowBox,
+            url: url,
+            window_name: 'versa_viewer'
+        });
+	}
 
 });
+
+bfree.api.Version.VW_TRGT = '/zones/{0}/libraries/{1}/documents/{2}/versions/{3}/download/?disposition=inline';
+bfree.api.Version.CP_TRGT = '/zones/{0}/libraries/{1}/documents/{2}/versions/{3}/download/?disposition=attachment';
+
 
 bfree.api.Version.schema = {
  	type: 'object',
@@ -6301,6 +6332,13 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
         });
 
         return true;
+    },
+
+    getVersions: function(){
+        if(!this._versions){
+            this._versions=new bfree.api.Versions({zone: this.zone, library: this.library, document: this});
+        }
+        return this._versions;
     },
 
     checkin: function(args){
@@ -6780,6 +6818,65 @@ bfree.api.Documents.isBusy = function(args){
 
 }
 
+if(!dojo._hasResource['bfree.api.PropertyMapping']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.PropertyMapping'] = true;
+/**
+ * @author Scott
+ */
+dojo.provide('bfree.api.PropertyMapping');
+
+
+
+
+dojo.declare('bfree.api.PropertyMapping', [bfree.api._Object],{
+	
+	constructor: function(/* Object */args){		
+        if(args) dojo.safeMixin(this, args);
+	}
+	
+});
+
+bfree.api.PropertyMapping.compare = function(item1, item2){
+    return item1.sort_order-item2.sort_order;
+}
+
+bfree.api.PropertyMapping.schema = {
+	type: 'object',
+	properties: {
+		'id': {
+			type: 'integer'
+		},
+		'document_type_id': {
+			type: 'integer'
+		},
+		'property_definition_id': {
+			type: 'integer'
+		},
+		'name': {
+			type: 'string',
+			'default': 'Property'
+		},	
+		'sort_order': {
+			type: 'integer',
+			'default': 1
+		},
+		'is_required': {
+			type: 'boolean',
+			'default': false
+		},
+		'choice_list_id': {
+			type: 'integer',
+			'default': null
+		},
+		'default_value': {
+			type: 'string',
+			'default': null
+		}
+	}
+};
+
+}
+
 if(!dojo._hasResource['bfree.api.DocumentType']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.api.DocumentType'] = true;
 /**
@@ -6792,7 +6889,8 @@ dojo._hasResource['bfree.api.DocumentType'] = true;
 dojo.provide('bfree.api.DocumentType');
 
 
-dojo.provide('bfree.api.XhrHelper');
+
+
 
 dojo.declare('bfree.api.DocumentType', [bfree.api._Object], {
 
@@ -6859,7 +6957,8 @@ bfree.api.DocumentType.schema = {
                     },
                     'sort_order': {
                         type: 'integer'
-                    }
+                    },
+                    prototype: new bfree.api.PropertyMapping()
                 }
             }
         },
@@ -6907,6 +7006,8 @@ dojo.declare('bfree.api.DocumentTypes', [bfree.api._Collection],{
         return false;
     },
 
+    //this method prevents sub-objects from being included in the query
+    //and being drawn on the grid
     _matchesQuery: function(item,request){
 
         //query returns array of property mappings,
@@ -6938,7 +7039,7 @@ dojo.declare('bfree.api.DocumentTypes', [bfree.api._Collection],{
 
 		this._initialize();
 //        this.store.isUpdateable = dojo.hitch(this, this._isUpdateable);
-        //this.store.matchesQuery  = dojo.hitch(this, this._matchesQuery);
+        this.store.matchesQuery  = dojo.hitch(this, this._matchesQuery);
     },
 
     getMetrics: function(args){
@@ -7974,12 +8075,11 @@ dojo.declare('bfree.api.Users', [bfree.api._Collection],{
         return admin;
     },
 
-    reset: function(fingerprint, oldPassword, newPassword){
+    reset: function(fingerprint, newPassword){
         bfree.api.XhrHelper.doPostAction({
             target: dojo.replace(bfree.api.Users.RESET_TRGT, this.zone),
             postData: {
                 f:fingerprint,
-                oldPassword:oldPassword,
                 newPassword:newPassword
             }
         })
@@ -8000,61 +8100,6 @@ bfree.api.Users.generatePassword = function(args){
 
 bfree.api.Users.TRGT = '/zones/{subdomain}/users';
 bfree.api.Users.RESET_TRGT = '/zones/{subdomain}/users/reset';
-
-}
-
-if(!dojo._hasResource['bfree.api.PropertyMapping']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.api.PropertyMapping'] = true;
-/**
- * @author Scott
- */
-dojo.provide('bfree.api.PropertyMapping');
-
-
-
-
-dojo.declare('bfree.api.PropertyMapping', [bfree.api._Object],{
-	
-	constructor: function(/* Object */args){		
-        if(args) dojo.safeMixin(this, args);
-	}
-	
-});
-
-bfree.api.PropertyMapping.schema = {
-	type: 'object',
-	properties: {
-		'id': {
-			type: 'integer'
-		},
-		'document_type_id': {
-			type: 'integer'
-		},
-		'property_definition_id': {
-			type: 'integer'
-		},
-		'name': {
-			type: 'string',
-			'default': 'Property'
-		},	
-		'sort_order': {
-			type: 'integer',
-			'default': 1
-		},
-		'is_required': {
-			type: 'boolean',
-			'default': false
-		},
-		'choice_list_id': {
-			type: 'integer',
-			'default': null
-		},
-		'default_value': {
-			type: 'string',
-			'default': null
-		}
-	}
-};
 
 }
 
@@ -8184,6 +8229,9 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
 			//for Hillcrest, only the date matters
 			//use toLocaleString() for date/time
 			//use toLocaleTimeString() for time
+//            return dojo.date.locale.format(datetime, {selector: 'date', datePattern: 'MM/dd/yyyy'});
+//            return bfree.api.Utilities.formatDate(datetime, false);
+//            toLocaleDateString is returning YY-MM-YYYY format
 			return datetime.toLocaleDateString();
 		}
 	},
@@ -15528,20 +15576,7 @@ dojo.provide('bfree.api.ViewDefinitions');
 
 dojo.declare('bfree.api.ViewDefinitions', [bfree.api._Collection],{
 		
-	documentTypes: null,		
-
-	_formatDateTime: function(cellDef, datetime){
-		if (cellDef.date_format && cellDef.date_format != "") {
-			//even though it says "selector: 'date'", time can still be included in the date pattern
-			return dojo.date.locale.format(datetime, {selector: 'date', datePattern: cellDef.date_format});
-		}
-		else {
-			//for Hillcrest, only the date matters
-			//use toLocaleString() for date/time
-			//use toLocaleTimeString() for time
-			return datetime.toLocaleDateString();
-		}
-	},
+	documentTypes: null,
 
     _matchesQuery: function(item,request){
 
@@ -42110,6 +42145,7 @@ bfree.widget.Bfree.ObjectTypes = {
     'CHOICE_LIST':  0x000A,
     'VIEW_DEF':     0x000B,
     'DOCUMENT':     0x000C,
+    'VERSION':      0x000D,
     'QUOTA':        0x00F0
 }
 
@@ -42140,6 +42176,7 @@ bfree.widget.Bfree.Commands = {
     'CANCEL_CKO':           0x0017,
     'SECURE':               0x0018,
     'EMPTY':                0x0019,
+    'VERSIONS':             0x001A,
     'ADMIN':                0x00FF,
 
     'EDIT_USER':            0x0401,
@@ -53170,6 +53207,42 @@ dojo.declare('bfree.widget.document.Accessor', null,{
 
 }
 
+if(!dojo._hasResource['bfree.widget.document.version.Accessor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.version.Accessor'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 08/12/11
+ * Time: 11:38 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.version.Accessor');
+
+dojo.declare('bfree.widget.document.version.Accessor', null,{
+
+    library: null,
+    zone: null,
+
+    constructor: function(args){
+        this.library = args.library;
+        this.zone = args.zone;
+    },
+
+    doCopyLocal: function(document, version){
+        version.copyLocal({zone: this.zone, library: this.library, document: document});
+    },
+
+    doView: function(document, version){
+        var box = bfree.api.Utilities.getBox({scale: 0.75});
+
+        version.view({zone: this.zone, library: this.library, document: document, windowBox: box});
+    }
+
+});
+
+
+}
+
 if(!dojo._hasResource['bfree.widget.Utils']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.widget.Utils'] = true;
 /**
@@ -53273,6 +53346,7 @@ dojo.declare('bfree.widget.document.ContextMenu', bfree.widget.HeaderMenu,{
     _btnDocView: null,
     _btnDocDestroy: null,
     _btnDocRestore: null,
+    _btnVersions: null,
     _arrDivides: [],
 
     menuLabel: 'Document',
@@ -53337,6 +53411,7 @@ dojo.declare('bfree.widget.document.ContextMenu', bfree.widget.HeaderMenu,{
             dojo.toggleClass(this._btnDocCancelCKO.domNode, 'versaHide', true);
             dojo.toggleClass(this._btnDocDelete.domNode, 'versaHide', true);
             dojo.toggleClass(this._btnDocACL.domNode, 'versaHide', true);
+            dojo.toggleClass(this._btnVersions.domNode, 'versaHide', true);
             dojo.toggleClass(this._btnDocRestore.domNode, 'versaHide', false);
             dojo.toggleClass(this._btnDocDestroy.domNode, 'versaHide', false);
         }
@@ -53355,11 +53430,13 @@ dojo.declare('bfree.widget.document.ContextMenu', bfree.widget.HeaderMenu,{
             dojo.toggleClass(this._btnDocCancelCKO.domNode, 'versaHide', false);
             dojo.toggleClass(this._btnDocDelete.domNode, 'versaHide', false);
             dojo.toggleClass(this._btnDocACL.domNode, 'versaHide', false);
+            dojo.toggleClass(this._btnVersions.domNode, 'versaHide', false);
             dojo.toggleClass(this._btnDocRestore.domNode, 'versaHide', true);
             dojo.toggleClass(this._btnDocDestroy.domNode, 'versaHide', true);
 
             var permissionSet = bfree.api.Document.getPermissionSet(this.activeItem.length?this.activeItem[0]:this.activeItem, null, this.activeLibrary, this.activeUser);
             this._btnDocView.set('disabled', !(permissionSet[bfree.api.Document.permissionIndices.VIEW]&&single));
+            this._btnVersions.set('disabled', !(permissionSet[bfree.api.Document.permissionIndices.VIEW]&&single));
             this._btnDocCopy.set('disabled', !(permissionSet[bfree.api.Document.permissionIndices.COPY]&&single));
             this._btnDocEdit.set('disabled', !(permissionSet[bfree.api.Document.permissionIndices.EDIT]&&single));
             this._btnDocMove.set('disabled', !(permissionSet[bfree.api.Document.permissionIndices.MOVE]));
@@ -53417,6 +53494,16 @@ dojo.declare('bfree.widget.document.ContextMenu', bfree.widget.HeaderMenu,{
                 bfree.widget.Bfree.ObjectTypes.DOCUMENT)
 		})
 		this.addChild(this._btnDocEdit);
+
+        this._btnVersions = new dijit.MenuItem({
+			label: 'Versions',
+            disabled: true,
+			iconClass: 'menuIcon bfreeIconNewDocument',
+			onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.VERSIONS,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+		})
+		this.addChild(this._btnVersions);
 
         this._arrDivides[0] = new dijit.MenuSeparator();
 		this.addChild(this._arrDivides[0]);
@@ -57234,7 +57321,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
                    parent.children[i].declaredClass=="bfree.api.Folder"&&
                    parent.children[i].name.toLowerCase()==value.toLowerCase()&&
                    parent.children[i].id!=this.item.id){
-                    alert("Duplicate folder names are not allowed");
+                    alert("Duplicate folder names are not allowed.");
                     this._destroyEditor();
                     this.edit();
                     return;
@@ -57329,7 +57416,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         //Set node to original (not working image)
         var i = node.isExpandable ? (node.isExpanded ? 1 : 2) : 3;
         dojo.replaceClass(node.expandoNode, this._nodeStyles[i], this._nodeStyles);
-
     },
 
     _beforeSelected: function(node){
@@ -57501,7 +57587,7 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     onNewNode: function(node){
-        this.setSelectedNode(node);
+        this.setSelectedItem(node.item);
     },
 
     onUpdateNode: function(node){
@@ -58565,7 +58651,7 @@ bfree.widget.propdef.Widget.resolveWdgName = function(wdgName){
 };
 
 bfree.widget.propdef.Widget.formats = {'SHORT': 0x00, 'LONG': 0x01}
-bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format, default_value){
+bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format, defaultValue, maxLength){
     var wdg = null;
 
     if(dataType.isString() || ((dataType.isText()) && (format == bfree.widget.propdef.Widget.formats.SHORT))){
@@ -58576,7 +58662,8 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'width:100%',
-            value: default_value
+            value: defaultValue,
+            maxLength: maxLength
         });
     }
     else if(dataType.isDateTime()){
@@ -58586,7 +58673,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'width:100%',
-            value: default_value
+            value: defaultValue
         });
     }
     else if(dataType.isText()){
@@ -58598,7 +58685,8 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'resize:none;width:100%',
-            value: default_value
+            value: defaultValue,
+            maxLength: maxLength
         });
 
     }
@@ -58608,7 +58696,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             id: wdgId,
             label: label,
             scrollOnFocus: false,
-            checked: default_value
+            checked: defaultValue
         });
     }
     else if((dataType.isBoolean()) && (format == bfree.widget.propdef.Widget.formats.LONG)){
@@ -58617,7 +58705,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             label: label,
             scrollOnFocus: false,
             style: 'width:100%',
-            value: default_value
+            value: defaultValue
         });
     }
     else if(dataType.isInteger()){
@@ -58630,7 +58718,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'width:100%',
-            value: default_value?default_value:0
+            value: defaultValue?defaultValue:0
         });
     }
     else if(dataType.isFloat()){
@@ -58643,7 +58731,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             scrollOnFocus: false,
             selectOnClick: true,
             style: 'width:100%',
-            value: default_value?default_value:0
+            value: defaultValue?defaultValue:0
         });
     }
 
@@ -58676,7 +58764,7 @@ bfree.widget.propdef.Widget.generate = function(propertyMapping, propertyDefinit
         wdg = bfree.widget.propdef.Widget.getChoiceListWidget(id, propertyDefinition.name, choiceList);
     }
     else{
-        wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name, propertyMapping.default_value);
+        wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name, bfree.widget.propdef.Widget.formats.LONG, propertyMapping.default_value, propertyDefinition.max_length);
     }
 
     wdg.set('required', propertyMapping.is_required);
@@ -61873,7 +61961,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
         documentItem.state = bfree.api.Document.states.UPLOADED;
         documentItem.current_version = {
-            binary_file_name: tmpFileItem.file,
+            binary_file_name: tmpFileItem.name,
             binary_content_type: tmpFileItem.content_type,
             binary_file_size: tmpFileItem.size
         }
@@ -62149,13 +62237,13 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
         try{
             if(this.filesLoaded){
-                if(!confirm("Files have not been added to VersaFile, closing this dialog will cause them to be lost")){
+                if(!confirm("Files have not been added to VersaFile, closing this dialog will cause them to be lost.")){
                     return false;
                 }
             }
 
             if(this._uploading){
-                alert("You must wait until all files are uploaded before closing this dialog.")
+                alert("You must wait until all files are uploaded before closing this dialog.");
                 return false;
             }
 
@@ -62542,6 +62630,373 @@ bfree.widget.document.PropertyEditor.show = function(args){
     dlg.startup();
     dlg.show();
 
+
+}
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.version.ContextMenu']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.version.ContextMenu'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: aaron
+ * Date: 02/03/12
+ * Time: 3:11 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.version.ContextMenu');
+
+
+
+
+dojo.declare('bfree.widget.document.version.ContextMenu', bfree.widget.HeaderMenu,{
+    _btnDocCopy: null,
+    _btnDocView: null,
+
+    menuLabel: 'Version',
+    activeItem: null,
+    versions: null,
+    document: null,
+
+    refresh: function(){
+    },
+
+    _onCommand: function(cmdId, option, e){
+        this.onCommand(cmdId, option, {document: this.document, version: this.activeItem});
+    },
+
+    _openMyself: function(evt){
+
+        try{
+            if((!this.rowHit) || (this.activeItem == null)){
+                evt.cancelBubble = true;
+                evt.returnValue = false;
+            }else{
+                this.inherited('_openMyself', arguments);
+            }
+        }finally{
+            this.rowHit = false;
+        }
+
+    },
+
+    constructor: function(args){
+        if(args) dojo.safeMixin(this, args);
+    },
+
+    onHide: function(){
+        this.activeItem = null;
+        this.inherited('onHide', arguments);
+    },
+
+    onCommand: function(cmdId, option, params){
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this._btnDocView = new dijit.MenuItem({
+            label: 'View',
+            iconClass: 'menuIcon bfreeIconViewDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.VIEW,
+                bfree.widget.Bfree.ObjectTypes.VERSION)
+        });
+        this.addChild(this._btnDocView);
+
+        this._btnDocCopy = new dijit.MenuItem({
+            label: 'Copy Local...',
+            iconClass: 'menuIcon bfreeIconCopyDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.COPY,
+                bfree.widget.Bfree.ObjectTypes.VERSION)
+        });
+		this.addChild(this._btnDocCopy);
+    }
+
+});
+
+
+
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.version.Grid']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.version.Grid'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: aaron
+ * Date: 02/03/12
+ * Time: 3:11 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.version.Grid');
+
+
+
+
+dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
+
+    versions: null,
+    document: null,
+
+    _mnuVersion: null,
+
+    _canEdit: function(cell, rowIndex){
+        return false;
+    },
+
+	_canSort: function(columnIndex){
+        return false;
+    },
+
+    _onCommand: function(cmdId, option, params){
+        this.onCommand(cmdId, option, params);
+    },
+
+	constructor: function(/* Object */args){
+		//this.baseClass = 'bfree';
+		this.updateDelay = 0;
+		this.rowsPerPage = 25;
+        this.formatterScope = this;
+
+		this.query = {};
+		this.queryOptions = {cache: true};
+		this.selectionMode = 'single';
+
+		this.clientSort = false;
+        this.canEdit = this._canEdit;
+		this.canSort = this._canSort;
+		this.noDataMessage = 'No Versions found';
+        this.sortInfo = 4;
+	},
+
+	postCreate: function(){
+		this.inherited('postCreate', arguments);
+
+        this._mnuVersion = new bfree.widget.document.version.ContextMenu({
+            onCommand: dojo.hitch(this, this._onCommand),
+            versions: this.versions,
+            document: this.document,
+            targetNodeIds: [this.id]
+        });
+
+        this.onRowContextMenu = dojo.hitch(this, this._onRowContextMenu);
+
+        this.set('structure', bfree.widget.document.version.Grid.view);
+        //this.set('sortInfo', 2);
+    },
+
+    onRowDblClick: function(evt){
+
+        if(evt.rowIndex < 0){
+            evt.cancelBubble = true;
+            return;
+        }
+
+        var item = this.getItem(evt.rowIndex);
+        this._onCommand(bfree.widget.Bfree.Commands.VIEW, bfree.widget.Bfree.ObjectTypes.VERSION, {version: item});
+    },
+
+    onCommand: function(cmdId, option, params){
+    },
+
+    _onRowContextMenu: function(evt){
+
+        if((this._mnuVersion == null) || (evt.rowIndex < 0)){
+            this.rowHit = false;
+            evt.cancelBubble = true;
+        }
+        else{
+            var selected=this.selection.selected[evt.rowIndex];
+
+            var item;
+            if(selected){
+                item=this.getItem(evt.rowIndex);
+            }else{
+                this.selection.clear();
+                item=this.getItem(evt.rowIndex);
+                this.selection.select(evt.rowIndex);
+                this._mnuVersion.rowHit = true;
+                this._mnuVersion.activeItem = item;
+            }
+            this._mnuVersion.rowHit = true;
+            this._mnuVersion.activeItem = item;
+        }
+
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this.setStore(this.versions.store, {}, {cache: true});
+    }
+
+});
+bfree.widget.document.version.Grid.getState = function(idx, item){
+
+    if(!item)
+        return 0;
+
+    if(item.id==this.grid.document.current_version.id){
+        return 1;
+    }
+
+    return 0;
+}
+
+bfree.widget.document.version.Grid.formatState = function(data, rowIndex){
+
+    var iconClass = '';
+
+    if(data==1){
+        iconClass = 'statusIcon bfreeIconNew';
+    }
+    return dojo.replace('<img src="/images/icons/16/blank.png" width="16" height="16" class="{0}"/>', [iconClass]);
+}
+
+bfree.widget.document.version.Grid.getVersion=function(idx, item){
+    if(!item){
+        return '';
+    }
+
+    return item.major_version_number+'.'+item.minor_version_number;
+}
+
+bfree.widget.document.version.Grid.formatVersion=function(data, rowIndex){
+    return data;
+}
+
+bfree.widget.document.version.Grid.view = [
+    {
+        cells: [
+            {
+                field: 'state',
+                name: '&nbsp;',
+                width: '16px',
+                get: bfree.widget.document.version.Grid.getState,
+                formatter: bfree.widget.document.version.Grid.formatState
+            },
+            {
+                field: 'major_version_number',
+                name: 'Version',
+                get: bfree.widget.document.version.Grid.getVersion,
+                formatter: bfree.widget.document.version.Grid.formatVersion
+            },
+            {
+                field: 'binary_file_name',
+                name: 'Name',
+                width: 'auto'
+            },
+            {
+                field: 'sort_id',
+                name: 'Sort',
+                hidden: true
+            }
+
+        ],
+        width: 'auto'
+    }
+]
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.version.Versions']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.version.Versions'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: aaron
+ * Date: 02/03/12
+ * Time: 2:14 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.version.Versions');
+
+
+
+dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
+    templateString: dojo.cache("bfree/widget/document/version", "template/Versions.html", "<div style=\"height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            style=\"height:100%;width:100%;\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                region=\"center\"\n                splitter=\"false\"\n                style=\"\">\n\n            <div dojoAttachPoint=\"gridNode\"></div>\n\n        </div>\n\n    </div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _grdVersions: null,
+
+    document: null,
+    library: null,
+    zone: null,
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+        this.inherited('destroy', arguments);
+    },
+
+    _onCommand: function(cmdId, option, e){
+        this.onCommand(cmdId, option, e);
+    },
+
+    onCommand: function(cmdId, option, e){
+
+    },
+
+    postCreate: function(){
+        this.document.library=this.library;
+        this.document.zone=this.zone;
+
+        this._grdVersions = new bfree.widget.document.version.Grid({
+            id: 'grdVersions',
+            'class': 'versaGridOutline',
+            versions: this.document.getVersions(),
+            document: this.document,
+            onCommand: dojo.hitch(this, this._onCommand)
+        }, this.gridNode);
+
+        this._grdVersions.startup();
+
+        this.inherited('postCreate', arguments);
+    },
+
+    destroy: function(){
+
+        if(this._grdVersions){
+            this._grdVersions.destroyRecursive();
+            this._grdVersions = null;
+        }
+    },
+
+    onDialogClosing: function(){
+        return true;
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+
+        this._grdVersions.resize();
+    }
+
+});
+
+bfree.widget.document.version.Versions.show = function(args){
+
+    var dlg = new bfree.widget.Dialog({
+        id: 'dlgVersions',
+        title: 'Versions',
+        widgetConstructor: bfree.widget.document.version.Versions,
+        widgetParams: {
+            document: args.document,
+            library: args.library,
+            zone: args.zone,
+            onCommand: args.onCommand
+        },
+        noResize: true,
+        height: 480,
+        width: 480,
+        zIndex: 1024,
+        buttons: bfree.widget.Dialog.buttons.close,
+        onClose: function(){return true;}
+    });
+    dlg.startup();
+    dlg.show();
 
 }
 
@@ -69042,14 +69497,11 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
 
     _txtNameValidator: function(newValue){
         if(this._txtName){
-            var items=this.users.fetch();
-            for(var i=0;i<items.length;i++){
-                if(items[i].name&&
-                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
-                   items[i].__id!=this.activeItem.__id){
-                    this._txtName.set('invalidMessage', 'Duplicate username');
-                    return false;
-                }
+            newValue=newValue.trim();
+
+            if(newValue==""){
+                this._txtName.set('invalidMessage', 'Username cannot be blank');
+                return false;
             }
             if(newValue.length<4){
                 this._txtName.set('invalidMessage', 'Username must be longer than 4 characters');
@@ -69058,6 +69510,15 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
             if(newValue.indexOf(' ')>=0){
                 this._txtName.set('invalidMessage', 'Username must be one word');
                 return false;
+            }
+            var items=this.users.fetch();
+            for(var i=0;i<items.length;i++){
+                if(items[i].name&&
+                   items[i].name.toLowerCase().trim()==newValue.toLowerCase().trim()&&
+                   items[i].__id!=this.activeItem.__id){
+                    this._txtName.set('invalidMessage', 'Duplicate username');
+                    return false;
+                }
             }
         }
         return true;
@@ -72182,10 +72643,11 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
 
     _setState: function(){
 
-        var permissionSet = bfree.api.Document.getPermissionSet(this.activeDocument, this.activeFolder, this.activeLibrary, this.activeUser);
-        this._mniDocument.set('disabled', !permissionSet[bfree.api.Document.permissionIndices.CREATE]);
+//        var permissionSet = bfree.api.Document.getPermissionSet(this.activeDocument, this.activeFolder, this.activeLibrary, this.activeUser);
 
-        permissionSet = bfree.api.Folder.getPermissionSet(this.activeFolder, this.activeLibrary, this.activeUser);
+        var permissionSet = bfree.api.Folder.getPermissionSet(this.activeFolder, this.activeLibrary, this.activeUser);
+        this._mniDocument.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.FILE]);
+
         this._mniFolder.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.CREATE]);
 
         var all_disabled = this._mniFolder.get('disabled') && this._mniDocument.get('disabled');
@@ -83299,8 +83761,10 @@ dojo.provide('bfree.widget.zone.Show');
 
 
 
+
+
 dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
-    templateString: dojo.cache("bfree.widget.zone", "template/Show.html", "<div style=\"background:#D9D9D6;height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"center\"\n            spitter=\"false\"\n            style=\"padding:8px 8px 0 8px\">\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                style=\"height:100%;width:100%\">\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"sidebar\"\n                    gutters=\"false\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopPane\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"left\"\n                        splitter=\"false\"\n                        class=\"versaHeadPane\">\n                    <img src=\"/images/versafile-64-tm.png\" height=\"56\" style=\"position:relative;top:-8px;left:0\"/>\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        class=\"versaBarPane\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0;overflow:hidden;position:relative;\">\n\n                        <div    dojoAttachPoint=\"trialStateNode\"\n                                style=\"display:none;margin-left:auto;margin-right:auto;text-align: center\">\n                            <span dojoAttachPoint=\"trialMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                            <span dojoAttachPoint=\"activateMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                        </div>\n\n                        <div dojoAttachPoint=\"toolbarNode\"></div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"right\"\n                            splitter=\"false\"\n                            style=\"width:256px;\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"position:relative;text-align:right;padding:2px 0 0 0\">\n\n                            <table cellpadding=\"0\" cellspacing=\"0\" style=\"position:absolute;right:0\"><tr>\n                                <td  style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                                    <a href=\"javascript://\" class=\"versaLink\" title=\"Edit Profile\" dojoAttachEvent=\"onclick: _onUserEdit\">\n                                    <span  dojoAttachPoint=\"nameNode\"></span>\n                                    </a>\n                                </td>\n                                <td style=\"padding-left:4px;\"><a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onLogoff\">Logout</a></td>\n                            </tr>\n                            </table>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:32px;padding:0;\">\n                            <div dojoAttachPoint=\"searchBoxNode\" style=\"\"></div>\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\"\n                    class=\"versaMainPane\">\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"true\"\n                        region=\"center\"\n                        splitter=\"false\"\n                        class=\"\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"left\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0;width:256px;\">\n\n                        <div style=\"height: 100%\">\n                           <div dojoAttachPoint=\"folderTreeNode\" style=\"height: 100%\"></div>\n                       </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"center\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0\">\n\n                        <div dojoAttachPoint=\"documentGridNode\"></div>\n\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"bottom\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding: 0 6px 8px 6px\">\n\n                    <div    dojoType=\"dojox.widget.Toaster\"\n                           dojoAttachPoint=\"errorToaster\"\n                           positionDirection=\"br-left\"\n                           style=\"height:88px\">\n                   </div>\n\n                   <div style=\"height:100%\" class=\"versaInfoPane\">\n                       <div dojoAttachPoint=\"itemInfoNode\" style=\"width: 100%\"></div>\n                   </div>\n\n                </div>\n\n            </div>\n\n\n        </div>\n\n    </div>\n\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"bottom\"\n            splitter=\"false\"\n            style=\"position:relative;height:16px;overflow:hidden;\">\n\n        <span class=\"dijitMediumLabel dijitDarkLabelV\">VersaFile is an RKO Business Solutions product. Copyright © 2012 All rights reserved</span>\n\n        <span style=\"position:absolute;right:16px;\">\n            <span dojoAttachPoint=\"versionSpan\" class=\"dijitMediumLabel dijitDarkLabelV\"></span>\n            <a href=\"mailto:support@versafile.com\" class=\"versaLink\">Contact Support</a>\n        </span>\n\n    </div>\n\n</div>\n\n</div>\n\n\n\n"),
+    templateString: dojo.cache("bfree.widget.zone", "template/Show.html", "<div style=\"background:#D9D9D6;height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"center\"\n            spitter=\"false\"\n            style=\"padding:8px 8px 0 8px\">\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                style=\"height:100%;width:100%\">\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"sidebar\"\n                    gutters=\"false\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopPane\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"left\"\n                        splitter=\"false\"\n                        class=\"versaHeadPane\">\n                    <img src=\"/images/versafile-64-tm.png\" height=\"56\" style=\"position:relative;top:-8px;left:0\"/>\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        class=\"versaBarPane\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0;overflow:hidden;position:relative;\">\n\n                        <div    dojoAttachPoint=\"trialStateNode\"\n                                style=\"display:none;margin-left:auto;margin-right:auto;text-align: center\">\n                            <span dojoAttachPoint=\"trialMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                            <span dojoAttachPoint=\"activateMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                        </div>\n\n                        <div dojoAttachPoint=\"toolbarNode\"></div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"right\"\n                            splitter=\"false\"\n                            style=\"width:256px;\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"position:relative;text-align:right;padding:2px 0 0 0\">\n\n                            <table cellpadding=\"0\" cellspacing=\"0\" style=\"position:absolute;right:0\"><tr>\n                                <td  style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                                    <a href=\"javascript://\" class=\"versaLink\" title=\"Edit Profile\" dojoAttachEvent=\"onclick: _onUserEdit\">\n                                    <span  dojoAttachPoint=\"nameNode\"></span>\n                                    </a>\n                                </td>\n                                <td style=\"padding-left:4px;\"><a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onLogoff\">Logout</a></td>\n                            </tr>\n                            </table>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:32px;padding:0;\">\n                            <div dojoAttachPoint=\"searchBoxNode\" style=\"\"></div>\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\"\n                    class=\"versaMainPane\">\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"true\"\n                        region=\"center\"\n                        splitter=\"false\"\n                        class=\"\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"left\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0;width:256px;\">\n\n                        <div style=\"height: 100%\">\n                           <div dojoAttachPoint=\"folderTreeNode\" style=\"height: 100%\"></div>\n                       </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"center\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0\">\n\n                        <div dojoAttachPoint=\"documentGridNode\"></div>\n\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"bottom\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding: 0 6px 8px 6px\">\n\n                    <div    dojoType=\"dojox.widget.Toaster\"\n                           dojoAttachPoint=\"errorToaster\"\n                           positionDirection=\"br-left\"\n                           style=\"height:88px\">\n                   </div>\n\n                   <div style=\"height:100%\" class=\"versaInfoPane\">\n                       <div dojoAttachPoint=\"itemInfoNode\" style=\"width: 100%\"></div>\n                   </div>\n\n                </div>\n\n            </div>\n\n\n        </div>\n\n    </div>\n\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"bottom\"\n            splitter=\"false\"\n            style=\"position:relative;height:16px;overflow:hidden;\">\n\n        <span class=\"dijitMediumLabel dijitDarkLabelV\">VersaFile is an RKO Business Solutions product. Copyright © 2012 All rights reserved.</span>\n\n        <span style=\"position:absolute;right:16px;\">\n            <span dojoAttachPoint=\"versionSpan\" class=\"dijitMediumLabel dijitDarkLabelV\"></span>\n            <a href=\"mailto:support@versafile.com\" class=\"versaLink\">Contact Support</a>\n        </span>\n\n    </div>\n\n</div>\n\n</div>\n\n\n\n"),
     widgetsInTemplate: true,
 
     _duration: 60000,   //check session state once a minute
@@ -83333,6 +83797,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 break;
             case bfree.widget.Bfree.Commands.VIEW:
                 this.__onView(option, params);
+                break;
+            case bfree.widget.Bfree.Commands.VERSIONS:
+                this.__onVersions(option, params);
                 break;
             case bfree.widget.Bfree.Commands.COPY:
                 this._onCopy(option, params);
@@ -83482,6 +83949,19 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
                 this._onDocumentView(params.document);
+                break;
+            case bfree.widget.Bfree.ObjectTypes.VERSION:
+                this._onVersionView(params.document, params.version);
+                break;
+        }
+
+    },
+
+    __onVersions: function(object_type, params){
+
+        switch(object_type){
+            case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
+                this._onDocumentVersions(params.document);
                 break
         }
 
@@ -83541,14 +84021,32 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _onAdminPropDefs: function(){
 
         try{
+            function __onClose(dlgResult, retValue){
+
+                var view = this._grdDocuments.activeView;
+                //clear the cache
+                this.activeLibrary.getViewDefinitions().clearCache();
+                //fetch all views, since some might have properties deleted
+                this.activeLibrary.getViewDefinitions().fetch();
+                //fetch the current view
+                var newView = this.activeLibrary.getViewDefinitions().fetchById({id: view.id});
+                var newStructure = newView.getView(this.activeLibrary);
+
+                this._grdDocuments.set('activeView', newStructure);
+                this._grdDocuments.set('structure', newStructure);
+                this._grdDocuments.set('sortInfo', newStructure.sort_column);
+                this._grdDocuments.refresh();
+
+                this._grdDocuments.refreshViews();
+
+                return true;
+            }
+
             bfree.widget.propdef.Administration.show({
                 zone: this.zone,
                 library: this.activeLibrary,
                 user: this.activeUser,
-                onClose: dojo.hitch(this,
-                    function(dlgResult, retValue){
-                       return true;
-                    })
+                onClose: dojo.hitch(this, __onClose)
             });
         }
         catch(e){
@@ -83613,6 +84111,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
                 this._onDocumentCopy(params.document);
+                break;
+            case bfree.widget.Bfree.ObjectTypes.VERSION:
+                this._onVersionCopy(params.document, params.version);
                 break;
         }
 
@@ -83794,6 +84295,30 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         }
     },
 
+    _onVersionCopy: function(document, version){
+
+        try{
+
+            if(!document||!version)
+                return;
+
+            var accessor = new bfree.widget.document.version.Accessor({
+                library: this.activeLibrary,
+                zone: this.zone
+            });
+            accessor.doCopyLocal(document, version);
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to copy document', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+        finally{
+        }
+    },
+
     _onDocumentDelete: function(item){
 
         var idx = 0;
@@ -83884,6 +84409,31 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 library: this.activeLibrary,
                 zone: this.zone,
                 onClose: dojo.hitch(this, __onClose)
+            });
+
+		}
+		catch(e){
+            this._grdDocuments.endUpdate();
+			var err = new bfree.api.Error('Failed to edit document properties', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+		}
+    },
+
+    _onDocumentVersions: function(item){
+        try{
+
+            if(!item)
+                return;
+
+            this._grdDocuments.beginUpdate();
+
+            bfree.widget.document.version.Versions.show({
+                document: item,
+                library: this.activeLibrary,
+                zone: this.zone,
+                onCommand: dojo.hitch(this, this.__onCommand)
             });
 
 		}
@@ -84053,6 +84603,31 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             var idx = this._grdDocuments.getItemIndex(item);
             this._grdDocuments.updateRow(idx);
             this._cmdBar.set('activeDocument', this.activeDocument);
+        }
+
+    },
+
+    _onVersionView: function(document, version){
+
+        try{
+
+            if(!document&&!version)
+                return;
+
+            var accessor = new bfree.widget.document.version.Accessor({
+                library: this.activeLibrary,
+                zone: this.zone
+            });
+            accessor.doView(document, version);
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to view document', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+        finally{
         }
 
     },
@@ -84514,17 +85089,17 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
 
         this._tvwFolders = new bfree.widget.folder.Tree({
-                library: this.activeLibrary,
-                user: this.activeUser,
-                folders: this.activeLibrary.getFolders(),
-                documents: this.activeLibrary.getDocuments(),
-                dndController: "bfree.widget.folder.DndSource",
-                dndType: "Folder",
-			    onCommand: dojo.hitch(this, this.__onCommand),
-                onSelected: dojo.hitch(this, this._tvwFolders_onSelected),
-                refreshGrid: dojo.hitch(this, this._onDocumentsRefresh),
-                style: "height: 100%"
-            }, this.folderTreeNode);
+            library: this.activeLibrary,
+            user: this.activeUser,
+            folders: this.activeLibrary.getFolders(),
+            documents: this.activeLibrary.getDocuments(),
+            dndController: "bfree.widget.folder.DndSource",
+            dndType: "Folder",
+            onCommand: dojo.hitch(this, this.__onCommand),
+            onSelected: dojo.hitch(this, this._tvwFolders_onSelected),
+            refreshGrid: dojo.hitch(this, this._onDocumentsRefresh),
+            style: "height: 100%"
+        }, this.folderTreeNode);
 
         this._grdDocuments = new bfree.widget.document.Grid({
             id: 'grdDocuments',

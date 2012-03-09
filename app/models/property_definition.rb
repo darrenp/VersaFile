@@ -5,6 +5,8 @@ class PropertyDefinition < ActiveRecord::Base
   has_many  :document_types,
             :through => :property_mappings
 
+  before_destroy :destroy_cell_definitions
+
   attr_accessor :sort_id
 
   def document_types_count
@@ -17,6 +19,13 @@ class PropertyDefinition < ActiveRecord::Base
 
   def dojo_url
     return "/zones/#{self.library.zone.subdomain}/libraries/#{self.library.id}/property_definitions/#{self.id}"
+  end
+
+  def destroy_cell_definitions
+    cells=self.library.cell_definitions.all(:conditions=>["table_name=? AND column_name=?", self.table_name, self.column_name])
+    unless cells.nil?
+      CellDefinition.destroy(cells)
+    end
   end
 
 
