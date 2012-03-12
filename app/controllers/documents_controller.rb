@@ -267,7 +267,8 @@ class DocumentsController < ApplicationController
 
       respond_to do |format|
         format.html # show.html.erb
-        format.json { render json: @document.to_json( :include => {:current_version => { :except => [:document_id, :content_storage_name, :content_uniqueness_key, :is_current_version] }} ) }
+        format.json  { render :json => @document.to_json(:except => [:body,:metadata,:custom_metadata], :include => { :current_version => { :except => [:id, :document_id, :content_storage_name, :content_uniqueness_key, :is_current_version] }} ) }
+        #format.json { render json: @document.to_json( :include => {:current_version => { :except => [:document_id, :content_storage_name, :content_uniqueness_key, :is_current_version] }} ) }
       end
     rescue ActiveRecord::RecordNotFound => e
       respond_to do |format|

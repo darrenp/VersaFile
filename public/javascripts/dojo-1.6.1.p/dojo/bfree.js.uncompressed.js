@@ -57256,6 +57256,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 			onChange: dojo.hitch(this, this._editor_onChange),
 			onCancel: dojo.hitch(this, this._editor_onCancel),
 			width: (tc.w - nc.l - 16) + 'px',
+            scrollIntoView: false,
             value: this.item.name
         }, editSpan);
 
@@ -57289,8 +57290,15 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
             var nodes = this.tree.getNodesByItem(parent);
             dojo.forEach(nodes, function(node, idx){
-                if(node.getChildren().length==0){
+//                console.log(node.getChildren());
+                var children=node.getChildren();
+                if(children.length==0){
                     this.tree._collapseNode(node);
+                }else if(children.length==1){
+                    if(children[0].item.__id==this.item.__id){
+                        node.setChildItems([]);
+                        this.tree._collapseNode(node);
+                    }
                 }
             }, this);
 
@@ -57323,7 +57331,9 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
                    parent.children[i].id!=this.item.id){
                     alert("Duplicate folder names are not allowed.");
                     this._destroyEditor();
-                    this.edit();
+                    setTimeout(dojo.hitch(this, function(){
+                        this.edit();
+                    }), 100);
                     return;
                 }
             }
@@ -57539,13 +57549,26 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 		if(!confirm(msg))
 			return;
 
+
+
         var path = item.path;
 
 //        var parent = item.__parent.__parent;
 //        var nodes=this.getNodesByItem(parent);
-
+//        item.destroyed="DESTROYED"
 		this.folders.destroy({item: item});
         this.folders.save();
+
+        var parent;
+        if(item.parent_id==0){
+            parent=this.rootNode.item;
+        }else{
+            parent=this.folders.fetchById({id: item.parent_id});
+        }
+
+        this.folders.store._index[parent.__id+'#children'].removeByValue(item);
+        this.folders.store._updates=[];
+//        console.log(items);
 
         path.pop();
 
@@ -62795,7 +62818,7 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
         }
 
         var item = this.getItem(evt.rowIndex);
-        this._onCommand(bfree.widget.Bfree.Commands.VIEW, bfree.widget.Bfree.ObjectTypes.VERSION, {version: item});
+        this._onCommand(bfree.widget.Bfree.Commands.VIEW, bfree.widget.Bfree.ObjectTypes.VERSION, {document: this.document, version: item});
     },
 
     onCommand: function(cmdId, option, params){
@@ -62884,7 +62907,7 @@ bfree.widget.document.version.Grid.view = [
             },
             {
                 field: 'binary_file_name',
-                name: 'Name',
+                name: 'Filename',
                 width: 'auto'
             },
             {
@@ -65105,7 +65128,7 @@ dojo.declare('bfree.widget.propdef.FilterGrid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Property Definitions found';
-        this.sortInfo = 2;
+        this.sortInfo = 1;
 	},
 
 	postCreate: function(){

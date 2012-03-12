@@ -45,21 +45,22 @@ curl \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"mikes@rkosolutions.com\", \
+            \"email\":\"darrenp@rkosolutions.com\", \
             \"password\":\"dont4get\", \
-            \"name\":\"RKO Business Solutions\", \
-            \"first_name\":\"Adam\", \
-            \"last_name\":\"Petrie\", \
-            \"address\":\"55 Water Street, Suite 503\", \
-            \"city\":\"Vancouver\", \
+            \"name\":\"JB Office Systems\", \
+            \"first_name\":\"Chris\", \
+            \"last_name\":\"Butterfield\", \
+            \"address\":\"602 Lake Street\", \
+            \"city\":\"Nelson\", \
             \"province\":\"BC\", \
             \"country\":\"CA\", \
-            \"postal_code\":\"V6B 1A1\", \
-            \"account_type\":1, \
+            \"postal_code\":\"V1L VC8\", \
+            \"phone\":\"250-352-2122\", \
+            \"account_type\":0, \
             \"billing_type\":0, \
-            \"trial_period\":-1, \
+            \"trial_period\":65535, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"rko\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"subdomains\": [ { \"name\":\"jboffice\", \"user_quota\":3, \"disk_quota\": 10 } ] \
         }" \
     $SERVER_HOST/accounts
 echo

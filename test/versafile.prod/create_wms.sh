@@ -45,21 +45,22 @@ curl \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"mikes@rkosolutions.com\", \
+            \"email\":\"sepands@versafile.com\", \
             \"password\":\"dont4get\", \
-            \"name\":\"RKO Business Solutions\", \
-            \"first_name\":\"Adam\", \
-            \"last_name\":\"Petrie\", \
-            \"address\":\"55 Water Street, Suite 503\", \
+            \"name\":\"Westside Montessori School\", \
+            \"first_name\":\"Bettina\", \
+            \"last_name\":\"Tioseco\", \
+            \"address\":\"4157 Oak Street\", \
             \"city\":\"Vancouver\", \
             \"province\":\"BC\", \
             \"country\":\"CA\", \
-            \"postal_code\":\"V6B 1A1\", \
-            \"account_type\":1, \
+            \"postal_code\":\"V6H 2N1\", \
+            \"phone\":\"604-731-6594\", \
+            \"account_type\":0, \
             \"billing_type\":0, \
-            \"trial_period\":-1, \
+            \"trial_period\":65535, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"rko\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"subdomains\": [ { \"name\":\"wsm\", \"user_quota\":3, \"disk_quota\": 10 } ] \
         }" \
     $SERVER_HOST/accounts
 echo

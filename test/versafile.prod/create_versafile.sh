@@ -47,19 +47,20 @@ curl \
             \"authenticity_token\":\"$auth_token\",
             \"email\":\"mikes@rkosolutions.com\", \
             \"password\":\"dont4get\", \
-            \"name\":\"RKO Business Solutions\", \
-            \"first_name\":\"Adam\", \
-            \"last_name\":\"Petrie\", \
-            \"address\":\"55 Water Street, Suite 503\", \
+            \"name\":\"VersaFile Inc.\", \
+            \"first_name\":\"Mike\", \
+            \"last_name\":\"Skelton\", \
+            \"address\":\"503-55 Water Street\", \
             \"city\":\"Vancouver\", \
             \"province\":\"BC\", \
             \"country\":\"CA\", \
             \"postal_code\":\"V6B 1A1\", \
-            \"account_type\":1, \
+            \"phone\":\"778-383-1850\", \
+            \"account_type\":0, \
             \"billing_type\":0, \
-            \"trial_period\":-1, \
+            \"trial_period\":65535, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"rko\", \"user_quota\":10, \"disk_quota\": 50 } ] \
+            \"subdomains\": [ { \"name\":\"versafile\", \"user_quota\":3, \"disk_quota\": 10 } ] \
         }" \
     $SERVER_HOST/accounts
 echo

@@ -281,6 +281,7 @@ dont think this is needed
       user.reset_fingerprint=nil
       user.reset_password=nil
       user.save
+      session[:active_user_id] = user.id
       respond_to do |format|
         format.json { render :json => "", :status => :ok}
       end
