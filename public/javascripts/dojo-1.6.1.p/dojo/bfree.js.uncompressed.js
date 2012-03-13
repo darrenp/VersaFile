@@ -57294,7 +57294,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
                 var children=node.getChildren();
                 if(children.length==0){
                     this.tree._collapseNode(node);
-                }else if(children.length==1){
+                }else if(children.length==1&&this.item.isNew()){
                     if(children[0].item.__id==this.item.__id){
                         node.setChildItems([]);
                         this.tree._collapseNode(node);
@@ -57566,9 +57566,10 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             parent=this.folders.fetchById({id: item.parent_id});
         }
 
-        this.folders.store._index[parent.__id+'#children'].removeByValue(item);
-        this.folders.store._updates=[];
-//        console.log(items);
+        if(parent.id!=0){
+            this.folders.store._index[parent.__id+'#children'].removeByValue(item);
+            this.folders.store._updates=[];
+        }
 
         path.pop();
 
@@ -70787,6 +70788,17 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
             });
         }
 
+        if(!dojo.has(this.filter, 'versions.binary_file_size')){
+            items.push({
+                id: 'versions.binary_file_size',
+                name: 'Size',
+                table_name: 'versions',
+                column_name: 'binary_file_size',
+                data_type_id: bfree.api.DataTypes.types.INTEGER,
+                formatter: bfree.api.CellDefinition.formats.size
+            });
+        }
+
         items.sort(function(a, b) {
             na = a.name.toLowerCase();
             nb = b.name.toLowerCase();
@@ -73440,6 +73452,7 @@ dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
         for(var i in children){
             if(children[i].item&&
                children[i].item.name&&
+               source.anchor.item&&
                children[i].item.name==source.anchor.item.name){
                 return false;
             }
@@ -73447,7 +73460,9 @@ dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
 
         if(targetNode.item.is_search||targetNode.item.is_trash){
 //            console.log();
-            if(source.anchor.type=="Document"&&targetNode.item.is_trash&&!sourceNode.document.getState(bfree.api.Document.states.DELETED)){
+            if(source.anchor.type=="Document"&&
+               targetNode.item.is_trash&&
+               !sourceNode.document.getState(bfree.api.Document.states.DELETED)){
                 return true;
             }
             return false;

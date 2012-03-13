@@ -27,14 +27,18 @@ module UploaderHelper
 
     #cleanup orphaned ~tmp dirs
     tmpPath = File.join(VersaFile::SYSTEM_PATH, zone.subdomain, '~tmp')
-    Dir.foreach(tmpPath) do |tmp_entry|
-      next if ['.', '..'].include?(tmp_entry)
-      entryPath = File.join(tmpPath, tmp_entry)
 
-      if(File.mtime(entryPath).utc < 1.day.ago)
-        UploaderHelper.clean_dir(entryPath)
+    #Don't clean if it doesn't exist
+    if File.exists?(tmpPath)
+      Dir.foreach(tmpPath) do |tmp_entry|
+        next if ['.', '..'].include?(tmp_entry)
+        entryPath = File.join(tmpPath, tmp_entry)
+
+        if(File.mtime(entryPath).utc < 1.day.ago)
+          UploaderHelper.clean_dir(entryPath)
+        end
+
       end
-
     end
 
   end

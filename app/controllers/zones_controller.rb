@@ -210,7 +210,7 @@ class ZonesController < ApplicationController
   def reset
     begin
 
-      @user=User.find_by_name(params[:username])
+      @user=@zone.users.find_by_name(params[:username])
 
       if((@user == nil) || @user.email.nil? || @user.email.downcase != params[:email].downcase)
         raise "We could not find an account that matches your credentials, please contact your administrator."
