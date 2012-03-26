@@ -11,28 +11,38 @@ module DocumentsHelper
     include ActionView::Helpers::NumberHelper
   end
 
-  def self.columns_from_doc_type(document_type)
+  def self.columns_by_doctype(document)
 
-    columns = [ 'id',
-                'name',
-                'document_type_id',
-                'active_permissions',
-                'checked_out_by',
-                'created_at',
-                'created_by',
-                'state',
-                'updated_at',
-                'updated_by',
-                'folder_id']
+    #Return only system-properties and properties defined in the doctype
+    columns = [
+      'id',
+      'name',
+      'state',
+      'checked_out_by',
+      'created_at',
+      'created_by',
+      'updated_at',
+      'updated_by',
+      'active_permissions',
+      'folder_id',
+      'document_type_id',
+      'document_type_name',
+      'binary_content_type',
+      'binary_file_name',
+      'binary_file_size',
+      'major_version_number',
+      'minor_version_number'
+      ]
 
-    document_type.property_mappings.each do |property_mapping|
-      property_definition = property_mapping.property_definition
-      if(property_definition.table_name == 'documents')
-        columns.push(property_definition.column_name) if (columns.index(property_definition.column_name).nil?)
+      #add properties from document type
+      document.document_type.property_mappings.each do |property_mapping|
+        property_definition = property_mapping.property_definition
+        if(property_definition.table_name == 'documents')
+          columns.push(property_definition.column_name) unless columns.include?(property_definition.column_name)
+        end
       end
-    end
 
-    return columns
+      return columns
   end
 
   def self.generate_columns(params)
@@ -47,13 +57,13 @@ module DocumentsHelper
   end
 
   # used for export to pdf (from views/documents/index.pdf.prawn)
-  def generate_pdf_data(documents,cell_definitions)
+  def generate_pdf_data(documents, view)
     rows = []
     #headers = []
     #headers_set = false
 
     row=[]
-    cell_definitions.each do |cell_definition|
+    view.cell_definitions.each do |cell_definition|
       label = {:content=>cell_definition.label.blank?||cell_definition.label=="&nbsp;" ? " " : "#{cell_definition.label}", :font_style=>:bold, :background_color=>"2DCCD3", :size=>10}
       row << label
     end
@@ -61,11 +71,11 @@ module DocumentsHelper
 
     documents.each do |document|
       row = []
-      cell_definitions.each do |cell_definition|
+      view.cell_definitions.each do |cell_definition|
         if(cell_definition.column_name=="binary_content_type")
-          value = {:image=>DocumentsHelper.formatted_column_value(document,cell_definition,"pdf"), :image_width=>16, :image_height=>16}
+          value = {:image => DocumentsHelper.formatted_column_value(document,cell_definition,"pdf"), :image_width=>16, :image_height=>16}
         else
-          value = {:content=>DocumentsHelper.formatted_column_value(document,cell_definition,"pdf").to_s, :size=>8}
+          value = {:content => DocumentsHelper.formatted_column_value(document,cell_definition,"pdf").to_s, :size=>8}
         end
 
         row << value
@@ -76,11 +86,11 @@ module DocumentsHelper
   end
 
   # used for export to csv and xml (from DocumentsController#index)
-  def self.generate_view(documents,cell_definitions, format)
+  def self.generate_view(documents, view, format)
     formatted_documents = []
     documents.each do |document|
       formatted_document = {}
-      cell_definitions.each do |cell_definition|
+      view.cell_definitions.each do |cell_definition|
         label = cell_definition.label.blank?||cell_definition.label=='&nbsp;' ? cell_definition.column_name : cell_definition.label.gsub(/[^A-Za-z0-9_.]/, '_').downcase
         value = formatted_column_value(document, cell_definition, format)
         formatted_document[label] = value
@@ -142,29 +152,44 @@ module DocumentsHelper
         data ? (date_format.blank? ? data.dojo_date_format : data.dojo_date_format(date_format)) : nil
       else data
       end
-    when "document_types" then document.document_type[column]
-    when "versions" then
-      data = document.current_version[column]
+    when "document_types"
       case column
-      when "version_number" then "#{document.current_version.major_version_number}.#{document.current_version.minor_version_number}"
-      when "binary_file_size" then help.number_to_human_size(data).to_s
-      when "binary_content_type" then
+        when "name"
+          document.document_type_name
+      end
+    when "versions" then
+      #data = document.current_version[column]
+      case column
+        when "version_number"
+          "#{document.major_version_number}"
+        when "binary_file_size"
+          help.number_to_human_size(document.binary_file_size).to_s
+      when "binary_content_type"
         if(format=='csv'||format=='xml')
-          return document.current_version.binary_content_type
+          return document.binary_content_type
         elsif(format=='pdf')
-          icon=Icon.find_by_content_type(document.current_version.binary_content_type)
-
-          if(icon)
-            return "#{Rails.root}/public/images/mimetypes/16/#{icon.file_name}"
-          else
-            return "#{Rails.root}/public/images/mimetypes/16/default.png"
-          end
+          icon = self.get_icon(document.binary_content_type)
         else
-          return self.mimetype_image_tag(document.current_version.binary_content_type)
+          return self.mimetype_image_tag(document.binary_content_type)
         end
-      else data
+        else
+          ""
       end
     end
+  end
+
+  def self.get_icon(content_type)
+    iconPath = nil
+
+    icon = Icon.find_by_content_type(content_type)
+    unless icon.nil?
+      iconPath = Rails.root.join('public', 'images', 'mimetypes', '16', icon.file_name)
+      iconPath = nil if !File.exists?(iconPath)
+    end
+
+    iconPath = Rails.root.join('public', 'images', 'mimetypes', '16', 'default.png') if iconPath.nil?
+
+    return iconPath
   end
 
   def self.status_image_tag(status)

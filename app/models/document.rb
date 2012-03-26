@@ -10,53 +10,110 @@ class Document < ActiveRecord::Base
   has_one :acl, :as => :securable, :dependent => :destroy
   before_create :create_acl
 
+  JOIN_STMT = 'INNER JOIN versions ON versions.document_id = documents.id AND versions.is_current_version=1 INNER JOIN document_types on documents.document_type_id=document_types.id'
+
+  REFERENCE_COLUMNS = {
+    'documents.id' => 'documents.id AS \'$ref\'',
+    'documents.state' => 'documents.state',
+    'documents.checked_out_by' => 'documents.checked_out_by',
+    'documents.name' => 'documents.name',
+    'documents.created_at' => 'documents.created_at',
+    'documents.created_by' => 'documents.created_by',
+    'documents.updated_at' => 'documents.updated_at',
+    'documents.updated_by' => 'documents.updated_by',
+    'documents.folder_id' => 'documents.folder_id',
+    'document_types.id' => 'document_types.id AS\'document_type_id\'',
+    'document_types.name' => 'document_types.name AS \'document_type_name\'',
+    'versions.binary_content_type' => 'versions.binary_content_type'
+  }
+
+  DOCUMENT_COLUMNS = [
+    'documents.*',
+    'document_types.id AS\'document_type_id\'',
+    'document_types.name AS \'document_type_name\'',
+    'versions.binary_content_type',
+    'versions.binary_file_name',
+    'versions.binary_file_size',
+    'versions.major_version_number',
+    'versions.minor_version_number'
+  ]
+
+
+  #return all documents not (soft) deleted
+  scope :active, lambda {
+     where("state & #{Bfree::DocumentStates.Deleted} = 0")
+  }
+
+  #returns a light version of the record that is a "reference" to the
+  #document and contains only columns specified in the view
+  #limit row count to the "range" if provided
+  scope :browse, lambda{ |view, sort, range|
+
+    columns = REFERENCE_COLUMNS.clone
+
+    unless view.nil?
+      view.cell_definitions.each do |cell|
+        column = "#{cell.table_name}.#{cell.column_name}"
+        if column == 'versions.version_number'
+          columns['versions.major_version_number'] = 'versions.major_version_number'
+          columns['versions.minor_version_number'] = 'versions.minor_version_number'
+        else
+          unless columns.include?(column)
+            columns[column] = column
+          end
+        end
+
+      end
+    end
+
+    select(columns.values.join(','))
+    .joins(JOIN_STMT)
+    .order(sort)
+    .limit(range['row_count'])
+    .offset(range['offset'])
+
+  }
+
+  #returns all (soft) deleted documents in the system
   scope :deleted, lambda {
     where("state & #{Bfree::DocumentStates.Deleted} > 0")
   }
 
+  scope :not_deleted, lambda {
+      where("state & #{Bfree::DocumentStates.Deleted} = 0")
+  }
+
+  scope :full, lambda{
+    select(DOCUMENT_COLUMNS.join(','))
+    .joins(JOIN_STMT)
+  }
+
+  #returns (non-deleted) documents in a specific folder OR
+  #in root folder if 'folder' param is null
   scope :in_folder, lambda { |folder|
+    folder_id = folder.nil? ? 0 : folder.id
+    where("folder_id = #{folder_id} AND (state & #{Bfree::DocumentStates.Deleted} = 0)")
+  }
 
-    if folder.nil?
-      where("folder_id = 0 AND (state & #{Bfree::DocumentStates.Deleted} = 0)")
-    else
-      where("folder_id = #{folder.id} AND (state & #{Bfree::DocumentStates.Deleted} = 0)")
-    end
+  scope :by_document_type, lambda { |document_type|
+    select(:name)
+  }
 
+  #returns only documents that the user has at least "view" privileges
+  #- adds the active permissions to the results
+  scope :viewable, lambda { |user, group|
+    select('viewable.active_permissions')
+    .joins("INNER JOIN ( #{Acl.viewable('Document', user, group).to_sql} ) AS viewable ON viewable.id = documents.id")
   }
 
   scope :simple, lambda{ |text|
 
-    where("documents.name LIKE('%#{text}%') OR MATCH (body,metadata,custom_metadata) AGAINST ('#{text}')")
+    where("documents.name LIKE('%#{text}%') OR MATCH (body,metadata,custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
 
   }
 
   scope :advanced, lambda{ |library, query|
     where(Search.evaluate(library, query))
-  }
-
-  scope :browse, lambda { |columns, join, sort, range|
-
-    if(range)
-      select(columns)
-      .joins(join)
-      .order(sort)
-      .limit(range['row_count'])
-      .offset(range['offset'])
-    else
-      select(columns)
-      .joins(join)
-      .order(sort)
-    end
-
-
-  }
-
-  scope :viewable, lambda { |user, group|
-
-    select('documents.*, viewable.active_permissions')
-    .joins("INNER JOIN ( #{Acl.viewable('Document', user, group).to_sql} ) AS viewable ON viewable.id = documents.id")
-    .where("state & #{Bfree::DocumentStates.Deleted} = 0")
-
   }
 
   scope :allowed, lambda { |user, group|
@@ -99,6 +156,16 @@ class Document < ActiveRecord::Base
         :checked_out_by => user.name
      )
 
+  end
+
+  def inherit_acl()
+
+    self.acl = (self.folder.nil?) ?
+                  self.library.acl.deep_clone :
+                  self.folder.acl.deep_clone
+    self.acl.inherits = true
+
+    return self.acl
   end
 
   def soft_delete(user)

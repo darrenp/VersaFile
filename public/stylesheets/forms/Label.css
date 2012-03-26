@@ -21,6 +21,11 @@
     font-size: 0.80em;
 }
 
+.versafile .dijitStrongErrorLabel{
+    color: #800000 !important;
+    font-size: 1em;
+}
+
 .versafile .dijitBoldLabel{
 	font-weight:bolder;
 }

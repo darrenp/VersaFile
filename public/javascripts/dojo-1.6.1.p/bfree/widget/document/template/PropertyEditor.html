@@ -5,7 +5,7 @@
         gutters="false"
         style="padding:0px 8px 4px 8px;height:100%;width:100%;">
 
-     <div    dojoType="dijit.layout.ContentPane"
+     <div   dojoType="dijit.layout.ContentPane"
             region="top"
             splitter="false"
             style="overflow:hidden;height:32px">
@@ -14,23 +14,31 @@
 
     </div>
 
-    <div    dojoType="dijit.layout.ContentPane"
+    <div    dojoType="dijit.layout.BorderContainer"
+            design="headline"
+            gutters="false"
+            splitter="false"
+            region="center">
+
+        <div    dojoType="dijit.layout.ContentPane"
                 splitter="false"
                 region="center"
                 splitter="true"
-                style="padding:8px"
-                class="highlightPane">
+                class="highlightPane"
+                style="padding:8px">
 
-       <div dojoAttachPoint="editorNode"></div>
+           <div dojoAttachPoint="editorNode"></div>
 
-    </div>
+        </div>
 
-    <div    dojoType="dijit.layout.ContentPane"
-            region="bottom"
-            splitter="false"
-            style="padding:8px;overflow:hidden;height:144px">
+        <div    dojoType="dijit.layout.ContentPane"
+                region="bottom"
+                splitter="false"
+                style="padding:8px;overflow:hidden;height:128px">
 
-         <div dojoAttachPoint="tableNode"></div>
+             <div dojoAttachPoint="infoNode"></div>
+
+        </div>
 
     </div>
 

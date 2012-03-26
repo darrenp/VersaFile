@@ -5,4 +5,4 @@
 */
 
 
-if(!dojo._hasResource["bfree.api.ChoiceValue"]){dojo._hasResource["bfree.api.ChoiceValue"]=true;dojo.provide("bfree.api.ChoiceValue");dojo.require("bfree.api._Object");dojo.require("bfree.api.Error");dojo.declare("bfree.api.ChoiceValue",[bfree.api._Object],{constructor:function(_1){if(_1){dojo.safeMixin(this,_1);}}});bfree.api.ChoiceValue.schema={type:"object",properties:{"id":{type:"integer"},"name":{type:"string"},"value":{type:"string"},"choice_list_id":{type:"integer"},"sort_order":{type:"integer","default":1}},prototype:new bfree.api.ChoiceValue()};}
+if(!dojo._hasResource["bfree.api.ChoiceValue"]){dojo._hasResource["bfree.api.ChoiceValue"]=true;dojo.provide("bfree.api.ChoiceValue");dojo.require("bfree.api._Object");dojo.require("bfree.api.Error");dojo.declare("bfree.api.ChoiceValue",[bfree.api._Object],{constructor:function(_1){dojo.safeMixin(this,((!_1)?{}:_1));}});bfree.api.ChoiceValue.schema={type:"object",properties:{"id":{type:"integer"},"name":{type:"string"},"value":{type:"string"},"choice_list_id":{type:"integer"},"sort_order":{type:"integer","default":1}},prototype:new bfree.api.ChoiceValue()};}

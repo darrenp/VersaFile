@@ -5,7 +5,7 @@ even = "FFFFFF"
 
 w = pdf.bounds.width
 
-data = generate_pdf_data @documents, @cell_definitions
+data = generate_pdf_data @documents, @view
 
 pdf.bounding_box([pdf.bounds.left, pdf.bounds.top-20], :width => w, :height => pdf.bounds.height - 50) do
   if data.size > 1

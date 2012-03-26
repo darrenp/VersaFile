@@ -7,7 +7,7 @@ require 'prawn'
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 3
-configatron.bfree.build_number = 1301
+configatron.bfree.build_number = 2601
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
 
@@ -35,6 +35,7 @@ module Bfree
     @@_folder = 1
     @@_simple = 2
     @@_advanced = 3
+    @@_trash = 4
 
     def self.None
       @@_none
@@ -50,6 +51,10 @@ module Bfree
 
     def self.Advanced
       @@_advanced
+    end
+
+    def self.Trash
+      @@_trash
     end
 
   end

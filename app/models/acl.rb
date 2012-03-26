@@ -49,6 +49,10 @@ class Acl < ActiveRecord::Base
     return my_clone
   end
 
+  def self.has_rights(permissions, access_flag)
+    return (permissions & access_flag) > 0
+  end
+
   def package
 
     exportable = {

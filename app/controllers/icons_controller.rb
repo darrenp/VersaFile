@@ -13,16 +13,19 @@ class IconsController < ApplicationController
   # GET /icons/1
   # GET /icons/1.json
   def show
-    file_name = 'default.png'
-    size = 16.to_s
+
+    size = params[:size].nil? ? 16.to_s : params[:size]
     @icon = Icon.find_by_content_type(params[:id])
 
-    file_name = @icon.file_name unless @icon.nil?
-    size = params[:size] unless params[:size].nil?
+    iconPath = nil
+    unless @icon.nil?
+      iconPath = Rails.root.join('public', 'images', 'mimetypes', size, @icon.file_name)
+      iconPath = nil if !File.exists?(iconPath)
+    end
 
-    path = Rails.root.join('public/images/mimetypes', size, file_name).to_s
-    send_file path, :type => 'image/png', :disposition =>'inline'
+    iconPath = Rails.root.join('public', 'images', 'mimetypes', size, 'default.png') if iconPath.nil?
 
+    send_file iconPath, :type => 'image/png', :disposition =>'inline'
   end
 
   # GET /icons/new

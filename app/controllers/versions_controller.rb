@@ -132,7 +132,10 @@ class VersionsController < ApplicationController
     end
   end
 
+  #MOVED THIS BACK TO 'documents' controller
+  #so we dont have to methods that do exactly the same thing
   # POST /versions/1/download.js
+=begin
   def download
 
     begin
@@ -166,4 +169,6 @@ class VersionsController < ApplicationController
     end
 
   end
+=end
+
 end
