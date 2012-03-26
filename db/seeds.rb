@@ -268,6 +268,9 @@ Icon.create([
   { :content_type => '.pdf', :file_name => 'application.pdf.png'},
   { :content_type => 'application/pdf', :file_name => 'application.pdf.png' },
 
+  { :content_type => '.png', :file_name => 'image.png.png' },
+  { :content_type => 'image/png', :file_name => 'image.png.png' },
+
   { :content_type => '.ppt', :file_name => 'application.vnd.ms-powerpoint.png'},
   { :content_type => '.pptx', :file_name => 'application.vnd.ms-powerpoint.png'},
   { :content_type => 'application/vnd.ms-powerpoint', :file_name => 'application.vnd.ms-powerpoint.png' },

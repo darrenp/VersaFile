@@ -46,10 +46,13 @@ class Folder < ActiveRecord::Base
     #Propagate to subfolders
     self.children.each do |subfolder|
       if subfolder.acl.inherits
-        acl=self.acl.deep_clone()
-        subfolder.acl = acl
+        acl = self.acl.deep_clone()
         acl.inherits = true
         acl.save
+
+        subfolder.acl = acl
+        subfolder.save
+
         subfolder.propagate_acl()
       end
     end
@@ -57,8 +60,10 @@ class Folder < ActiveRecord::Base
     #Propagate to documents
     self.documents.each do |document|
       if document.acl.inherits
-        document.acl = self.acl.deep_clone()
-        document.acl.inherits = true
+        acl = self.acl.deep_clone()
+        acl.inherits = true
+        acl.save
+        document.acl = acl
         document.save
       end
     end
@@ -84,8 +89,12 @@ class Folder < ActiveRecord::Base
       json_obj = {
           '$ref' => self.id,
           :name => self.name,
+          :parent_id => child.parent_id,
           :children => (self.children.count > 0),
-          :path => self.dojo_path
+          :path => self.dojo_path,
+          :is_search => self.is_search,
+          :is_trash => self.is_trash,
+          :active_permissions => self.acl.get_role(options[:user], options[:group]).permissions
       }
     else
       json_obj = super.as_json(options)
@@ -100,7 +109,12 @@ class Folder < ActiveRecord::Base
         json_obj[:children] << {
             '$ref' => child.id,
             :name => child.name,
-            :children => (child.children.count > 0)
+            :parent_id => child.parent_id,
+            :children => (child.children.count > 0),
+            :path => child.dojo_path,
+            :is_search => child.is_search,
+            :is_trash => child.is_trash,
+            :active_permissions => child.acl.get_role(options[:user], options[:group]).permissions
         }
       end
     end

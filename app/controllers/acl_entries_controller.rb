@@ -56,6 +56,7 @@ class AclEntriesController < ApplicationController
   # PUT /acl_entries/1
   # PUT /acl_entries/1.json
   def update
+
     @acl_entry = AclEntry.find(params[:id])
 
     respond_to do |format|

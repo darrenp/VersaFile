@@ -4,6 +4,9 @@ class UsersController < ApplicationController
   before_filter :zone_required, :only => [:index, :show, :avatar, :create, :destroy, :update, :reset]
   before_filter :authorization_required, :except => [:reset]
 
+  rescue_from Exception, :with => :user_error
+  rescue_from ActiveRecord::RecordNotFound, :with => :user_not_found
+
   def avatar
 
     @user = @zone.users.find(params[:id])
@@ -63,6 +66,7 @@ dont think this is needed
   # GET /users
   # GET /users.json
   def index
+
     if(params[:search] != nil)
       @search="%"+params[:search].upcase+"%"
       @users = @zone.users.find_by_sql ["SELECT `users`.* from `users` WHERE UPPER(name) LIKE(?) OR UPPER(FIRST_NAME) LIKE(?) OR UPPER(LAST_NAME) LIKE(?) OR UPPER(CONCAT(FIRST_NAME,' ',LAST_NAME)) LIKE(?) ORDER BY ?", @search, @search, @search, @search]
@@ -88,7 +92,7 @@ dont think this is needed
       format.xml  { render :xml => @users }
       format.js{
         ActiveRecord::Base.include_root_in_json = false
-        render :json => @users.to_json( :except => [:password, :zone_id], :methods => [:disabled, :active_group, :sort_id] )
+        render :json => @users.to_json( :except => [:password, :reset_password, :password_expires, :reset_password, :zone_id], :methods => [:disabled, :active_group, :sort_id] )
       }
     end
   end
@@ -101,7 +105,7 @@ dont think this is needed
 
     respond_to do |format|
       format.html # show.html.erb
-      format.json { render :json => @user.to_json( :except => [:password, :zone_id], :methods => [:disabled, :active_group] ) }
+      format.json { render :json => @user.to_json( :except => [:password, :reset_password, :password_expires, :reset_fingerprint, :reset_password, :zone_id], :methods => [:disabled, :active_group] ) }
     end
   end
 
@@ -180,7 +184,7 @@ dont think this is needed
       respond_to do |format|
         format.html { redirect_to(@user, :notice => 'User was successfully created.') }
         format.xml  { render :xml => @user, :status => :created, :location => @user }
-        format.json { render :json => @user.to_json(:except => :password, :methods => [:disabled, :active_group]), :status => :created, :location=> @user.dojo_url }
+        format.json { render :json => @user.to_json(:except => [:password, :reset_password, :password_expires, :reset_fingerprint, :reset_password, :zone_id], :methods => [:disabled, :active_group]), :status => :created, :location=> @user.dojo_url }
       end
 
     rescue => e
@@ -196,8 +200,6 @@ dont think this is needed
   # PUT /users/1
   # PUT /users/1.json
   def update
-
-    begin
 
       @user = @zone.users.find(params[:id])
 
@@ -227,29 +229,15 @@ dont think this is needed
           )
         end
 
-        unless params[:reset_password].blank?
-          @user.update_attributes(
-            :password => params[:reset_password],
-            :password_expires => nil
-          )
-        end
-
-        unless params[:old_password].nil?
-          if(@user.verify_password(params[:old_password]))
-            @user.update_attributes(
-              :password => params[:new_password],
-              :password_expires => nil
-            )
-          else
-            raise "Incorrect password"
+        reset = UsersHelper::doReset(@active_user, @user, params)
+        if(reset[:doPassword] || reset[:doExpiry])
+          if reset[:doPassword]
+            @user.update_attribute(:password, reset[:password])
           end
-        end
-
-        unless @user.password_expires.nil?
-          @user.update_attributes(
-            :password => params[:new_password],
-            :password_expires => nil
-          )
+          if reset[:doExpiry]
+            @user.update_attribute(:password_expires, reset[:expiry])
+          end
+          @user.update_attribute(:updated_by, @active_user.name)
         end
 
         unless @user.save
@@ -261,36 +249,24 @@ dont think this is needed
       respond_to do |format|
         format.html { redirect_to(@user, :notice => 'User was successfully updated.') }
         format.xml  { head :ok }
-        format.json { render :json => @user.to_json(:except => :password, :methods => [:disabled, :active_group]), :status => :ok, :location=> @user.dojo_url }
+        format.json { render :json => @user.to_json(:except => [:password, :reset_password, :password_expires, :reset_fingerprint, :reset_password, :zone_id], :methods => [:disabled, :active_group]), :status => :ok, :location=> @user.dojo_url }
       end
-
-    rescue => e
-      logger.error "User update failed => #{e.message}"
-      respond_to do |format|
-        format.json { render :json => e.message, :status => :unprocessable_entity }
-      end
-    end
 
   end
 
   #POST /users/reset
   def reset
-    begin
-      user=@zone.users.find_by_reset_fingerprint(params[:f])
-      user.password=params[:newPassword]
-      user.reset_fingerprint=nil
-      user.reset_password=nil
+
+      user = @zone.users.find_by_reset_fingerprint(params[:f])
+      user.password = params[:newPassword]
+      user.reset_fingerprint = nil
+      user.reset_password = nil
       user.save
-      session[:active_user_id] = user.id
+
       respond_to do |format|
         format.json { render :json => "", :status => :ok}
       end
-    rescue => e
-      logger.error "User password reset failed => #{e.message}"
-      respond_to do |format|
-        format.json { render :json => e.message, :status => :unprocessable_entity }
-      end
-    end
+
   end
 
   # DELETE /users/1
@@ -367,6 +343,25 @@ dont think this is needed
           :grantee_id => user.id
         )
       end
+    end
+  end
+
+:protected
+
+  def user_error(e)
+    logger.error "Failed perform user action => #{e.message}"
+    logger.error "#{e.backtrace.join('\n')}"
+    respond_to do |format|
+      format.json { render :json => e.message, :status => :unprocessable_entity }
+    end
+  end
+
+  def document_not_found(e)
+    logger.error "Failed to retrieve user => #{e.message}"
+    logger.error "#{e.backtrace.join('\n')}"
+    respond_to do |format|
+      msg = "User with id = #{params[:id]} could not be found"
+      format.json { render :json => msg, :status => :not_found }
     end
   end
 

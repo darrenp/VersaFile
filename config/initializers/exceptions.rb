@@ -61,5 +61,21 @@ module Exceptions
     end
   end
 
+  class PermissionError < StandardError
+    attr :acl_permission
+    attr :username
+
+    def initialize(username, permission)
+      super()
+      @username = username
+      @acl_permission = permission
+    end
+
+    def message()
+      return "The user '#{self.username}' does not have permission to this action"
+    end
+
+  end
+
 
 end

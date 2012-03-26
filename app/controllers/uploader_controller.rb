@@ -57,12 +57,24 @@ class UploaderController < ApplicationController
 
   def upload
 
-    begin
+    #begin
 
-      logger.debug("DIR:> #{VersaFile::SYSTEM_PATH}")
       is_pkg = params[:pkg].nil? ? false : (params[:pkg] == 'true')
       unique_id = params[:authenticity_token]
 
+      @upload_type = params[:upload_type].nil? ? '' : params[:upload_type].downcase
+
+      case @upload_type
+        when 'html5'
+          uploaded_files = params[:uploadedfiles]
+          uploadHTML5(@zone, unique_id, uploaded_files, is_pkg)
+        when 'flash'
+          uploaded_file = params[:uploadedfileFlash]
+          uploadFlash(@zone, unique_id, uploaded_file, is_pkg)
+      end
+
+
+=begin
       if(params[:upload_type] == 'html5')
 
         @retval = {
@@ -132,7 +144,67 @@ class UploaderController < ApplicationController
         format.json { render :json => e.message, :status => :unprocessable_entity }
       end
     end
+=end
 
   end
+
+protected
+
+def uploadHTML5(zone, unique_id, uploaded_files, is_pkg)
+
+  #HTML5 - all files are received at once
+  retval = { :uploadedfiles => []}
+  file_info = nil
+  error_msg = ''
+
+  uploaded_files.each do |uploaded_file|
+
+    begin
+      #Write file to temp dir
+      #If it is a "package" file, write in different dir
+      file_info = (is_pkg ?
+        UploaderHelper.write_pkg_file(zone, uploaded_file) :
+        UploaderHelper.write_file(zone, unique_id, uploaded_file))
+    rescue => e
+      error_msg = e.message
+    end
+
+    #push current
+    retval[:uploadedfiles] << {
+            :name => uploaded_file.original_filename,
+            :content_type => File.mime_type?(uploaded_file.original_filename),
+            :size =>  file_info.nil? ? 0 : file_info[:size],
+            :file => file_info.nil? ? uploaded_file.original_filename : file_info[:name],
+            :error => error_msg
+         }
+
+  end
+
+  render :text =>  "(#{retval.to_json})"
+end
+
+def uploadFlash(zone, unique_id, uploaded_file, is_pkg)
+  file_info = nil
+  error_msg = ''
+
+  begin
+    #Write file to temp dir
+    #If it is a "package" file, write in different dir
+    file_info = (is_pkg ?
+      UploaderHelper.write_pkg_file(zone, uploaded_file) :
+      UploaderHelper.write_file(zone, unique_id, uploaded_file))
+  rescue => e
+    error_msg = e.message
+  end
+
+  file_info = {
+    :name => uploaded_file.original_filename,
+    :content_type => File.mime_type?(uploaded_file.original_filename),
+    :size =>  file_info.nil? ? 0 : file_info[:size],
+    :file =>  file_info.nil? ? uploaded_file.original_filename : file_info[:name],
+    :error => error_msg
+  }
+  render :text => "file=#{CGI::escape(file_info[:file])},name=#{CGI::escape(file_info[:name])},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+end
 
 end

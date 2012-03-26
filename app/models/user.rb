@@ -15,13 +15,16 @@ class User < ActiveRecord::Base
   end
 
   def active_group
+    return self.active_group_object.id
+  end
 
-    grp = self.groups.first
+  def active_group_object
+     grp = self.groups.first
     if grp.nil?
       grp = self.zone.groups.everyones.first
     end
 
-    return grp.id
+    return grp
   end
 
   def qualified_name
@@ -44,6 +47,7 @@ class User < ActiveRecord::Base
   end
 
   def password=(value)
+    logger.debug("VALUE: '#{value}'")
     write_attribute('password', User.encrypt(value))
   end
 
@@ -68,6 +72,10 @@ class User < ActiveRecord::Base
     role = self.zone.acl.get_role(self, nil)
     return ((role.nil?) || (role.permissions == Bfree::Acl::Permissions.None))
 
+  end
+
+  def is_admin?
+    return self.is_admin || self.active_group_object.is_admin
   end
 
   def verify_password(password)
@@ -99,7 +107,7 @@ class User < ActiveRecord::Base
   def switch_to_group(group)
 
     return if self.groups.exists?(:id => group.id)
-    raise "You cannot change the Administrator account's group'" if self.is_admin&&!group.is_admin
+    raise "You cannot change the Administrator account's group'" if self.is_admin && !group.is_admin
 
     self.groups.clear
     unless (group.nil? || group.is_everyone)

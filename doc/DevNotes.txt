@@ -6,6 +6,22 @@ NOTE:   MySQL limits the return results: If result count > 50% of the total reco
 Link to MySQL 5.0 "Stop Words":
     http://dev.mysql.com/doc/refman/5.0/en/fulltext-stopwords.html
 
+'Boolean' Full-Text Searches
+    - Uses 'IN BOOLEAN MODE' modifier
+    - Does not user '50% threshold'
+    - Supported Operators:
+        '+' word MUST be present in each row returned
+        '-' word MUST NOT be present in each row returned, NOTE: Only used to return to exclude rows that are matched
+                by other search terms NOT returns 'all rows except those containing any of the excluded terms'
+        (no operator) implies words are 'OR'd together
+        '>' increases the contribution to the relevance value
+        '<' decreases the contribution to the relevance value
+        '(...)' group words into subexpressions (can be nested)
+        '~' causes the word's contribution to the row's relevance to be negative..does not exclude the row
+        '*' wildcard operator
+        '"' defines search "phrase"
+
+
 Multi-File Uploader
 ======================================
 Will attempt to use HTML5 uploader 1st: Tested with:

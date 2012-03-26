@@ -17,21 +17,16 @@ class AclsController < ApplicationController
   # GET /acls/1.json
   def show
 
-    if params[:securable_type].nil?
-      @acl = @zone.acls.find(params[:id])
-    else
-      @acl = @zone.acls.find_by_securable_id(params[:id], :conditions => { :securable_type => params[:securable_type]})
-    end
+    @acl = params[:securable_type].nil? ?
+                  @zone.acls.find(params[:id]) :
+                  @zone.acls.find_by_securable_id(params[:id], :conditions => { :securable_type => params[:securable_type]})
 
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @acl }
-      format.json  { render :json => @acl.to_json( :include =>
-                                                      {:acl_entries => { :include =>
-                                                                             {  :role => {:only => [:id, :name, :permissions]},
-                                                                                :grantee => {:only => [:id, :name]} } }},
-                                                                          :except => [ :zone_id ] ) }
+      format.json  { render :json => @acl.to_json(:include => {:acl_entries => {:only => [:grantee_id, :grantee_type, :role_id]} }) }
     end
+
   end
 
   # GET /acls/new
@@ -72,56 +67,35 @@ class AclsController < ApplicationController
 
     begin
 
-      if params[:securable_type].nil?
-        @acl = @zone.acls.find(params[:id])
-      else
-        @acl = @zone.acls.find_by_securable_id(params[:id], :conditions => { :securable_type => params[:securable_type]})
-      end
+      @acl = params[:securable_type].nil? ?
+                  @zone.acls.find(params[:id]) :
+                  @zone.acls.find_by_securable_id(params[:id], :conditions => { :securable_type => params[:securable_type]})
+      @entries = params[:acl_entries]
 
       Acl.transaction do
 
         @acl.inherits = params[:inherits]
-        @acl.acl_entries.destroy_all
+        if @acl.inherits && @acl.securable.respond_to?(:inherit_acl)
+          @acl = @acl.securable.inherit_acl()
+        else
 
-        params[:acl_entries].each do |acl_entry|
-          @role = @zone.roles.find( acl_entry[:role_id])
+          @acl.acl_entries.clear
+          @entries.each do |entry|
+            grantee = AclsHelper.get_grantee(@zone, entry[:grantee_type], entry[:grantee_id])
+            precedence = AclsHelper.get_precedence(grantee)
+            role = @zone.roles.find(entry[:role_id])
 
-            if(acl_entry[:grantee_type] == 'user')
-              @grantee = @zone.users.find(acl_entry[:grantee_id])
-              @precedence = Bfree::Acl::PrecedenceTypes.NamedUser
-            else
-              @grantee = @zone.groups.find(acl_entry[:grantee_id])
-              @precedence = (@grantee.name == 'Everyone') ? Bfree::Acl::PrecedenceTypes.Everyone : Bfree::Acl::PrecedenceTypes.NamedGroup
-              if(@grantee.name=='Everyone'&&params[:inherits])
-                acl=nil
-                if(@acl.securable_type=='Document')
-                  if(@acl.securable.folder_id==0)
-                    acl=@acl.securable.library.acl
-                  else
-                    acl=@acl.securable.folder.acl
-                  end
-                else
-                  if(@acl.securable.parent_id==0)
-                    acl=@acl.securable.library.acl
-                  else
-                    acl=@acl.securable.parent.acl
-                  end
-                end
-                  @role=acl.acl_entries.first(:conditions=>"grantee_type='Group' AND grantee_id=#{@grantee.id}").role
-              end
-            end
-
-
-            @acl.acl_entries << AclEntry.new(
-                :role => @role,
-                :precedence => @precedence,
-                :grantee => @grantee
+             @acl.acl_entries << AclEntry.new(
+                :role => role,
+                :precedence => precedence,
+                :grantee => grantee
             )
 
-        end
+          end
 
-        unless @acl.save
-          raise @acl.errors
+          unless @acl.save
+            raise @acl.errors
+          end
         end
 
         #Propogate to children
@@ -134,7 +108,8 @@ class AclsController < ApplicationController
       @role = @acl.get_role(@active_user, @active_group)
 
       respond_to do |format|
-        format.json { render :json => @role.permissions, :status => :ok }
+        format.json  { render :json => @acl.to_json(:include => {:acl_entries => {:only => [:grantee_id, :grantee_type, :role_id]} }) }
+        #format.json { render :json => @role.permissions, :status => :ok }
       end
 
     rescue => e

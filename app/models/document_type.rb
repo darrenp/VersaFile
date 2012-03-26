@@ -2,7 +2,7 @@ class DocumentType < ActiveRecord::Base
   belongs_to :library
   has_many :documents
   has_many :users
-  has_many :property_mappings, :dependent => :destroy, :order=>"sort_order"
+  has_many :property_mappings, :dependent => :destroy, :include => :property_definition, :order=>"sort_order"
   has_many  :property_definitions,
             :through => :property_mappings,
             :order => "sort_order"

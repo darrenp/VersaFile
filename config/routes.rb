@@ -100,6 +100,7 @@ VersaFile::Application.routes.draw do
           put 'cancel_checkout'
           put 'file'
           put 'restore'
+          put 'soft_delete'
           put 'unfile'
         end
         collection do

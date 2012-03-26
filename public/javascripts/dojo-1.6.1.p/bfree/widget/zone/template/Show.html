@@ -102,6 +102,7 @@
                         class="">
 
                     <div    dojoType="dijit.layout.ContentPane"
+                            dojoAttachPoint="folderPane"
                             region="left"
                             splitter="true"
                             class="versaInfoPane"
@@ -114,6 +115,7 @@
                     </div>
 
                     <div    dojoType="dijit.layout.ContentPane"
+                            dojoAttachPoint="contentPane"
                             region="center"
                             splitter="true"
                             class="versaInfoPane"
@@ -129,12 +131,6 @@
                         region="bottom"
                         splitter="false"
                         style="height:96px;padding: 0 6px 8px 6px">
-
-                    <div    dojoType="dojox.widget.Toaster"
-                           dojoAttachPoint="errorToaster"
-                           positionDirection="br-left"
-                           style="height:88px">
-                   </div>
 
                    <div style="height:100%" class="versaInfoPane">
                        <div dojoAttachPoint="itemInfoNode" style="width: 100%"></div>

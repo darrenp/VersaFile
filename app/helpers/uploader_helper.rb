@@ -30,6 +30,7 @@ module UploaderHelper
 
     #Don't clean if it doesn't exist
     if File.exists?(tmpPath)
+      
       Dir.foreach(tmpPath) do |tmp_entry|
         next if ['.', '..'].include?(tmp_entry)
         entryPath = File.join(tmpPath, tmp_entry)
@@ -102,7 +103,7 @@ module UploaderHelper
     tmpFilePath = Pathname.new(tmpFilePath).cleanpath()
     File.open(tmpFilePath, "wb") { |tmpFile| tmpFile.write(file.read) }
 
-    return {:name => tmpFileName, :path => tmpFilePath}
+    return {:name => tmpFileName, :path => tmpFilePath, :size => File.size(tmpFilePath)}
   end
 
 

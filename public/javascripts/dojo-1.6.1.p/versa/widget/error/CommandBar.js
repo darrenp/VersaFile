@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["versa.widget.error.CommandBar"]){dojo._hasResource["versa.widget.error.CommandBar"]=true;dojo.provide("versa.widget.error.CommandBar");dojo.require("bfree.widget.Bfree");dojo.require("dijit.Toolbar");dojo.require("bfree.widget.Button");dojo.require("bfree.widget.Label");dojo.declare("versa.widget.error.CommandBar",dijit.Toolbar,{_btnNext:null,_btnBack:null,_lblPageInfo:null,_onCommand:function(_1,e){this.onCommand(_1);},_setLabelAttr:function(_2){this._lblPageInfo.set("value",_2);},constructor:function(_3){},destroy:function(){this.inherited("destroy",arguments);},onCommand:function(_4){},postCreate:function(){this.inherited("postCreate",arguments);this._btnNext=new bfree.widget.Button({label:"Next Error...",showLabel:false,iconClass:"commandIcon bfreeIconErrorRight",onClick:dojo.hitch(this,this._onCommand,bfree.widget.Bfree.Commands.NEXT)});this.addChild(this._btnNext);this._lblPageInfo=new bfree.widget.Label({value:"",isError:true,style:"width:144px;text-align:center;"});this.addChild(this._lblPageInfo);this._btnBack=new bfree.widget.Button({label:"Previous Error...",showLabel:false,iconClass:"commandIcon bfreeIconErrorLeft",onClick:dojo.hitch(this,this._onCommand,bfree.widget.Bfree.Commands.PREV)});this.addChild(this._btnBack);}});}

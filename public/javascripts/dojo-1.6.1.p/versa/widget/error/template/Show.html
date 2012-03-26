@@ -1,0 +1,54 @@
+<div style="height:100%;width:100%;position:relative">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        dojoAttachPoint="mainContainer"
+        design="sidebar"
+        gutters="false"
+        style="padding:8px 8px 0 8px;height:100%;width:100%;">
+
+    <div 	dojoType="dijit.layout.ContentPane"
+            region="left"
+            splitter="false"
+            style="width:32px;padding:8px 8px 0 0">
+
+        <img src="/images/icons/32/error-orb.png" height="32" width="32">
+
+    </div>
+
+    <div    dojoAttachPoint="errorNode"
+            dojoType="dijit.layout.BorderContainer"
+            design="headline"
+            gutters="false"
+            region="center"
+            splitter="false">
+
+
+        <div 	dojoAttachPoint="messageNode"
+                dojoType="dijit.layout.ContentPane"
+                region="top"
+                splitter="false"
+                class="errorPane"
+                style="height:126px;padding:0px">
+
+            <div dojoAttachPoint="errorStackNode"></div>
+
+        </div>
+
+        <div    dojoAttachPoint="pageNode"
+                dojoType="dijit.layout.ContentPane"
+                region="center"
+                splitter="false"
+                style="padding:0 88px 0 0;display:none">
+
+            <div dojoAttachPoint="pageBarNode"></div>
+
+        </div>
+
+    </div>
+
+
+
+</div>
+
+
+</div>

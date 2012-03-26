@@ -21,7 +21,7 @@
         <table>
             <thead>
                 <tr>
-                    <% @cell_definitions.each do |c| %>
+                    <% @view.cell_definitions.each do |c| %>
                     <th style="width:<%= c.width%>; text-align: left;">
                         <%= raw(c.label) %>
                     </th>
@@ -31,7 +31,7 @@
             <tbody>
                 <% @documents.each do |d| %>
                 <tr class="<%= cycle("even", "odd") %>">
-                    <% @cell_definitions.each do |c| %>
+                    <% @view.cell_definitions.each do |c| %>
                     <td style="width:<%= c.width%>">
                         <%= raw(DocumentsHelper.formatted_column_value(d, c, "html")) %>
                     </td>

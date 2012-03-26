@@ -143,7 +143,6 @@ module VersaFile
       @@_pending
     end
 
-
   end
 
 end

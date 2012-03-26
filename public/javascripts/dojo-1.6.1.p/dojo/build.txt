@@ -65,8 +65,10 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/api/Application.js
 ./../../../dojo-1.6.1.p/bfree/api/Version.js
 ./../../../dojo-1.6.1.p/bfree/api/Versions.js
+./../../../dojo-1.6.1.p/versa/api/PermissionSet.js
 ./../../../dojo-1.6.1.p/bfree/api/Document.js
 ./../../../dojo-1.6.1.p/bfree/api/Documents.js
+./../../../dojo-1.6.1.p/versa/api/Formatter.js
 ./../../../dojo-1.6.1.p/bfree/api/PropertyMapping.js
 ./../../../dojo-1.6.1.p/bfree/api/DocumentType.js
 ./../../../dojo-1.6.1.p/bfree/api/DocumentTypes.js
@@ -133,9 +135,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/dijit/layout/_ContentPaneResizeMixin.js
 ./../../../dojo-1.6.1.p/dojo/html.js
 ./../../../dojo-1.6.1.p/dijit/layout/ContentPane.js
-./../../../dojo-1.6.1.p/dojo/fx/Toggler.js
-./../../../dojo-1.6.1.p/dojo/fx.js
-./../../../dojo-1.6.1.p/dojox/widget/Toaster.js
 ./../../../dojo-1.6.1.p/dijit/_KeyNavContainer.js
 ./../../../dojo-1.6.1.p/dijit/_CssStateMixin.js
 ./../../../dojo-1.6.1.p/dijit/MenuItem.js
@@ -151,7 +150,16 @@ bfree.js:
 ./../../../dojo-1.6.1.p/dijit/form/Button.js
 ./../../../dojo-1.6.1.p/bfree/widget/admin/CommandBar.js
 ./../../../dojo-1.6.1.p/bfree/widget/Button.js
+./../../../dojo-1.6.1.p/dijit/form/ToggleButton.js
+./../../../dojo-1.6.1.p/dijit/layout/StackController.js
+./../../../dojo-1.6.1.p/dijit/layout/StackContainer.js
+./../../../dojo-1.6.1.p/bfree/widget/Bfree.js
+./../../../dojo-1.6.1.p/bfree/widget/Label.js
+./../../../dojo-1.6.1.p/versa/widget/error/CommandBar.js
+./../../../dojo-1.6.1.p/versa/widget/error/Show.js
 ./../../../dojo-1.6.1.p/bfree/widget/ErrorManager.js
+./../../../dojo-1.6.1.p/dojo/fx/Toggler.js
+./../../../dojo-1.6.1.p/dojo/fx.js
 ./../../../dojo-1.6.1.p/dojox/widget/Standby.js
 ./../../../dojo-1.6.1.p/bfree/widget/Standby.js
 ./../../../dojo-1.6.1.p/dojo/dnd/Mover.js
@@ -166,7 +174,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/Dialog.js
 ./../../../dojo-1.6.1.p/bfree/widget/_DialogWidget.js
 ./../../../dojo-1.6.1.p/dijit/Tooltip.js
-./../../../dojo-1.6.1.p/dijit/form/ToggleButton.js
 ./../../../dojo-1.6.1.p/dijit/form/CheckBox.js
 ./../../../dojo-1.6.1.p/dijit/form/TextBox.js
 ./../../../dojo-1.6.1.p/dijit/form/ValidationTextBox.js
@@ -208,7 +215,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/admin/Show.js
 ./../../../dojo-1.6.1.p/dijit/form/Form.js
 ./../../../dojo-1.6.1.p/bfree/widget/zone/Logon.js
-./../../../dojo-1.6.1.p/bfree/widget/Bfree.js
 ./../../../dojo-1.6.1.p/bfree/widget/_Grid.js
 ./../../../dojo-1.6.1.p/dojo/data/ItemFileWriteStore.js
 ./../../../dojo-1.6.1.p/dijit/_TimePicker.js
@@ -240,7 +246,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/DataTypeSelector.js
 ./../../../dojo-1.6.1.p/bfree/widget/choiceList/CommandBar.js
 ./../../../dojo-1.6.1.p/bfree/widget/choiceList/Grid.js
-./../../../dojo-1.6.1.p/bfree/widget/Label.js
 ./../../../dojo-1.6.1.p/dojox/layout/TableContainer.js
 ./../../../dojo-1.6.1.p/bfree/widget/PropertyTable.js
 ./../../../dojo-1.6.1.p/bfree/widget/ObjectInfo.js
@@ -287,6 +292,7 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/file/Preview.js
 ./../../../dojo-1.6.1.p/dojox/fx/_base.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/Creator.js
+./../../../dojo-1.6.1.p/bfree/widget/document/SystemInfo.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/PropertyEditor.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/version/ContextMenu.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/version/Grid.js

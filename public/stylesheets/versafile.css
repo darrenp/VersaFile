@@ -141,6 +141,12 @@ div.highlightPane{
     border-radius:4px;
 }
 
+div.errorPane{
+    background-color: #FFCCCC;
+    border: #FF0000 1px solid;
+    border-radius:4px;
+}
+
 div.versaUser{
     background-color: #CDECFE;
     border-width: 0 2px 2px 0;
