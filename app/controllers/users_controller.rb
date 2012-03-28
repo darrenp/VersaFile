@@ -138,7 +138,7 @@ dont think this is needed
           raise "Username must be unique"
         end
 
-        @tmp_password = params[:reset_password]
+        @tmp_password = params[:password]
 
         @user = @zone.users.new(
           :name => params[:name],

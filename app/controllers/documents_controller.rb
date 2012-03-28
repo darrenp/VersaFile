@@ -175,7 +175,7 @@ class DocumentsController < ApplicationController
           @folder = @library.folders.find_by_id(params[:query])
           @query = @library.documents.viewable(@active_user, @active_group).active.in_folder(@folder)
         when Bfree::SearchTypes.Trash
-          @query = @library.documents.deleted
+          @query = @library.documents.viewable(@active_user, @active_group).deleted
         when Bfree::SearchTypes.Simple
           @simple_text = params[:query]
           @query = @library.documents.viewable(@active_user, @active_group).simple(@simple_text)
@@ -423,9 +423,11 @@ class DocumentsController < ApplicationController
       @document.soft_restore(@active_user)
     end
 
+    columns = DocumentsHelper.columns_by_doctype(@document)
+
     respond_to do |format|
       format.html { redirect_to @document, notice: 'Document was successfully restored.' }
-      format.json { render :json => @document.to_json( :include => {:current_version => { :except => [:id, :document_id, :content_storage_name, :content_uniqueness_key, :is_current_version] }} ), :status => :ok, :location=>@document.dojo_url }
+      format.json { render json: @document.to_json(:only => columns) }
     end
 
   end

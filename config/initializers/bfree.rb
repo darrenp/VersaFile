@@ -7,7 +7,7 @@ require 'prawn'
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 3
-configatron.bfree.build_number = 2602
+configatron.bfree.build_number = 2801
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
 
@@ -76,9 +76,9 @@ module Bfree
 
   module ColumnMaximum
     @@_string = 64
-    @@_boolean = 8
-    @@_integer = 8
-    @@_float = 8
+    @@_boolean = 24
+    @@_integer = 16
+    @@_float = 16
     @@_datetime = 16
     @@_text = 8
 
@@ -333,40 +333,6 @@ module Bfree
 
     def self.Multiple
       @@_multiple
-    end
-
-  end
-
-  module ColumnMaximum
-    @@_string = 64
-    @@_boolean = 8
-    @@_integer = 8
-    @@_float = 8
-    @@_datetime = 16
-    @@_text = 8
-
-    def self.Boolean
-      @@_boolean
-    end
-
-    def self.DateTime
-      @@_datetime
-    end
-
-    def self.Float
-      @@_float
-    end
-
-    def self.Integer
-      @@_integer
-    end
-
-    def self.String
-      @@_string
-    end
-
-    def self.Text
-      @@_text
     end
 
   end

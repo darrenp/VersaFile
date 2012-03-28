@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120221232820) do
+ActiveRecord::Schema.define(:version => 20120327161934) do
 
   create_table "accounts", :force => true do |t|
     t.string   "email",                                      :null => false
@@ -274,6 +274,38 @@ ActiveRecord::Schema.define(:version => 20120221232820) do
     t.text     "prp_txt008"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "prp_bln009"
+    t.boolean  "prp_bln010"
+    t.boolean  "prp_bln011"
+    t.boolean  "prp_bln012"
+    t.boolean  "prp_bln013"
+    t.boolean  "prp_bln014"
+    t.boolean  "prp_bln015"
+    t.boolean  "prp_bln016"
+    t.boolean  "prp_bln017"
+    t.boolean  "prp_bln018"
+    t.boolean  "prp_bln019"
+    t.boolean  "prp_bln020"
+    t.boolean  "prp_bln021"
+    t.boolean  "prp_bln022"
+    t.boolean  "prp_bln023"
+    t.boolean  "prp_bln024"
+    t.integer  "prp_int009"
+    t.integer  "prp_int010"
+    t.integer  "prp_int011"
+    t.integer  "prp_int012"
+    t.integer  "prp_int013"
+    t.integer  "prp_int014"
+    t.integer  "prp_int015"
+    t.integer  "prp_int016"
+    t.float    "prp_flt009"
+    t.float    "prp_flt010"
+    t.float    "prp_flt011"
+    t.float    "prp_flt012"
+    t.float    "prp_flt013"
+    t.float    "prp_flt014"
+    t.float    "prp_flt015"
+    t.float    "prp_flt016"
   end
 
   add_index "documents", ["body", "metadata", "custom_metadata"], :name => "fulltext_document"

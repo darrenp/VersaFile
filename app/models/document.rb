@@ -107,9 +107,7 @@ class Document < ActiveRecord::Base
   }
 
   scope :simple, lambda{ |text|
-
-    where("documents.name LIKE('%#{text}%') OR MATCH (body,metadata,custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
-
+    where("MATCH (body, metadata, custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
   }
 
   scope :advanced, lambda{ |library, query|

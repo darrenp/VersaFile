@@ -2592,9 +2592,11 @@ bfree.api.Utilities.viewUrl = function(args){
 								'width=${0},height=${1},top=${2},left=${3},toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0,scrollbars=1',
 								[box.w, box.h, box.t, box.l])
 
-    var win = parent.frames['zoneframe'].open('about:blank', winName, winArgs);
-    win.document.location.href = url;
-	win.focus();
+
+    window.open(url, winName, winArgs).focus();
+    //var win = parent.frames['zoneframe'].open('about:blank', winName, winArgs);
+    //win.document.location.href = url;
+	//
 };
 
 bfree.api.Utilities.formatDate= function(date){
@@ -6422,8 +6424,9 @@ versa.api.PermissionIndices = {
     'CANCEL_CKO':   0x07,
     'VERSION':      0x08,
     'DELETE':       0x09,
-    'SECURE':       0x0A
-
+    'SECURE':       0x0A,
+    'RESTORE':      0x0B,
+    'DESTROY':      0x0C
 
 }
 
@@ -6574,6 +6577,9 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
         prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
         prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL));
 
+        prmSet.setValue(versa.api.PermissionIndices.RESTORE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
+        prmSet.setValue(versa.api.PermissionIndices.DESTROY, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
+
         return prmSet;
     },
 
@@ -6597,7 +6603,7 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
         var zone = args.zone;
         var library = args.library;
 
-        var url = dojo.replace(bfree.api.Document.RESTORE_TRGT,  [zone.subdomain, library.id, this.id]);
+        var url = dojo.replace(bfree.api.Document.RESTORE_TRGT,  [zone.subdomain, library.getId(), this.getId()]);
         var putData = {};
 
         var result = bfree.api.XhrHelper.doPutAction({
@@ -7115,6 +7121,19 @@ dojo.declare('bfree.api.PropertyMapping', [bfree.api._Object],{
 
 bfree.api.PropertyMapping.compare = function(item1, item2){
     return item1.sort_order-item2.sort_order;
+}
+
+bfree.api.PropertyMapping.formatValue = function(property_definition, value){
+    var frmt_value = null;
+
+    if(property_definition.isTypeDate()){
+        frmt_value = versa.api.Formatter.formatDateTime(value);
+    }
+    else{
+        frmt_value = value;
+    }
+
+    return frmt_value;
 }
 
 bfree.api.PropertyMapping.schema = {
@@ -8287,18 +8306,26 @@ dojo.declare('bfree.api.User', [bfree.api._Object], {
             isValid=false;
         }
 
-        var password=this.reset_password;
+        if(this.password){
+            if(String.isEmpty(this.password) || (this.password.length < 8)){
+                isValid = false;
+            }
+        }
+
+        /*
         if(this.isNew()){
-            if(password.length<8){
+            if(String.isEmpty(this.password) || (this.password.length < 8)){
                 isValid = false;
             }
         }else{
+            if(!)
             if(!(!password||password==null||password==""||password.length==0)){
                 if(password.length>0&&password.length<8){
                     isValid=false;
                 }
             }
         }
+        */
 
         if(String.isEmpty(this.email)){
             isValid=false;
@@ -8608,7 +8635,7 @@ bfree.api.ViewDefinition._getDocumentAttrFn =  function(rowIndex, item){
             break;
         default:
             if (/prp_dtt/.test(column) && item[column]) {
-                value = viewDef._formatDateTime(cellDef, value);
+                value = viewDef._formatDateTime(cellDef, item[column]);
             }
             else {
                 value = item[column];
@@ -43320,13 +43347,19 @@ dojo.declare('bfree.widget._Grid', dojox.grid.DataGrid, {
         //validate idx is not less than 0 or less than min rows
         if((idx < 0) && (this.rowCount <= 0)){
             this.selection.clear(); //selectItem(null);
+            this.onSelectedItems([]);
         }
         else{
             //Set to first row if idx invalid
             if(idx < 1) idx = 0
-            //var item = this.getItem(idx);
-            this.selection.select(idx);  //addToSelection(idx); //selectItem(item);
-            this.onSelectedItems(this.selection.getSelected());
+
+            if(this.selection.isSelected(idx)){
+                this.onSelectedItems(this.selection.getSelected());
+            }
+            else{
+                this.selection.select(idx);
+            }
+
         }
 
     },
@@ -53043,7 +53076,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
             id: 'btnAddValue',
             label: 'Add Value to Choice List...',
             showLabel: false,
-            disabled: false,
+            disabled: true,
             iconClass: 'sidebarIcon bfreeIconAdd',
             disabledIconClass:'sidebarIcon bfreeIconAddD',
             onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.ADD)
@@ -53055,7 +53088,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
             //'class': 'sidebarButton',
             label: 'Move Value up...',
             showLabel: false,
-            disabled: false,
+            disabled: true,
             iconClass: 'sidebarIcon bfreeIconUp',
             disabledIconClass:'sidebarIcon bfreeIconUpD',
             onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.MOVE_UP)
@@ -53066,7 +53099,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
             id: 'btnValueDown',
             label: 'Move Value down...',
             showLabel: false,
-            disabled: false,
+            disabled: true,
             iconClass: 'sidebarIcon bfreeIconDown',
             disabledIconClass:'sidebarIcon bfreeIconDownD',
             onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.MOVE_DOWN)
@@ -53078,7 +53111,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
                 //'class': 'sidebarButton',
                 label: 'Remove Value from Choice List...',
                 showLabel: false,
-                disabled: false,
+                disabled: true,
                 iconClass: 'sidebarIcon bfreeIconRemove',
                 disabledIconClass: 'sidebarIcon bfreeIconRemoveD',
                 onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.REMOVE)
@@ -53416,7 +53449,11 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
 
     },
 
-    _grdValues_onSelectedItem: function(item){
+    _grdValues_onSelectedItems: function(items){
+        var item = null;
+        if(dojo.isArray(items) && items.length > 0)
+            item = items[0];
+
         this._cmdBar.set('activeValue', item);
     },
 
@@ -53629,7 +53666,9 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
         this._handles[1] = dojo.connect(this._valueStore, 'onDelete', this, this._onValueDeleted);
         this._handles[2] = dojo.connect(this._valueStore, 'onSet', this, this._onValueUpdated);
 
-        this._grdValues.setStore(this._valueStore)
+        this._grdValues.setStore(this._valueStore);
+        this._grdValues.resize();
+        this._grdValues.setSelectedIndex(0);
 
     },
 
@@ -53755,7 +53794,7 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             formatterScope: this,
             rowsPerPage: 1000,
             style: 'width:100%;height:100%',
-            onSelectedItem: dojo.hitch(this, this._grdValues_onSelectedItem)
+            onSelectedItems: dojo.hitch(this, this._grdValues_onSelectedItems)
         }, this.valueListNode);
 
         this._cmdBar = new bfree.widget.choiceList.ValueBar({
@@ -54258,27 +54297,17 @@ dojo.declare('bfree.widget.document.Accessor', null,{
 
 
     doRestore: function(document, save){
-        var folder_id=this.library.getDocuments().getValue(document, 'folder_id');
 
-        var folder;
-        if(folder_id!=0){
-            try{
-                folder=this.library.getFolders().fetchById({id: folder_id});
-            }catch(e){
-            }
+        try{
+            //had to change back to this function because rails 'update' only works on non-deleted items
+            document.restore({zone: this.zone, library: this.library});
+            this.library.getDocuments().store.onDelete(document);
+        }
+        finally{
+            // SEE notes in 'doCancelCheckout' on this.
+            this.library.getDocuments().refreshItem(document.getId());
         }
 
-        this.library.getDocuments().setValue(document, "state", document.setState(bfree.api.Document.states.DELETED, false));
-        if(!folder||this.library.getFolders().isDirty({item: folder})){
-            this.library.getDocuments().setValue(document, "folder_id", 0);
-        }else{
-            this.library.getDocuments().setValue(document, "folder_id", folder.getId());
-        }
-        if(save){
-            this.library.getDocuments().save();
-        }
-
-//        document.restore({zone: this.zone, library: this.library});
     },
 
     doView: function(document){
@@ -54563,7 +54592,8 @@ dojo.declare('bfree.widget.document.ContextMenu', bfree.widget.HeaderMenu,{
         this._btnDocDelete.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));
         this._btnDocACL.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.SECURE) && isSingleItem));
 
-        this._btnDocDestroy.set('disabled', false);
+        this._btnDocRestore.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.RESTORE)));
+        this._btnDocDestroy.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DESTROY)));
 
     },
 
@@ -58767,7 +58797,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     onUpdateNode: function(node){
-
     },
 
     postCreate: function(){
@@ -59367,13 +59396,18 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
         }
         else{
 
-             //Always select the row that has been clicked
-            if(!this.selection.isSelected(evt.rowIndex)){
-                this.selection.clear();
-                this.selection.addToSelection(evt.rowIndex);
+            var items = this.selection.getSelected();
+
+            //If row is already selected, re-fire 'onSelectedItem' event
+            //*mimics normal left-click behaviour
+            if(this.selection.isSelected(evt.rowIndex)){
+                this.onSelectedItems(items);
+            }
+            else{
+                //if row was selected, select it.
+                this.setSelectedIndex(evt.rowIndex)
             }
 
-            var items = this.selection.getSelected();
             this._mnuDocument.rowHit = true;
             this._mnuDocument.set('activeItems', items);
         }
@@ -60336,7 +60370,6 @@ dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templ
 
     startup: function(){
         this.inherited('startup', arguments);
-        console.log('gooddog');
     }
 
 });
@@ -60387,6 +60420,15 @@ dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
                 this.activeItem.document_type_id = documentType.id;
                 this.activeItem.validate({library: this.library});
             }
+
+            dojo.forEach(documentType.property_mappings, function(item, idx){
+                var propertyDefinition = this._propertyDefinitions.fetchById({id: item.property_definition_id});
+                if(!propertyDefinition.is_system&&item.default_value){
+                    this.library.getDocuments().setValue(this.activeItem, propertyDefinition.column_name, item.default_value);
+                }
+            }, this);
+
+
             this._docTypeEditor.setValues(this.activeItem);
         }
         else{
@@ -61776,13 +61818,10 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
             if(evt.hasOwnProperty('uploadedfiles')){
                 uploaded_files = evt.uploadedfiles;
             }
-
             else if(bfree.api.Utilities.isArray(evt)){
-                //array returned from upload -- most likely HTML5
                 for(var i = 0; i < evt.length; i++){
                     uploaded_files.push({
-                        file: decodeURIComponent(evt[i].file),
-                        name: decodeURIComponent(evt[i].name),
+                        name: decodeURI(evt[i].name),
                         content_type:  evt[i].type,
                         size: evt[i].size,
                         error: evt[i].error
@@ -61791,10 +61830,10 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
             }
             else{
                 uploaded_files.push({
-                    file: decodeURIComponent(evt.file),
-                    name: decodeURIComponent(evt.name),
+                    name: decodeURI(evt.name),
                     content_type: evt.type,
-                    size: evt.size
+                    size: evt.size,
+                    error: evt.error
                 });
             }
         }
@@ -61828,7 +61867,6 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
             this.uploadOnSelect = initValue;
             if(this.uploadOnSelect){
                 dojo.connect(this, 'onChange', function(data){
-                    console.log(data);
                     this.upload(data[0])
                 });
             }
@@ -63261,6 +63299,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
             var documentItem = this._fileGrid.store.getValue(nextItem, 'document');
             if(documentItem.getState(bfree.api.Document.states.UPLOADED) && !(documentItem.getState(bfree.api.Document.states.PENDING))){
                 this._fileGrid.setSelectedIndex(i + 1);
+                this._fileGrid.scrollToRow(i + 1);
                 break;
             }
 
@@ -63352,10 +63391,10 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         var fileItem = this._fileGrid.store.fetchItemById(tmpFileItem.name);
 
         var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
-        documentItem.state = bfree.api.Document.states.UPLOADED;
+        documentItem.state =  bfree.api.Document.states.UPLOADED;
 
         //update info from server
-        documentItem.binary_file_name = tmpFileItem.file;
+        documentItem.binary_file_name = tmpFileItem.name;
         documentItem.binary_content_type = tmpFileItem.content_type;
         documentItem.binary_file_size = tmpFileItem.size;
 
@@ -63555,8 +63594,14 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
         var canAdd = !this._uploading;
 
+        var idx = this._fileGrid.getItemIndex(fileItem);
+        this._fileGrid.updateRow(idx);
+
         var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
         canAdd |= (documentItem.state == bfree.api.Document.states.UPLOADED);
+
+        if(documentItem.getState(bfree.api.Document.states.CHECKED_IN))
+            canAdd = false;
 
         this._btnAdd.set('disabled', !canAdd);
 
@@ -63620,6 +63665,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         var canClose = false;
 
         try{
+
             if(this.filesLoaded){
                 if(!confirm("Files have not been added to VersaFile, closing this dialog will cause them to be lost.")){
                     return false;
@@ -67117,7 +67163,11 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
 
     },
 
-    _grdPropMap_onSelectedItem: function(item){
+    _grdPropMap_onSelectedItems: function(items){
+        var item = null;
+        if(dojo.isArray(items) && items.length > 0)
+            item = items[0];
+
         this._cmdBar.set('activePropMap', item);
     },
 
@@ -67422,7 +67472,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             formatterScope: this,
             rowsPerPage: 1000,
             style: 'width:100%;height:100%',
-            onSelectedItem: dojo.hitch(this, this._grdPropMap_onSelectedItem)
+            onSelectedItems: dojo.hitch(this, this._grdPropMap_onSelectedItems)
         }, this.propertyMappingsNode);
 
         this._cmdBar = new bfree.widget.doctype.PropMapBar({
@@ -70287,12 +70337,13 @@ dojo.declare('bfree.widget.user.ProfileEditor', [dijit._Widget, dijit._Templated
 
         this._users.setDirty(this.user);
         this.onValueChange();
+
     },
 
     _loadItem: function(){
 
         try{
-
+            this._txtFirstName.setFocus(true);
         }
         finally{
             this.onWidgetLoaded();
@@ -70877,7 +70928,7 @@ dojo.declare('bfree.widget.user.PasswordBox', [dijit._Widget, dijit._Templated],
         this.activeItem = item;
 
         if(this.activeItem){
-            this._txtPassword.set('value', this.activeItem.reset_password);
+            this._txtPassword.set('value', this.activeItem.password);
         }
         else{
             this._txtPassword.reset();
@@ -71066,7 +71117,7 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
 
         var oldValue = this.users.getValue(this.activeItem, property);
 
-        if(oldValue==null&&newValue=="")
+        if(String.isEmpty(oldValue) && String.isEmpty(newValue))
             return;
 
         if(oldValue != newValue){
@@ -71237,17 +71288,18 @@ dojo.declare('bfree.widget.user.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     _passwordValidator: function(newValue){
-        var password=newValue;
+        var password = newValue;
+
         if(this.activeItem.isNew()){
             if(password.length < 8){
                 return false;
             }
         }else{
 
-            if(!password||password==null||password==""||password.length==0){
+            if(!String.isEmpty(password)){
                 return true;
             }
-            if(password.length>0&&password.length<8){
+            if(password.length > 0 && password.length < 8){
                 return false;
             }
         }
@@ -71529,7 +71581,7 @@ dojo.declare('bfree.widget.user.Administration', [dijit._Widget, dijit._Template
                 updated_at: new Date(),
                 is_admin: false,
                 active_group: this._groups.getEveryone().id,
-                reset_password: bfree.api.Users.generatePassword({ length: 8 }),
+                password: bfree.api.Users.generatePassword({ length: 8 }),
                 disabled: false
             });
 
@@ -71602,7 +71654,7 @@ dojo.declare('bfree.widget.user.Administration', [dijit._Widget, dijit._Template
                 this._users.clone({item: item});
                 this._grdUsers.updateRow(idx);
                 this._grdUsers.setSelectedIndex(idx);
-                this._users.setValue(item, 'reset_password', "");
+                //this._users.setValue(item, 'reset_password', "");
                 this._editor.focus();
             }
 
@@ -72847,7 +72899,11 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
         return true;
     },
 
-    _grdCells_onSelectedItem: function(item){
+    _grdCells_onSelectedItems: function(items){
+        var item = null;
+        if(dojo.isArray(items) && items.length > 0)
+            item = items[0];
+
         this._cmdBar.set('activeCell', item);
     },
 
@@ -73089,6 +73145,7 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
         this._cmbSort.set('store', this._cellStore);
         this._grdCells.setStore(this._cellStore);
         this._grdCells.resize();
+        this._grdCells.setSelectedIndex(0);
 
     },
 
@@ -73188,7 +73245,7 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
             formatterScope: this,
             rowsPerPage: 1000,
             style: 'width:100%;height:100%',
-            onSelectedItem: dojo.hitch(this, this._grdCells_onSelectedItem)
+            onSelectedItems: dojo.hitch(this, this._grdCells_onSelectedItems)
         }, this.cellGridNode);
 
         this._cmdBar = new bfree.widget.view.CellBar({
@@ -74450,7 +74507,7 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
     postCreate: function(){
 		this.inherited('postCreate', arguments);
 
-        if(this.library.hasRights(bfree.api._Securable.permissions.WRITE_METADATA)){
+        if(this.library.hasRights(bfree.api._Securable.permissions.ADMIN)){
             this._btnAdmin = new dijit.form.DropDownButton({
                 label: 'Administration',
                 showLabel: true,
@@ -75078,7 +75135,7 @@ dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
 //        var nodes=this.tree.getNodesByItem(this.targetAnchor.item);
         try{
             if(this.containerState!=""&&this.targetAnchor!=null){
-                if(nodes[0].type=="Document"){
+                if(nodes[0].type == "Document"){
 
 
                     var targetNode=dijit.getEnclosingWidget(nodes[0]);
@@ -75133,12 +75190,13 @@ dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
             var allDelete=true;
             var allMove=true;
             dojo.forEach(documents, function(document, idx){
-                var permissionSet = bfree.api.Document.getPermissionSet(document, null, this.tree.library, this.tree.user);
 
-                if(!permissionSet[bfree.api.Document.permissionIndices.MOVE]){
+                var permissionSet = document.getPermissionSet(null, this.tree.library, this.tree.user);
+
+                if(!permissionSet.getValue(versa.api.PermissionIndices.MOVE)){
                     allMove=false;
                 }
-                if(!permissionSet[bfree.api.Document.permissionIndices.DELETE]){
+                if(!permissionSet.getValue(versa.api.PermissionIndices.DELETE)){
                     allDelete=false;
                 }
             }, this);
@@ -75725,17 +75783,20 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
             return;
 
         if(this._itemMap.hasOwnProperty(item.getId())){
-            itemData = this._generateSingleItem(item);
-        }
 
-        if(itemData){
+            this.nameNode.innerHTML = item.name;
+
+            itemData = this._generateSingleItem(item);
             dojo.forEach(this._labels, function(label, idx){
                 label.reset(itemData[idx].label, itemData[idx].value);
             }, this);
+
             this._tblProperties.refresh();
+
+            delete this._itemMap[item.getId()];
         }
 
-        delete this._itemMap[item.getId()];
+
         if(Object.keys(this._itemMap).length < 1)
             dojo.style(this.stateIconNode, {display: 'none'});
 
@@ -85779,7 +85840,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     //Method to apply a function to all document items with
     // - consistent error handling
     // - consistent state change handling
-    __doAction: function(items, actionFn, onError){
+    __doAction: function(items, actionFn, onComplete, onError){
         var grdIdx = -1;
 
         if((items == null) || (items.length < 1))
@@ -85826,6 +85887,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             //Reselect items
             this._grdDocuments.selectItems(items, grdIdx);
 
+            onComplete(items);
         }
 
     },
@@ -85897,7 +85959,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             //Reselect items
             this._grdDocuments.selectItems(items, grdIdx);
         }
-
 
     },
 
@@ -85997,7 +86058,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 this.__onSecure(option, params);
                 break;
             case bfree.widget.Bfree.Commands.EMPTY:
-                this._onEmpty();
+                this._onFolderTrashEmpty();
                 break;
             case bfree.widget.Bfree.Commands.PRINT:
                 this._onPrint();
@@ -86179,11 +86240,29 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     },
 
     __wdgDocuments_onSelectedItems: function(items){
-        this.set('activeDocuments', items);
+        if(dojo.isArray(items) && items.length > 0){
+            this.set('activeDocuments', items);
+        }
+        else if(this._grdDocuments.rowCount < 1){
+            this.set('activeType', bfree.widget.Bfree.ObjectTypes.FOLDER);
+            this.__wdgFolders_onSelected(this.activeFolder, null);
+        }
     },
 
     __wdgFolders_onSelected: function(item, node){
         this.set('activeFolder', item);
+    },
+
+    __wdgFolders_onUpdateNode: function(node){
+
+        var folder = node.item;
+        if((this.activeType == bfree.widget.Bfree.ObjectTypes.FOLDER) && (folder === this.activeFolder)){
+            this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.FOLDER, [folder]);
+            this._wdgItemInfo.loadItem({
+                item: folder
+            });
+        }
+
     },
 
     __wdgPane_onFocus: function(pane){
@@ -86352,6 +86431,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             }
         }
 
+        function __onComplete(items){
+        }
+
         function __onError(item, e){
             var err = new bfree.api.Error(dojo.replace('Failed to cancel checkout of document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
@@ -86359,7 +86441,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onError);
+        this.__doAction(items, __action, __onComplete, __onError);
 
     },
 
@@ -86392,6 +86474,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             accessor.doCopyLocal(item);
         }
 
+        function __onComplete(items){
+        }
+
         function __onError(item, e){
             var err = new bfree.api.Error(dojo.replace('Failed to checkout document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
@@ -86399,7 +86484,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onError);
+        this.__doAction(items, __action, __onComplete, __onError);
 
     },
 
@@ -86415,6 +86500,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             accessor.doCopyLocal(item);
         }
 
+        function __onComplete(items){
+        }
+
         function __onError(item, e){
             var err = new bfree.api.Error(dojo.replace('Failed to copy document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
@@ -86422,7 +86510,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onError);
+        this.__doAction(items, __action, __onComplete, __onError);
 
     },
 
@@ -86444,6 +86532,10 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             });
         }
 
+        function __onComplete(items){
+
+        }
+
         function __onError(item, e){
             var err = new bfree.api.Error(dojo.replace('Failed to delete document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
@@ -86451,66 +86543,39 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onError);
+        this.__doAction(items, __action, dojo.hitch(this, __onComplete), __onError);
 
     },
 
     _onDocumentDestroy: function(items){
-        var idx = -1;
 
-        if((items == null) || (items.length < 1))
+        var msg = 'Are you sure you want to permanently delete the selected documents?\nWarning: This cannot be undone.';
+        if(!confirm(msg))
             return;
 
-        //HERE if the first one is in deleted state...all are in deleted state
-        var msg = (items[0].getState(bfree.api.Document.states.DELETED)) ?
-               'Are you sure you want to permanently delete the selected documents?\nWarning: This cannot be undone.':
-               'Are you sure you want to delete the selected documents?';
+        var accessor = new bfree.widget.document.Accessor({
+            library: this.activeLibrary,
+            zone: this.zone
+        });
 
-        if(!confirm(msg)){
-            return;
+        function __action(item){
+            accessor.library.getDocuments().destroy({
+                soft: false,
+                item: item
+            });
         }
 
-        try{
-
-            //Get index of first selected item
-            idx = this._grdDocuments.getItemIndex(items[0]);
-
-            //Set selected rows to 'busy'
-            dojo.forEach(items, function(item, idx){
-                this._grdDocuments.setBusy(item, true);
-            }, this);
-
-            this._grdDocuments.beginUpdate();
-
-            //TODO: look into handling errors for each item.
-            dojo.forEach(items, function(item, idx){
-                this.activeLibrary.getDocuments().destroy({
-                    item: item
-                });
-            }, this);
-
+        function __onComplete(items){
         }
-        catch(e){
-            var err = new bfree.api.Error('Failed to delete selected document(s)', e);
+
+        function __onError(item, e){
+            var err = new bfree.api.Error(dojo.replace('Failed to destroy document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
 				error: err
 			});
-
-            idx = -1;   //don't reselect items
         }
-        finally{
-            this._grdDocuments.endUpdate();
 
-            if(idx > 0){
-                this._grdDocuments.setSelectedIndex(idx);
-            }
-            else{
-                //Unset busy state
-                dojo.forEach(items, function(item, idx){
-                    this._grdDocuments.setBusy(item, false);
-                }, this);
-            }
-        }
+        this.__doAction(items, __action, __onComplete, __onError);
 
     },
 
@@ -86571,6 +86636,11 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                     function(dlgResult, retValue){
                        this._grdDocuments.endUpdate();
                        this._grdDocuments.refresh();
+
+                       if(this._grdDocuments.selection.getSelectedCount() < 1)
+                        this._grdDocuments.setSelectedIndex(0);
+
+                       this.__wdgFolders_onSelected(this.activeFolder, null);
                        return true;
                     })
             });
@@ -86585,40 +86655,29 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     },
 
-     _onDocumentRestore: function(item){
+     _onDocumentRestore: function(items){
 
-        try{
+        var accessor = new bfree.widget.document.Accessor({
+            library: this.activeLibrary,
+            zone: this.zone
+        });
 
-            if(!item)
-                return;
-
-            if(!item.length){
-                item=[item];
-            }
-
-            dojo.forEach(item, dojo.hitch(this, function(it, idx){
-                this._grdDocuments.setBusy(it);
-            }));
-
-            var accessor = new bfree.widget.document.Accessor({
-                library: this.activeLibrary,
-                zone: this.zone
-            });
-
-            dojo.forEach(item, dojo.hitch(this, function(it, idx){
-                accessor.doRestore(it, false);
-            }));
-
-            this._grdDocuments.selection.clear();
-
-            this.activeLibrary.getDocuments().save({onComplete: dojo.hitch(this, function(){this._grdDocuments.refresh()})});
+        function __action(item){
+            accessor.doRestore(item, false);
         }
-        catch(e){
-            var err = new bfree.api.Error('Failed to restore document', e);
+
+        function __onComplete(items){
+        }
+
+        function __onError(item, e){
+            var err = new bfree.api.Error(dojo.replace('Failed to restore document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
 				error: err
 			});
         }
+
+        this.__doAction(items, __action, __onComplete, __onError);
+
     },
 
     _onDocumentSecure: function(items){
@@ -86652,6 +86711,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             accessor.doView(item);
         }
 
+        function __onComplete(items){
+        }
+
         function __onError(item, e){
             var err = new bfree.api.Error(dojo.replace('Failed to view document \'{0}\'', [item.name]), e);
 			bfree.widget.ErrorManager.handleError({
@@ -86659,7 +86721,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onError);
+        this.__doAction(items, __action, __onComplete, __onError);
 
     },
 
@@ -86792,6 +86854,25 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 				error: err
 			});
 		}
+
+    },
+
+    _onFolderTrashEmpty: function(){
+
+        var msg = 'Are you sure you want to permanently delete all of the documents in the Recycle Bin?\nWarning: This cannot be undone.'
+        if(!confirm(msg))
+            return;
+
+        try{
+            this.activeLibrary.getDocuments().empty_recycling({zone: this.zone, library: this.activeLibrary});
+            this._grdDocuments.refresh();
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to empty the Recycle Bin', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
 
     },
 
@@ -87054,7 +87135,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _setActiveFolderAttr: function(item){
 
         //Don't re-query if user clicks on active folder...
-        var doQuery = (item !== this.activeFolder);
+        var doQuery = ((item !== this.activeFolder) || item.isSearch());
 
         //Now set new active folder
         this.activeFolder = item;
@@ -87146,11 +87227,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     onWorking: function(){
     },
 
-    _onEmpty: function(){
-        this.activeLibrary.getDocuments().empty_recycling({zone: this.zone, library: this.activeLibrary});
-        this._grdDocuments.refresh();
-    },
-
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
@@ -87203,6 +87279,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             dndType: "Folder",
             onCommand: dojo.hitch(this, this.__onCommand),
             onSelected: dojo.hitch(this, this.__wdgFolders_onSelected),
+            onUpdateNode: dojo.hitch(this, this.__wdgFolders_onUpdateNode),
             style: "height: 100%"
         }, this.folderTreeNode);
 

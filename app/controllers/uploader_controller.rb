@@ -71,6 +71,11 @@ class UploaderController < ApplicationController
         when 'flash'
           uploaded_file = params[:uploadedfileFlash]
           uploadFlash(@zone, unique_id, uploaded_file, is_pkg)
+        when 'iframe'
+          uploaded_file = params[:uploadedfile0]
+          uploadIFrame(@zone, unique_id, uploaded_file, is_pkg)
+        else
+          raise "Invalid Uploader type"
       end
 
 
@@ -204,7 +209,38 @@ def uploadFlash(zone, unique_id, uploaded_file, is_pkg)
     :file =>  file_info.nil? ? uploaded_file.original_filename : file_info[:name],
     :error => error_msg
   }
-  render :text => "file=#{CGI::escape(file_info[:file])},name=#{CGI::escape(file_info[:name])},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+
+  logger.debug "file=#{CGI::escape(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escape(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+
+  render :text => "file=#{CGI::escapeHTML(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escapeHTML(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+end
+
+def uploadIFrame(zone, unique_id, uploaded_file, is_pkg)
+  file_info = nil
+  error_msg = ''
+
+  begin
+    #Write file to temp dir
+    #If it is a "package" file, write in different dir
+    file_info = (is_pkg ?
+      UploaderHelper.write_pkg_file(zone, uploaded_file) :
+      UploaderHelper.write_file(zone, unique_id, uploaded_file))
+  rescue => e
+    error_msg = e.message
+  end
+
+  @file_info = {
+    :name => uploaded_file.original_filename,
+    :content_type => File.mime_type?(uploaded_file.original_filename),
+    :size =>  file_info.nil? ? 0 : file_info[:size],
+    :file =>  file_info.nil? ? uploaded_file.original_filename : file_info[:name],
+    :error => error_msg
+  }
+
+  respond_to do |format|
+    format.html {}
+  end
+
 end
 
 end
