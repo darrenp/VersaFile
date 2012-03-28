@@ -38341,7 +38341,6 @@ dojo.declare('bfree.widget.admin.Show', [dijit._Widget, dijit._Templated], {
 
 
     postCreate: function(){
-        bfree.widget.ErrorManager.errorToaster = this.errorToaster;
 
         this.nameNode.innerHTML=this.user.name;
 
