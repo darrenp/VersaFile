@@ -3,7 +3,9 @@ class ChoiceList < ActiveRecord::Base
   belongs_to :library
   belongs_to :data_type
   has_many  :property_mappings
-  has_many  :choice_values, :dependent => :destroy
+  has_many  :choice_values,
+            :order => "sort_order",
+            :dependent => :destroy
 
   attr_accessor :sort_id
 

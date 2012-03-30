@@ -178,10 +178,10 @@ class DocumentsController < ApplicationController
           @query = @library.documents.viewable(@active_user, @active_group).deleted
         when Bfree::SearchTypes.Simple
           @simple_text = params[:query]
-          @query = @library.documents.viewable(@active_user, @active_group).simple(@simple_text)
+          @query = @library.documents.viewable(@active_user, @active_group).active.simple(@simple_text)
         when Bfree::SearchTypes.Advanced
           @advanced = ActiveSupport::JSON.decode(params[:query])
-          @query = @library.documents.viewable(@active_user, @active_group).advanced(@library, @advanced)
+          @query = @library.documents.viewable(@active_user, @active_group).active.advanced(@library, @advanced)
       end
 
       @count = @query.nil? ? 0 : @query.count

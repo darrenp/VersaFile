@@ -58,6 +58,26 @@ class UpdateDocumentsColumns < ActiveRecord::Migration
       end
     end
 
+    PropertyColumn.all.each do |pc|
+      new_maximum = 0
+      case pc.data_type_id
+        when Bfree::DataTypes.Boolean
+          new_maximum = Bfree::ColumnMaximum.BooleanMax
+        when Bfree::DataTypes.Integer
+          new_maximum = Bfree::ColumnMaximum.IntegerMax
+        when Bfree::DataTypes.Float
+          new_maximum = Bfree::ColumnMaximum.FloatMax
+        when Bfree::DataTypes.DateTime
+          new_maximum = Bfree::ColumnMaximum.DateTimeMax
+        when Bfree::DataTypes.String
+          new_maximum = Bfree::ColumnMaximum.StringMax
+        when Bfree::DataTypes.Text
+          new_maximum = Bfree::ColumnMaximum.TextMax
+      end
+
+      pc.update_attribute(:max_columns, new_maximum) unless new_maximum < 1
+    end
+
   end
 
   def down

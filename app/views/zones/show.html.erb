@@ -88,7 +88,8 @@ function loadMain(){
         activeLibrary: library,
         onLoad: _wdgMain_onLoad,
         onWorking: _wdgMain_onWorking,
-        version: '<%="#{configatron.bfree.major_version}.#{configatron.bfree.minor_version}.#{configatron.bfree.revision_number}.#{configatron.bfree.build_number}"%>'
+        version: '<%="#{configatron.bfree.major_version}.#{configatron.bfree.minor_version}.#{configatron.bfree.revision_number}.#{configatron.bfree.build_number}"%>',
+        location: '<%=ENV['location']%>'
     }, 'mainNode');
 
 }
