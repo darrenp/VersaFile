@@ -53564,6 +53564,18 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
             var item = this._grdValues.selection.getFirstSelected();
             idx = this._grdValues.getItemIndex(item);
             this._valueStore.deleteItem(item);
+
+            var props=this._valueStore._arrayOfTopLevelItems;
+            props.sort(function(item1, item2){
+                return item1.sort[0]-item2.sort[0];
+            });
+
+            for(var i=0;i<props.length;i++){
+                if(props[i]){
+                    this._valueStore.setValue(props[i], 'sort', i);
+                }
+            }
+
             this._valueStore.save();
 
         }
@@ -58571,6 +58583,9 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
     postCreate: function(){
 		this.inherited('postCreate', arguments);
+
+
+
 	},
 
     startup: function(){
@@ -59414,7 +59429,8 @@ dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
             }
             else{
                 //if row was selected, select it.
-                this.setSelectedIndex(evt.rowIndex)
+                this.setSelectedIndex(evt.rowIndex);
+                items = this.selection.getSelected();
             }
 
             this._mnuDocument.rowHit = true;
@@ -67234,16 +67250,10 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
 
     _onPropertyMapDeleted: function(deletedItem){
 
-        if(!confirm('WARNING: There may be data associated with this document property. '+
-                    'If you delete this property all data associated with this property will be deleted. '+
-                    'Do you wish to continue?')){
-            return;
-        }
-
         var id = this._propMapStore.getIdentity(deletedItem);
         for(var idx = 0; idx < this.activeItem.property_mappings.length; idx++){
             if(this.activeItem.property_mappings[idx].property_definition_id == id){
-                this.activeItem.property_mappings.splice(idx, 1)
+                this.activeItem.property_mappings.splice(idx, 1);
                 break;
             }
         }
@@ -67307,6 +67317,12 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
 
     _onPropertyMapRemove: function(){
 
+        if(!confirm('WARNING: There may be data associated with this document property. '+
+                    'If you delete this property all data associated with this property will be deleted. '+
+                    'Do you wish to continue?')){
+            return;
+        }
+
         var idx = 0;
 
         try{
@@ -67315,6 +67331,18 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             var item = this._grdPropertyMappings.selection.getFirstSelected();
             idx = this._grdPropertyMappings.getItemIndex(item);
             this._propMapStore.deleteItem(item);
+
+            var props=this._propMapStore._arrayOfTopLevelItems;
+            props.sort(function(item1, item2){
+                return item1.sort[0]-item2.sort[0];
+            });
+
+            for(var i=0;i<props.length;i++){
+                if(props[i]){
+                    this._propMapStore.setValue(props[i], 'sort', i);
+                }
+            }
+
             this._propMapStore.save();
         }
         catch(e){
@@ -73049,6 +73077,18 @@ dojo.declare('bfree.widget.view.Editor', [dijit._Widget, dijit._Templated],{
                 this._cmbSort.reset();
                 this._cmbSort.validate();
             }
+
+            var props=this._cellStore._arrayOfTopLevelItems;
+            props.sort(function(item1, item2){
+                return item1.sort[0]-item2.sort[0];
+            });
+
+            for(var i=0;i<props.length;i++){
+                if(props[i]){
+                    this._cellStore.setValue(props[i], 'sort', i);
+                }
+            }
+
             this._cellStore.save();
         }
         catch(e){
@@ -85847,7 +85887,7 @@ dojo.provide('bfree.widget.zone.Show');
 
 
 dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
-    templateString: dojo.cache("bfree.widget.zone", "template/Show.html", "<div style=\"background:#D9D9D6;height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"center\"\n            spitter=\"false\"\n            style=\"padding:8px 8px 0 8px\">\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                style=\"height:100%;width:100%\">\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"sidebar\"\n                    gutters=\"false\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopPane\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"left\"\n                        splitter=\"false\"\n                        class=\"versaHeadPane\">\n                    <img src=\"/images/versafile-64-tm.png\" height=\"56\" style=\"position:relative;top:-8px;left:0\"/>\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        class=\"versaBarPane\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0;overflow:hidden;position:relative;\">\n\n                        <div    dojoAttachPoint=\"trialStateNode\"\n                                style=\"display:none;margin-left:auto;margin-right:auto;text-align: center\">\n                            <span dojoAttachPoint=\"trialMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                            <span dojoAttachPoint=\"activateMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                        </div>\n\n                        <div dojoAttachPoint=\"toolbarNode\"></div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"right\"\n                            splitter=\"false\"\n                            style=\"width:256px;\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"position:relative;text-align:right;padding:2px 0 0 0\">\n\n                            <table cellpadding=\"0\" cellspacing=\"0\" style=\"position:absolute;right:0\"><tr>\n                                <td  style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                                    <a href=\"javascript://\" class=\"versaLink\" title=\"Edit Profile\" dojoAttachEvent=\"onclick: _onUserEdit\">\n                                    <span  dojoAttachPoint=\"nameNode\"></span>\n                                    </a>\n                                </td>\n                                <td style=\"padding-left:4px;\"><a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onLogoff\">Logout</a></td>\n                            </tr>\n                            </table>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:32px;padding:0;\">\n                            <div dojoAttachPoint=\"searchBoxNode\" style=\"\"></div>\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\"\n                    class=\"versaMainPane\">\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"true\"\n                        region=\"center\"\n                        splitter=\"false\"\n                        class=\"\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"folderPane\"\n                            region=\"left\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0;width:256px;\">\n\n                        <div style=\"height: 100%\">\n                           <div dojoAttachPoint=\"folderTreeNode\" style=\"height: 100%\"></div>\n                       </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"contentPane\"\n                            region=\"center\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0\">\n\n                        <div dojoAttachPoint=\"documentGridNode\"></div>\n\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"bottom\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding: 0 6px 8px 6px\">\n\n                   <div style=\"height:100%\" class=\"versaInfoPane\">\n                       <div dojoAttachPoint=\"itemInfoNode\" style=\"width: 100%\"></div>\n                   </div>\n\n                </div>\n\n            </div>\n\n\n        </div>\n\n    </div>\n\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"bottom\"\n            splitter=\"false\"\n            style=\"position:relative;height:16px;overflow:hidden;\">\n\n        <span class=\"dijitMediumLabel dijitDarkLabelV\">VersaFile is an RKO Business Solutions product. Copyright © 2012 All rights reserved.</span>\n\n        <span style=\"position:absolute;right:16px;\">\n            <table>\n                <tr>\n                    <td style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                        <span dojoAttachPoint=\"versionSpan\" class=\"dijitMediumLabel dijitDarkLabelV\"></span>\n                    </td><td style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                        <a dojoAttachPoint=\"guideAnchor\" target=\"_blank\">How-to</a>\n                    </td><td>\n                        <a href=\"mailto:support@versafile.com\" class=\"versaLink\">Contact Support</a>\n                    </td>\n                </tr>\n            </table>\n        </span>\n\n    </div>\n\n</div>\n\n</div>\n\n\n\n"),
+    templateString: dojo.cache("bfree.widget.zone", "template/Show.html", "<div style=\"background:#D9D9D6;height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"center\"\n            spitter=\"false\"\n            style=\"padding:8px 8px 0 8px\">\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                style=\"height:100%;width:100%\">\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"sidebar\"\n                    gutters=\"false\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopPane\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"left\"\n                        splitter=\"false\"\n                        class=\"versaHeadPane\">\n                    <img src=\"/images/versafile-64-tm.png\" height=\"56\" style=\"position:relative;top:-8px;left:0\"/>\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        class=\"versaBarPane\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0;overflow:hidden;position:relative;\">\n\n                        <div    dojoAttachPoint=\"trialStateNode\"\n                                style=\"display:none;margin-left:auto;margin-right:auto;text-align: center\">\n                            <span dojoAttachPoint=\"trialMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                            <span dojoAttachPoint=\"activateMsgNode\" class=\"dijitMediumLabel dijitDarkLabelV\" style=\"display:inline-block\"></span>\n                        </div>\n\n                        <div dojoAttachPoint=\"toolbarNode\"></div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"right\"\n                            splitter=\"false\"\n                            style=\"width:256px;\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"position:relative;text-align:right;padding:2px 0 0 0\">\n\n                            <table cellpadding=\"0\" cellspacing=\"0\" style=\"position:absolute;right:0\"><tr>\n                                <td  style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                                    <a href=\"javascript://\" class=\"versaLink\" title=\"Edit Profile\" dojoAttachEvent=\"onclick: _onUserEdit\">\n                                    <span  dojoAttachPoint=\"nameNode\"></span>\n                                    </a>\n                                </td>\n                                <td style=\"padding-left:4px;\"><a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onLogoff\">Logout</a></td>\n                            </tr>\n                            </table>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:32px;padding:0;\">\n                            <div dojoAttachPoint=\"searchBoxNode\" style=\"\"></div>\n                        </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\"\n                    class=\"versaMainPane\">\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"sidebar\"\n                        gutters=\"true\"\n                        region=\"center\"\n                        splitter=\"false\"\n                        class=\"\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"folderPane\"\n                            region=\"left\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0;width:256px;\">\n\n                        <div style=\"height: 100%\">\n                           <div dojoAttachPoint=\"folderTreeNode\" style=\"height: 100%\"></div>\n                       </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"contentPane\"\n                            region=\"center\"\n                            splitter=\"true\"\n                            class=\"versaInfoPane\"\n                            style=\"padding:0\">\n\n                        <div dojoAttachPoint=\"documentGridNode\"></div>\n\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"bottom\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding: 0 6px 8px 6px\">\n\n                   <div style=\"height:100%\" class=\"versaInfoPane\">\n                       <div dojoAttachPoint=\"itemInfoNode\" style=\"width: 100%\"></div>\n                   </div>\n\n                </div>\n\n            </div>\n\n\n        </div>\n\n    </div>\n\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"bottom\"\n            splitter=\"false\"\n            style=\"position:relative;height:16px;overflow:hidden;\">\n\n        <span class=\"dijitMediumLabel dijitDarkLabelV\">VersaFile is an RKO Business Solutions product. Copyright © 2012 All rights reserved.</span>\n\n        <span style=\"position:absolute;right:16px;\">\n            <table>\n                <tr>\n                    <td style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                        <span dojoAttachPoint=\"versionSpan\" class=\"dijitMediumLabel dijitDarkLabelV\"></span>\n                    </td><td style=\"padding-right:4px; border-right: 1px solid #75787B\">\n                        <a dojoAttachPoint=\"guideAnchor\" href=\"http://www.versafile.com/assets/VersaFile%20Quick%20Reference%20Guide.pdf\" target=\"_blank\">How-to</a>\n                    </td><td>\n                        <a href=\"mailto:support@versafile.com\" class=\"versaLink\">Contact Support</a>\n                    </td>\n                </tr>\n            </table>\n        </span>\n\n    </div>\n\n</div>\n\n</div>\n\n\n\n"),
     widgetsInTemplate: true,
 
     _duration: 60000,   //check session state once a minute
@@ -86276,8 +86316,11 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         }
         else if(this._grdDocuments.rowCount < 1){
             this.set('activeType', bfree.widget.Bfree.ObjectTypes.FOLDER);
-            if(!this.activeFolder.isSearch())
-                this.__wdgFolders_onSelected(this.activeFolder, null);
+            this.activeFolder.document_count = this._grdDocuments.rowCount;
+            this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.FOLDER, [this.activeFolder]);
+            this._wdgItemInfo.loadItem({
+                item: this.activeFolder
+            });
         }
     },
 
@@ -87346,7 +87389,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         bfree.widget.acl.Editor.refresh=dojo.hitch(this, this._onDocumentsRefresh);
 
         this.versionSpan.innerHTML='V'+this.version;
-        this.guideAnchor.href='http://assets.'+this.location+'/assets/VersaFile+Quick+Reference+Guide.pdf';
 
         dojo.connect(this.folderPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.folderPane));
         dojo.connect(this.contentPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.contentPane));
