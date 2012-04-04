@@ -102,7 +102,7 @@ module DocumentsHelper
 
   def self.generate_range(request)
     start_idx = 0
-    max_rows = 25
+    max_rows = -1
 
     if request.headers['dojo-Range']
       _, s, e = request.headers['dojo-Range'].match(/items=([^-]*)-(.*)/).to_a

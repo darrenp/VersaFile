@@ -187,7 +187,9 @@ class DocumentsController < ApplicationController
       @count = @query.nil? ? 0 : @query.count
       @documents = @query.browse(@view, sort, range) unless @query.nil?
 
-      headers['Content-Range'] = "#{range['offset']}-#{range['offset'] + range['row_count']}/#{@count}"
+      unless range['row_count']< 0
+        headers['Content-Range'] = "#{range['offset']}-#{range['offset'] + range['row_count']}/#{@count}"
+      end
 
       respond_to do |format|
         format.csv { send_data(to_csv(@documents, @view), :type => 'text/csv; charset=utf-8; header=present', :filename => "documents.csv") }

@@ -25,7 +25,7 @@ end
 pdf.page_count.times do |i|
   pdf.go_to_page(i+1)
   pdf.bounding_box([pdf.bounds.left,pdf.bounds.top + 25], :width => w){
-    pdf.table [[{:image=>"#{Rails.root}/public/images/versafile-32-tm.png"},{:content=>"VersaFile - #{@library.name}", :size=>10, :align => :center, :valign=>:center},""]],
+    pdf.table [[{:image=>"#{Rails.root}/public/images/versafile-64-tm.png", :scale=>0.5},{:content=>"VersaFile - #{@library.name}", :size=>10, :align => :center, :valign=>:center},""]],
     :column_widths => {0 => w/8, 1 =>  3*w/4, 2 => w/8},
     :position => :center,
     :cell_style => {:borders => []}

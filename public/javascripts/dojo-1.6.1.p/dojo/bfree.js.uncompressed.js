@@ -60047,6 +60047,7 @@ bfree.widget.propdef.Widget.getChoiceListWidget = function(wdgId, label, choiceL
         label: label,
         query: {},
         store: valueStore,
+        scrollOnFocus: false,
         searchAttr: 'display'
     });
 
@@ -65484,9 +65485,23 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
 
     _onUserCreated: function(newItem, parentInfo){
 
+        var groups = this.groups.fetch();
+
+        dojo.forEach(groups, function(group, idx){
+            for(var i=0;i<group.active_users.length;i++){
+                if(!group.is_everyone){
+                    if(group.active_users[i].user_id==this._userStore.getIdentity(newItem)){
+                        group.active_users.removeByValue(group.active_users[i]);
+                        break;
+                    }
+                }
+            }
+        }, this);
+
         this.activeItem.active_users.push({
             user_id: this._userStore.getIdentity(newItem)
         });
+
         this.onValueChange(this.activeItem, 'active_users', [], this.activeItem.active_users);
 
     },
@@ -65615,7 +65630,7 @@ dojo.declare('bfree.widget.group.Editor', [dijit._Widget, dijit._Templated],{
 
     destroy: function(){
 
-        this.destroyDescendants()
+        this.destroyDescendants();
 
         if(this._tblProperties){
             this._tblProperties.destroyRecursive();
@@ -68220,6 +68235,7 @@ dojo.declare('bfree.widget.doctype.Administration', [dijit._Widget, dijit._Templ
         try{
 
             var item = this._grdDocTypes.selection.getFirstSelected();
+            this._documentTypes.clearCache();
             this._documentTypes.revert();
 
             if(item){
