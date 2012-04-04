@@ -138,7 +138,7 @@ dont think this is needed
           raise "Username must be unique"
         end
 
-        @tmp_password = params[:reset_password]
+        @tmp_password = params[:password]
 
         @user = @zone.users.new(
           :name => params[:name],
@@ -230,6 +230,7 @@ dont think this is needed
         end
 
         reset = UsersHelper::doReset(@active_user, @user, params)
+
         if(reset[:doPassword] || reset[:doExpiry])
           if reset[:doPassword]
             @user.update_attribute(:password, reset[:password])
@@ -303,8 +304,6 @@ dont think this is needed
       end
     end
   end
-
-
 
   def setACLDisabled(user, disabled)
     if(disabled)

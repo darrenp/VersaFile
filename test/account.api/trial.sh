@@ -44,7 +44,7 @@ curl \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"scotth@rkosolutions.com\", \
+            \"email\":\"aarons1@rkosolutions.com\", \
             \"password\":\"password\", \
             \"name\":\"Springfield Nuclear Power Plant\", \
             \"first_name\":\"C. Montgomery\", \
@@ -58,7 +58,7 @@ curl \
             \"billing_type\":0, \
             \"trial_period\":60, \
             \"template\": 1, \
-            \"subdomains\": [ { \"name\":\"nuke\", \"user_quota\":3, \"disk_quota\": 12 } ] \
+            \"subdomains\": [ { \"name\":\"test\", \"user_quota\":3, \"disk_quota\": 12 } ] \
         }" \
     http://$SERVER_HOST/accounts
 echo

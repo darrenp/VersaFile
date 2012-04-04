@@ -66,11 +66,17 @@ class Document < ActiveRecord::Base
       end
     end
 
-    select(columns.values.join(','))
-    .joins(JOIN_STMT)
-    .order(sort)
-    .limit(range['row_count'])
-    .offset(range['offset'])
+    unless range['row_count'] < 0
+      select(columns.values.join(','))
+      .joins(JOIN_STMT)
+      .order(sort)
+      .limit(range['row_count'])
+      .offset(range['offset'])
+    else
+       select(columns.values.join(','))
+      .joins(JOIN_STMT)
+      .order(sort)
+    end
 
   }
 
@@ -107,9 +113,7 @@ class Document < ActiveRecord::Base
   }
 
   scope :simple, lambda{ |text|
-
-    where("documents.name LIKE('%#{text}%') OR MATCH (body,metadata,custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
-
+    where("MATCH (body, metadata, custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
   }
 
   scope :advanced, lambda{ |library, query|
