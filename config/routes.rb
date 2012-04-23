@@ -1,7 +1,11 @@
 VersaFile::Application.routes.draw do
 
+  resources :view_mappings
+
   match '/avatars/zone_default' => 'avatars#zone_default'
   match '/avatars/user_default' => 'avatars#user_default'
+
+  match '/shares/:id' => 'shares#forward', :constraints => { :id => /.*/ }
 
   resources :packager, :constraints => { :id => /.*/ } do
     member do
@@ -46,6 +50,17 @@ VersaFile::Application.routes.draw do
 
   #route for zone
   resources :zones, :constraints => { :id => /.*/ } do
+    resources :shares do
+      member do
+        post 'authorize'
+        post 'download'
+        get 'shared_items'
+      end
+    end
+
+
+    #match 'shares/:id' => 'shares#show', :constraints => { :id => /.*/ }
+    #match 'shares/:share_id/authorize' => 'shares#authorize', :constraints => { :share_id => /.*/ }
 
     resources :users do
       member do
@@ -75,8 +90,12 @@ VersaFile::Application.routes.draw do
     resources :avatars
     resources :groups
     resources :libraries do
-      resources :choice_lists
+      member do
+        put 'empty_trash'
+      end
 
+      resources :choice_lists
+      resources :view_mappings
       resources :document_types do
         collection do
           get 'dtmetrics'
@@ -94,22 +113,33 @@ VersaFile::Application.routes.draw do
           end
         end
         member do
-          get 'download'
-          put 'checkin'
-          put 'checkout'
-          put 'cancel_checkout'
           put 'file'
           put 'restore'
-          put 'soft_delete'
           put 'unfile'
         end
+
+      end
+
+      resources :folders do
         collection do
-          post 'empty'
+          get 'root'
         end
       end
-      resources :folders
-      resources :property_definitions
 
+      resources :property_definitions
+      resources :references do
+        member do
+          put 'checkout'
+          put 'checkin'
+          put 'cancel_checkout'
+          get 'download'
+          put 'file'
+          put 'restore'
+          put 'share'
+          put 'soft_delete'
+          put 'unshare'
+        end
+      end
       resources :view_definitions
     end
 
@@ -124,8 +154,6 @@ VersaFile::Application.routes.draw do
     end
 
     resources :roles
-
-
 
   end
 

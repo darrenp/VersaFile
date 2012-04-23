@@ -6,101 +6,6 @@ class DocumentsController < ApplicationController
   rescue_from Exception, :with => :document_error
   rescue_from ActiveRecord::RecordNotFound, :with => :document_not_found
 
-  # PUT /document/1/cancel_checkout
-  def cancel_checkout
-
-    @document = @library.documents.viewable(@active_user, @active_group).not_deleted.full.find(params[:id])
-
-    #CHECK PERMISSIONS HERE
-    unless Acl.has_rights(@document.active_permissions, Bfree::Acl::Permissions.Version)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Version)
-    end
-
-    Document.transaction do
-        @document.cancel_checkout(@active_user)
-    end
-
-    respond_to do |format|
-      format.html { redirect_to @document, notice: 'Document was successfully updated.' }
-      format.json { render :json => @document.to_json( :include => {:current_version => { :except => [:id, :document_id, :content_storage_name, :content_uniqueness_key, :is_current_version] }} ), :status => :ok, :location=>@document.dojo_url }
-    end
-
-
-  end
-
-  # PUT /document/1/checkin
-  def checkin
-
-    isMinorVersion = params[:isMinorVersion].nil? ? false : params[:isMinorVersion]
-    unique_id = params[:authenticity_token]
-
-    @document = @library.documents.viewable(@active_user, @active_group).not_deleted.full.find(params[:id])
-
-    #CHECK PERMISSIONS HERE
-    unless Acl.has_rights(@document.active_permissions, Bfree::Acl::Permissions.Version)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Version)
-    end
-
-    @temp_file = UploaderHelper.read_file(@zone, unique_id, params[:binary_file_name])
-
-     Document.transaction do
-
-       @document.update_attributes(
-          :name => params[:name],
-          :description => params[:description],
-          :updated_by => @active_user.name
-        )
-
-        @document.update_metadata(params)
-        @document.custom_metadata = @document.generate_custom_metadata()
-
-        @version = Version.supersede(@library, @document.current_version, @temp_file, isMinorVersion)
-        if(@version.binary_content_type.blank?)
-          @version.binary_content_type = params[:content_type]
-        end
-        @document.versions.push(@version)
-
-        @document.checkin(@active_user)
-        @document[:active_permissions] = @document.acl.get_role(@active_user, @active_group).permissions
-
-        unless @document.save && @version.save
-          raise @document.errors
-        end
-
-    end
-
-    columns = DocumentsHelper.columns_by_doctype(@document)
-
-    respond_to do |format|
-      format.html { redirect_to @document, notice: 'Document was successfully checked in.' }
-      format.json { render json: @document.to_json(:only => columns), :status => :ok }
-      #format.json { render :json =>@document.to_json( :include => {:current_version => { :except => [:id, :document_id, :content_storage_name, :content_uniqueness_key, :is_current_version] }} ), :status => :ok, :location=>@document.dojo_url }
-    end
-
-  end
-
-  # PUT /document/1/checkout
-  def checkout
-
-    @document = @library.documents.viewable(@active_user, @active_group).not_deleted.full.find(params[:id])
-
-    #CHECK PERMISSIONS HERE
-    unless Acl.has_rights(@document.active_permissions, Bfree::Acl::Permissions.Version)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Version)
-    end
-
-    Document.transaction do
-        @document.checkout(@active_user)
-    end
-
-    columns = DocumentsHelper.columns_by_doctype(@document)
-
-    respond_to do |format|
-      format.html { redirect_to @document, notice: 'Document was successfully updated.' }
-      format.json { render json: @document.to_json(:only => columns) }
-    end
-
-  end
 
   # PUT /document/1/file
   def file
@@ -178,18 +83,16 @@ class DocumentsController < ApplicationController
           @query = @library.documents.viewable(@active_user, @active_group).deleted
         when Bfree::SearchTypes.Simple
           @simple_text = params[:query]
-          @query = @library.documents.viewable(@active_user, @active_group).active.simple(@simple_text)
+          @query = @library.documents.viewable(@active_user, @active_group).simple(@simple_text)
         when Bfree::SearchTypes.Advanced
           @advanced = ActiveSupport::JSON.decode(params[:query])
-          @query = @library.documents.viewable(@active_user, @active_group).active.advanced(@library, @advanced)
+          @query = @library.documents.viewable(@active_user, @active_group).advanced(@library, @advanced)
       end
 
       @count = @query.nil? ? 0 : @query.count
       @documents = @query.browse(@view, sort, range) unless @query.nil?
 
-      unless range['row_count']< 0
-        headers['Content-Range'] = "#{range['offset']}-#{range['offset'] + range['row_count']}/#{@count}"
-      end
+      headers['Content-Range'] = "#{range['offset']}-#{range['offset'] + range['row_count']}/#{@count}"
 
       respond_to do |format|
         format.csv { send_data(to_csv(@documents, @view), :type => 'text/csv; charset=utf-8; header=present', :filename => "documents.csv") }
@@ -206,7 +109,7 @@ class DocumentsController < ApplicationController
   # GET /documents/1.json
   def show
 
-    @document = @library.documents.viewable(@active_user, @active_group).full.find(params[:id])
+    @document = @library.documents.full.find(params[:id])
     columns = DocumentsHelper.columns_by_doctype(@document)
 
     respond_to do |format|
@@ -264,7 +167,6 @@ class DocumentsController < ApplicationController
       @document = @zone.documents.new({
           :library => @library,
           :document_type => @document_type,
-          :folder_id => (@folder.nil? ? 0 : @folder.id),
           :name => params[:name],
           :description => params[:description],
           :state => Bfree::DocumentStates.CheckedIn,
@@ -285,14 +187,19 @@ class DocumentsController < ApplicationController
         raise @document.errors
       end
 
-      @document[:active_permissions] = @document.acl.get_role(@active_user, @active_group).permissions
+      @reference = @library.references.create({
+        :reference_type => VersaFile::ReferenceTypes.Content,
+        :document => @document,
+        :folder_id => (@folder.nil? ? 0 : @folder.id)
+      })
+
+      #@document[:active_permissions] = @document.acl.get_role(@active_user, @active_group).permissions
       @document.delay.extract_content()
 
     end
 
     columns = DocumentsHelper.columns_by_doctype(@document)
-
-    @document = @library.documents.viewable(@active_user, @active_group).full.find(@document.id)
+    @document = @library.documents.full.find(@document.id)
 
     respond_to do |format|
       format.html { redirect_to @document, notice: 'Document was successfully created.' }

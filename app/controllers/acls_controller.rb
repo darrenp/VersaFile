@@ -2,6 +2,8 @@ class AclsController < ApplicationController
   before_filter :zone_required
   before_filter :authorization_required
 
+  #rescue_from Exception, :with => :acl_error
+
   # GET /acls
   # GET /acls.json
   def index
@@ -65,18 +67,67 @@ class AclsController < ApplicationController
   # PUT /acls/1.json
   def update
 
-    begin
+    #begin
 
       @acl = params[:securable_type].nil? ?
                   @zone.acls.find(params[:id]) :
                   @zone.acls.find_by_securable_id(params[:id], :conditions => { :securable_type => params[:securable_type]})
       @entries = params[:acl_entries]
+      inherits = params[:inherits].nil? ?
+                      false :
+                      params[:inherits]
+
 
       Acl.transaction do
 
+        if inherits
+          @acl.inherits = true
+          @acl.inherit_from_parent(@acl.securable)
+        else
+          @acl.inherits = false
+          @acl.acl_entries.clear
+          @entries.each do |entry|
+            grantee = AclsHelper.get_grantee(@zone, entry[:grantee_type], entry[:grantee_id])
+            precedence = AclsHelper.get_precedence(grantee)
+            role = @zone.roles.find(entry[:role_id])
+
+             @acl.acl_entries << AclEntry.new(
+                :role => role,
+                :precedence => precedence,
+                :grantee => grantee
+            )
+
+          end
+        end
+
+        unless @acl.save
+          raise @acl.errors
+        end
+
+        #Propogate to children
+        if(@acl.securable.respond_to?(:propagate_acl))
+          @acl.securable.propagate_acl()
+        end
+
+      end
+
+      respond_to do |format|
+        format.json  { render :json => @acl.to_json(:include => {:acl_entries => {:only => [:grantee_id, :grantee_type, :role_id]} }) }
+      end
+
+    #rescue => e
+    #  logger.error "ACL update failed => #{e.message}"
+    #  respond_to do |format|
+    #    format.json { render :json => e.message, :status => :unprocessable_entity }
+    #  end
+    #end
+
+  end
+
+=begin
         @acl.inherits = params[:inherits]
         if @acl.inherits && @acl.securable.respond_to?(:inherit_acl)
-          @acl = @acl.securable.inherit_acl()
+          @acl.securable.inherit_acl()
         else
 
           @acl.acl_entries.clear
@@ -93,19 +144,20 @@ class AclsController < ApplicationController
 
           end
 
-          unless @acl.save
-            raise @acl.errors
-          end
-        end
+         # unless @acl.save
+        #    raise @acl.errors
+        #  end
+
+       #end
 
         #Propogate to children
-        if(@acl.securable.respond_to?(:propagate_acl))
-          @acl.securable.propagate_acl()
-        end
+        #if(@acl.securable.respond_to?(:propagate_acl))
+        #  @acl.securable.propagate_acl()
+        #end
 
-      end
+      #end
 
-      @role = @acl.get_role(@active_user, @active_group)
+      #@role = @acl.get_role(@active_user, @active_group)
 
       respond_to do |format|
         format.json  { render :json => @acl.to_json(:include => {:acl_entries => {:only => [:grantee_id, :grantee_type, :role_id]} }) }
@@ -118,7 +170,8 @@ class AclsController < ApplicationController
         format.json { render :json => e.message, :status => :unprocessable_entity }
       end
     end
-  end
+end
+=end
 
   # DELETE /acls/1
   # DELETE /acls/1.json
@@ -132,3 +185,13 @@ class AclsController < ApplicationController
     end
   end
 end
+
+:protected
+
+  def acl_error(e)
+    logger.error "Failed perform acl action => #{e.message}"
+    logger.error "#{e.backtrace.join('\n')}"
+    respond_to do |format|
+      format.json { render :json => e.message, :status => :unprocessable_entity }
+    end
+  end

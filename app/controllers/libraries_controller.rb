@@ -2,6 +2,30 @@ class LibrariesController < ApplicationController
   before_filter :zone_required
   before_filter :authorization_required
 
+  def empty_trash
+
+    @library = @zone.libraries.find(params[:id])
+
+    #only administrators can destroy all documents
+    @trash = @library.folders.viewable(@active_user, @active_group).where(:folder_type => VersaFile::FolderTypes.Trash)
+    if @trash.nil?
+      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Delete)
+    end
+
+    Library.transaction do
+      @deleted = @library.documents.deleted.destroy_all
+      #@documents.each do |document|
+      #  document.destroy
+      #end
+    end
+
+    respond_to do |format|
+      format.html { redirect_to references_url }
+      format.json { render :json => [], :status => :ok }
+    end
+
+  end
+
 
   # GET /libraries
   # GET /libraries.json

@@ -11,6 +11,61 @@ module VersaFile
   configatron.versafile.mail.zone_upgrade_active.subject = "Welcome to VersaFile"
   configatron.versafile.mail.zone_upgrade_quota.subject = "VersaFile Account Upgrade Notification"
 
+  #folders are sorted by types (descending order)
+  #gaps between indices are there to insert
+  #new folder types if needed.
+  module FolderTypes
+    @@_root       = 0x0000
+    @@_content    = 0x0001
+    @@_share_root = 0x0010
+    @@_share      = 0x0011
+    @@_search     = 0x0020
+    @@_trash  = 0x0040
+
+    def self.Content
+      @@_content
+    end
+
+    def self.Root
+      @@_root
+    end
+
+    def self.Search
+      @@_search
+    end
+
+    def self.Share
+      @@_share
+    end
+
+    def self.ShareRoot
+      @@_share_root
+    end
+
+    def self.Trash
+      @@_trash
+    end
+
+  end
+
+  module ReferenceTypes
+    @@_content =  0x0000
+    @@_share =    0x0011
+    @@_trash =    0x0040
+
+    def self.Content
+      @@_content
+    end
+
+    def self.Share
+      @@_share
+    end
+
+    def self.Trash
+      @@_trash
+    end
+  end
+
   module ZoneTemplates
     @@_none   = 0x0000
     @@_smb    = 0x0001

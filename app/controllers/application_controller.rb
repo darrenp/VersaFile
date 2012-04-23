@@ -62,6 +62,13 @@ class ApplicationController < ActionController::Base
     return true
   end
 
+  def guest_authorization_required()
+    raise Exceptions::AuthorizationRequired.new if session[:guest_user_id].nil?
+
+    logger.debug session[:guest_user_id]
+
+  end
+
   def authorization_required()
     if(params[:f])
       @user=@zone.users.find_by_reset_fingerprint(params[:f])
@@ -74,6 +81,7 @@ class ApplicationController < ActionController::Base
     if self.active_user.nil?
       raise Exceptions::AuthorizationRequired.new
     end
+
 
 =begin
 #TODO: RE-IMPLEMENT session expiry
@@ -110,6 +118,7 @@ class ApplicationController < ActionController::Base
 
 
   def get_zone_node(id)
+
     if(request.subdomains.first.downcase=="admin")
       return nil
     end

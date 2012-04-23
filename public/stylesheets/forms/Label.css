@@ -42,6 +42,10 @@
 	font-size: 1.05em;
 }
 
+.versafile .dijitHeadingLabel{
+	font-size: 1.25em;
+    font-weight: bold;
+}
 /*
 .bfree .dijitLabel{
 }

@@ -6,12 +6,15 @@ class Library < ActiveRecord::Base
   has_one :acl, :as => :securable
   has_one :configuration, :as => :configurable
   has_many :folders
+  has_many :shares
+  has_many :references
   has_many :documents
   has_many :versions
   has_many :choice_lists
   has_many :view_definitions
   has_many :cell_definitions
   has_many :preferences
+  has_many :view_mappings
 
   after_create :create_defaults
 
@@ -37,6 +40,10 @@ class Library < ActiveRecord::Base
     libraries << library
 
     return libraries
+  end
+
+  def root_folder
+    return self.folders.where(:folder_type == VersaFile::FolderTypes.Root).first
   end
 
   def as_json(options={})
@@ -448,23 +455,42 @@ private
 
     ViewDefinition.from_document_type(self, document_type, self.created_by, true).save()
 
+    root_folder = self.zone.folders.create(
+        :library => self,
+        :name => self.name,
+        :folder_type => VersaFile::FolderTypes.Root,
+        :created_by => self.created_by,
+        :updated_by => self.created_by,
+        :parent_id => nil?
+    )
+
     #create trash folder
     trash = self.zone.folders.create(
       :library => self,
       :name => 'Recycle Bin',
-      :is_trash => true,
+      :folder_type => VersaFile::FolderTypes.Trash,
       :created_by => self.created_by,
       :updated_by => self.updated_by,
-      :parent_id=>0
+      :parent => root_folder
     )
     #create search folder
     search = self.zone.folders.create(
       :library => self,
       :name => 'Search',
-      :is_search => true,
+      :folder_type => VersaFile::FolderTypes.Search,
       :created_by => self.created_by,
       :updated_by => self.updated_by,
-      :parent_id=>0
+      :parent => root_folder
+    )
+
+    #create share folder
+    search = self.zone.folders.create(
+      :library => self,
+      :name => 'Shares',
+      :folder_type => VersaFile::FolderTypes.ShareRoot,
+      :created_by => self.created_by,
+      :updated_by => self.updated_by,
+      :parent => root_folder
     )
 
     #createdefault ACL

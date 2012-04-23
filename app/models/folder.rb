@@ -1,20 +1,25 @@
 class Folder < ActiveRecord::Base
-  acts_as_tree :order => "name"
+  acts_as_tree :order => "folder_type DESC, name ASC"
   belongs_to :zone
   belongs_to :library
-  has_one :acl, :as => :securable
-  has_many  :documents
+  has_one :acl, :as => :securable, :dependent => :destroy
+  has_one :share, :dependent => :destroy, :autosave => true
+  has_many  :references
+  has_many  :documents, :through => :references
+  has_one :share, :dependent => :destroy
+  has_many :view_mappings, :dependent => :destroy
+  has_many :view_definitions, :through => :view_mappings
+
   before_create :create_acl
 
   scope :root_folders, lambda {
-    where('parent_id=0')
+    where(:folder_type => VersaFile::FolderTypes.Root)
   }
 
   scope :viewable, lambda { |user, group|
 
     select('folders.*, viewable.active_permissions')
     .joins("INNER JOIN ( #{Acl.viewable('Folder', user, group).to_sql} ) AS viewable ON viewable.id = folders.id")
-    .order('is_trash DESC, is_search DESC, name ASC')
   }
 
   def text_path
@@ -29,17 +34,23 @@ class Folder < ActiveRecord::Base
   end
 
   def document_count
-    if is_trash
-      return self.library.documents.deleted.length
-    else
-      return self.documents.length
-    end
-
+    #return (self.folder_type == VersaFile::FolderTypes.Trash) ?
+    #         self.library.documents.deleted.length :
+    #         self.documents.length
+    return self.references.length
   end
 
+  def get_securable_parent()
+    self.parent.nil? ?
+          self.library :
+          self.parent
+  end
+
+=begin
   def parent_id
     self[:parent_id].nil? ? 0 : self[:parent_id]
   end
+=end
 
   def propagate_acl()
 
@@ -58,13 +69,13 @@ class Folder < ActiveRecord::Base
     end
 
     #Propagate to documents
-    self.documents.each do |document|
-      if document.acl.inherits
+    self.references.each do |reference|
+      if reference.acl.inherits
         acl = self.acl.deep_clone()
         acl.inherits = true
         acl.save
-        document.acl = acl
-        document.save
+        reference.acl = acl
+        reference.save
       end
     end
 
@@ -73,7 +84,8 @@ class Folder < ActiveRecord::Base
 
   def dojo_path
 
-    return ["0", self.id.to_s] if parent.nil?
+    #return ["0", self.id.to_s] if parent.nil?
+    return [self.id.to_s] if parent.nil?
     return  parent.dojo_path << self.id.to_s
 
   end
@@ -82,29 +94,40 @@ class Folder < ActiveRecord::Base
     return "/zones/#{self.library.zone.subdomain}/libraries/#{self.library.id}/folders/#{self.id}"
   end
 
+  def get_view_definition(user)
+
+    view = self.view_definitions.first
+
+    if view.nil? && !self.parent.nil?
+      view = self.parent.get_view_definition(user)
+    end
+    if view.nil?
+      view = self.library.view_definitions.where(:is_system => true).first
+    end
+
+    return view
+  end
+
   def as_json(options={})
 
-
-    if(options[:as_ref])
-      json_obj = {
-          '$ref' => self.id,
-          :name => self.name,
-          :parent_id => child.parent_id,
-          :children => (self.children.count > 0),
-          :path => self.dojo_path,
-          :is_search => self.is_search,
-          :is_trash => self.is_trash,
-          :active_permissions => self.acl.get_role(options[:user], options[:group]).permissions
-      }
-    else
       json_obj = super.as_json(options)
       json_obj[:path] = self.dojo_path
       json_obj[:document_count] = self.document_count
       json_obj[:text_path] = self.text_path
+      json_obj[:folder_type] = self.folder_type
       json_obj[:active_permissions] = self.acl.get_role(options[:user], options[:group]).permissions
+      json_obj[:view_definition_id] = self.get_view_definition(options[:user]).id
+
+      if self.folder_type == VersaFile::FolderTypes.Share
+        json_obj[:expiry] = self.share.expiry
+        json_obj[:fingerprint] = self.share.fingerprint
+        json_obj[:share_url] = self.share.generate_url(options[:request])
+      end
+
       json_obj[:children] = []
 
-      self.children.viewable(options[:user], options[:group]).each do |child|
+      #self.children.viewable(options[:user], options[:group]).each do |child|
+      self.children.each do |child|
 
         json_obj[:children] << {
             '$ref' => child.id,
@@ -112,26 +135,27 @@ class Folder < ActiveRecord::Base
             :parent_id => child.parent_id,
             :children => (child.children.count > 0),
             :path => child.dojo_path,
-            :is_search => child.is_search,
-            :is_trash => child.is_trash,
-            :active_permissions => child.acl.get_role(options[:user], options[:group]).permissions
+            :folder_type => child.folder_type,
+            :active_permissions => child.acl.get_role(options[:user], options[:group]).permissions,
+            :view_definition_id => child.get_view_definition(options[:user]).id
         }
+
       end
-    end
 
     return json_obj
   end
 
-  def deleteDocuments(user)
+  def soft_delete(user)
+
+    #(soft) delete all documents in subfolders
     self.children.each do |subfolder|
-      #logger.debug "...#{subfolder.path}"
-      subfolder.deleteDocuments(user)
+      subfolder.soft_delete(user)
     end
 
-    self.documents.each do |document|
-      logger.debug document.name
-      document.soft_delete(user)
+    self.references.each do |reference|
+      reference.soft_delete(user)
     end
+
   end
 
   def package(root_folder)
@@ -234,7 +258,7 @@ class Folder < ActiveRecord::Base
     self.acl = (self.parent.nil?) ?
                   self.library.acl.deep_clone :
                   self.parent.acl.deep_clone
-    self.acl.inherits = true
+    self.acl.inherits = true unless self.parent.nil?
 
   end
 

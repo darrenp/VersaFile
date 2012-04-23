@@ -53,6 +53,21 @@ class Acl < ActiveRecord::Base
     return (permissions & access_flag) > 0
   end
 
+  def inherit_from_parent(securable_item)
+
+    parent = securable_item.get_securable_parent()
+
+    self.acl_entries.clear
+    parent.acl.acl_entries.each do |entry|
+      self.acl_entries << AclEntry.new(
+        :grantee => entry.grantee,
+        :role => entry.role,
+        :precedence => entry.precedence
+      )
+    end
+
+  end
+
   def package
 
     exportable = {

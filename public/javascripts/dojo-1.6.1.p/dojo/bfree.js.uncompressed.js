@@ -2561,9 +2561,7 @@ bfree.api.Utilities.saveUrl = function(args){
 								'width=10,height=10,top=-20,left=-20,toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0',
 								[])
 
-    //
-    window.location = url;
-	//var win = window.open(url, winName, winArgs);
+    window.location.href = url;
 }
 
 bfree.api.Utilities.getBox = function(args){
@@ -2583,6 +2581,68 @@ bfree.api.Utilities.getBox = function(args){
 
 };
 
+bfree.api.Utilities.getFormatStore=function(){
+
+    var items = [
+        {
+            id: bfree.api.DataTypes.types.BOOLEAN + ':' + bfree.api.CellDefinition.formats.none,
+            format_id: bfree.api.CellDefinition.formats.none,
+            data_type_id: bfree.api.DataTypes.types.BOOLEAN,
+            name: 'None'
+        },
+        {
+            id: bfree.api.DataTypes.types.DATETIME + ':' + bfree.api.CellDefinition.formats.none,
+            format_id: bfree.api.CellDefinition.formats.none,
+            data_type_id: bfree.api.DataTypes.types.DATETIME,
+            name: 'None'
+        },
+        {
+            id: bfree.api.DataTypes.types.DATETIME + ':' + bfree.api.CellDefinition.formats.datetime,
+            format_id: bfree.api.CellDefinition.formats.datetime,
+            data_type_id: bfree.api.DataTypes.types.DATETIME,
+            name: 'Date'
+        },
+        {
+            id: bfree.api.DataTypes.types.FLOAT + ':' + bfree.api.CellDefinition.formats.none,
+            format_id: bfree.api.CellDefinition.formats.none,
+            data_type_id: bfree.api.DataTypes.types.FLOAT,
+            name: 'None'
+        },
+        {
+            id: bfree.api.DataTypes.types.INTEGER + ':' + bfree.api.CellDefinition.formats.none,
+            format_id: bfree.api.CellDefinition.formats.none,
+            data_type_id: bfree.api.DataTypes.types.INTEGER,
+            name: 'None'
+        },
+        {
+            id: bfree.api.DataTypes.types.INTEGER + ':' + bfree.api.CellDefinition.formats.size,
+            format_id: bfree.api.CellDefinition.formats.size,
+            data_type_id: bfree.api.DataTypes.types.INTEGER,
+            name: 'File Size'
+        },
+        {
+            id: bfree.api.DataTypes.types.STRING + ':' + bfree.api.CellDefinition.formats.none,
+            format_id: bfree.api.CellDefinition.formats.none,
+            data_type_id: bfree.api.DataTypes.types.STRING,
+            name: 'None'
+        },
+        {
+            id: bfree.api.DataTypes.types.TEXT + ':' + bfree.api.CellDefinition.formats.none,
+            format_id: bfree.api.CellDefinition.formats.none,
+            data_type_id: bfree.api.DataTypes.types.TEXT,
+            name: 'None'
+        }
+    ];
+
+    return new bfree.api.ItemFileWriteStore({
+        data: {
+            identifier: 'id',
+            label: 'name',
+            items: items
+        }
+    });
+};
+
 bfree.api.Utilities.viewUrl = function(args){
     var box = args.windowBox;
 	var url = args.url;
@@ -2592,11 +2652,7 @@ bfree.api.Utilities.viewUrl = function(args){
 								'width=${0},height=${1},top=${2},left=${3},toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0,scrollbars=1',
 								[box.w, box.h, box.t, box.l])
 
-
     window.open(url, winName, winArgs).focus();
-    //var win = parent.frames['zoneframe'].open('about:blank', winName, winArgs);
-    //win.document.location.href = url;
-	//
 };
 
 bfree.api.Utilities.formatDate= function(date){
@@ -2665,6 +2721,7 @@ dojo.declare('bfree.api._Collection', null,{
 	store: null,
 	target: null,
 	schema: null,
+    syncMode: true,
 	cache: false,
 	first: null,
     isLoaded: false,
@@ -2720,7 +2777,7 @@ dojo.declare('bfree.api._Collection', null,{
 			idAttribute: 'id',
 			labelAttribute: 'name',
 			schema: this.schema,
-			syncMode: true,
+			syncMode: this.syncMode,
 			cacheByDefault: this.cache,
             clearOnClose: true,
 			loadLazyValues: false,
@@ -2735,6 +2792,10 @@ dojo.declare('bfree.api._Collection', null,{
         this.store.clearCache();
     },
 
+    clone: function(args){
+		this.store.changing(args.item);
+	},
+
 	/**
 	 * Creates a new instance of bfree.api._Collection
  	 * @constructor
@@ -2743,9 +2804,9 @@ dojo.declare('bfree.api._Collection', null,{
 		//dojo.connect(this.store, 'onSet', this, this.onSet);
 	},
 
-	clone: function(args){
-		this.store.changing(args.item);
-	},
+    containsValue: function(item, attribute, value){
+        return this.store.containsValue(item, attribute, value);
+    },
 
 	create: function(args){
 		var newItem = this.store.newItem(args);
@@ -2757,8 +2818,6 @@ dojo.declare('bfree.api._Collection', null,{
         var no_save = (args) ? args.no_save : false;
 
         try{
-
-
 
             this.store.deleteItem(args.item);
             if(!no_save)
@@ -2916,6 +2975,27 @@ dojo.declare('bfree.api._Collection', null,{
         this.fetch();
     },
 
+    refreshAsync: function(args){
+
+        //Remove item if exists (to refresh from server);
+        var prefix = this.store.service.servicePath.replace(/[^\/]*$/,'');
+        var full_id = (prefix || '') + args.identity;
+        var item = this.store._index[full_id];
+        if(item)
+            delete this.store._index[full_id]
+
+        //var idx = dojo.indexOf(this.store._index, ((prefix || '') + args.identity));
+        //if(idx >= 0) this.store._index.splice(idx, 1);
+
+        this.store.fetchItemByIdentity({
+            scope: args.scope,
+            identity: args.identity,
+            onItem: args.onItem,
+            onError: args.onError
+        });
+
+    },
+
     refreshItem: function(item_id){
 
         var retval = this.store.fetch({
@@ -2924,6 +3004,7 @@ dojo.declare('bfree.api._Collection', null,{
         });
 
         return retval.results;
+
     },
 
 	revert: function(args){
@@ -5692,7 +5773,8 @@ dojo.declare('bfree.api._Securable', null,{
 bfree.api._Securable.types = {
     'Library': 'Library',
     'Folder': 'Folder',
-    'Document': 'Document'
+    'Document': 'Document',
+    'Reference': 'Reference'
 }
 
 bfree.api._Securable.permissions = {
@@ -6463,54 +6545,6 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
     library: null,
     state: 0x0000,  //NONE
 
-
-    cancelCheckout: function(args){
-        var zone = args.zone;
-        var library = args.library;
-
-        var url = dojo.replace(bfree.api.Document.XCKO_TRGT,  [zone.subdomain, library.id, this.getId()]);
-
-        var putData = {
-        };
-
-        var result = bfree.api.XhrHelper.doPutAction({
-            target: url,
-            putData: putData
-        });
-
-        return true;
-    },
-
-    checkin: function(args){
-        var zone = args.zone;
-        var library = args.library;
-
-        var url = dojo.replace(bfree.api.Document.CKI_TRGT,  [zone.subdomain, library.id, this.getId()]);
-        var putData = dojo.fromJson(dojox.json.ref.toJson(this, false, '', true));;
-
-        var result = bfree.api.XhrHelper.doPutAction({
-            target: url,
-            putData: putData
-        });
-
-        return true;
-    },
-
-    checkout: function(args){
-        var zone = args.zone;
-        var library = args.library;
-
-        var url = dojo.replace(bfree.api.Document.CKO_TRGT,  [zone.subdomain, library.id, this.getId()]);
-        var putData = {};
-
-        var result = bfree.api.XhrHelper.doPutAction({
-            target: url,
-            putData: putData
-        });
-
-        return true;
-    },
-
     constructor: function(args){
         dojo.safeMixin(this, ((!args) ? { } : args));
 
@@ -6753,38 +6787,6 @@ bfree.api.Document.getStateMessage = function(state){
 
 }
 
-/*
-bfree.api.Document. = function(document, folder, library, user){
-    var prmSet = new versa.api.PermissionSet();
-    var isLibNull = (library == null);
-    var isDocNull = ((isLibNull) || (document == null));
-    var isFldNull = ((isLibNull) || (folder == null));
-    var isSysFolder = ((!isFldNull) && ((folder.is_trash) || (folder.is_search)));
-
-    /*
-    arr[bfree.api.Document.permissionIndices.CREATE] = ((!isLibNull) && (!isSysFolder) && (library.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)));
-    arr[bfree.api.Document.permissionIndices.VIEW] = ((!isDocNull) && (document.hasRights(bfree.api._Securable.permissions.VIEW)));
-    arr[bfree.api.Document.permissionIndices.COPY] = arr[bfree.api.Document.permissionIndices.VIEW];
-    arr[bfree.api.Document.permissionIndices.EDIT] = ((!isDocNull) && (document.hasRights(bfree.api._Securable.permissions.WRITE_METADATA)));
-    arr[bfree.api.Document.permissionIndices.MOVE] = arr[bfree.api.Document.permissionIndices.EDIT];
-    arr[bfree.api.Document.permissionIndices.CKO] = ((!isDocNull)
-            && (document.hasRights(bfree.api._Securable.permissions.VERSION))
-            && (document.getState(bfree.api.Document.states.CHECKED_IN)));
-    arr[bfree.api.Document.permissionIndices.CKI] = ((!isDocNull)
-            && (document.hasRights(bfree.api._Securable.permissions.VERSION))
-            && (document.getState(bfree.api.Document.states.CHECKED_OUT))
-            && (document.checked_out_by == user.name));
-    arr[bfree.api.Document.permissionIndices.CANCEL_CKO] = arr[bfree.api.Document.permissionIndices.CKI];
-    arr[bfree.api.Document.permissionIndices.DELETE] = ((!isDocNull)
-            && (document.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS)));
-    arr[bfree.api.Document.permissionIndices.SECURE] = ((!isDocNull)
-            && (document.hasRights(bfree.api._Securable.permissions.WRITE_ACL)));
-
-    return prmSet;
-}
-
-*/
-
 bfree.api.Document.VW_TRGT = '/zones/{0}/libraries/{1}/documents/{2}/download/?disposition=inline';
 bfree.api.Document.CP_TRGT = '/zones/{0}/libraries/{1}/documents/{2}/download/?disposition=attachment';
 bfree.api.Document.CKO_TRGT = '/zones/{0}/libraries/{1}/documents/{2}/checkout.json';
@@ -6816,10 +6818,6 @@ bfree.api.Document.schema = {
  		},
         'document_type_id': {
             type: 'integer'
-        },
-        'folder_id': {
-            type: 'integer',
-            optional: true
         },
  		'name': {
  			type: 'string',
@@ -6934,6 +6932,7 @@ dojo.declare('bfree.api.Documents', [bfree.api._Collection],{
         this.target = dojo.replace(bfree.api.Documents.TRGT, [this.zone.subdomain, this.library.id]);
 		this.schema = bfree.api.Document.schema;
 		this.cache = false;
+        this.syncMode = false;
 
 		this._initialize();
         this.store.isUpdateable = dojo.hitch(this, this._isUpdateable);
@@ -7385,25 +7384,29 @@ dojo.declare('bfree.api.Search', [bfree.api._Object], {
 
     type: 0,
     queryData: null,
+    view_definition_id: null,
 
     _getAdvancedQuery: function(){
         return {
             type: this.type,
-            query: dojo.toJson(this.queryData)
+            query: dojo.toJson(this.queryData),
+            view: this.view_definition_id
         }
     },
 
     _getFolderQuery: function(){
         return {
             type: this.type,
-            query: this.queryData
+            query: this.queryData,
+            view: this.view_definition_id
         }
     },
 
     _getSimpleQuery: function(){
         return {
             type: this.type,
-            query: this.queryData
+            query: this.queryData,
+            view: this.view_definition_id
         }
     },
 
@@ -7476,46 +7479,85 @@ dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
 
     getActiveQuery: function(){
 
-       if(!this._activeQuery){
-           this._activeQuery = new bfree.api.Search({
+        if(!this._activeQuery){
+            this._activeQuery = new bfree.api.Search({
                 type: (this.isTrash() ? bfree.api.Search.types.TRASH : bfree.api.Search.types.FOLDER),
-                queryData: this.getId()
+                queryData: this.getId(),
+                view_definition_id: this.view_definition_id
             });
-       }
+        }
 
         return this._activeQuery;
     },
 
+    getPermissionSet: function(library, user){
+        var prmSet = new versa.api.PermissionSet();
+
+        prmSet.setValue(versa.api.PermissionIndices.VIEW, true);
+        prmSet.setValue(versa.api.PermissionIndices.COPY, true);
+        prmSet.setValue(versa.api.PermissionIndices.EDIT, this.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!this.isSpecial() || this.isShare()) && (!this.isRoot()));
+        prmSet.setValue(versa.api.PermissionIndices.CREATE, this.hasRights(bfree.api._Securable.permissions.CREATE_FOLDERS) && (!(this.isTrash() || this.isSearch() || this.isShare())));
+        prmSet.setValue(versa.api.PermissionIndices.FILE, this.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS) && (!this.isSpecial()));
+        prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS) && (!this.isSpecial() && (!this.isRoot())));
+        prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL) && (!this.isSpecial() || this.isShare()));
+
+        return prmSet;
+    },
+
+    isRoot: function(){
+        return (this.folder_type == bfree.api.Folder.FolderTypes.ROOT);
+    },
+
     isSearch: function(){
-        return this.is_search;
+        return (this.folder_type == bfree.api.Folder.FolderTypes.SEARCH);
+    },
+
+    isShare: function(){
+        return (this.folder_type == bfree.api.Folder.FolderTypes.SHARE);
+    },
+
+    isShareRoot: function(){
+        return (this.folder_type == bfree.api.Folder.FolderTypes.SHARE_ROOT);
+    },
+
+    isSpecial: function(){
+        return (this.folder_type == bfree.api.Folder.FolderTypes.SEARCH ||
+                   this.folder_type == bfree.api.Folder.FolderTypes.TRASH ||
+                   this.folder_type == bfree.api.Folder.FolderTypes.SHARE ||
+                   this.folder_type == bfree.api.Folder.FolderTypes.SHARE_ROOT);
     },
 
     isTrash: function(){
-        return (this.is_trash);
+        return (this.folder_type == bfree.api.Folder.FolderTypes.TRASH);
     },
 
     setActiveQuery: function(query){
         this._activeQuery = query;
+        this._activeQuery.view_definition_id = this.view_definition_id;
     }
 });
 
 bfree.api.Folder.FolderTypes = {
-    'CONTENT':      0x0000,
+    'ROOT':         0x0000,
+    'CONTENT':      0x0001,
     'SHARE_ROOT':   0x0010,
     'SHARE':        0x0011,
     'SEARCH':       0x0020,
     'TRASH':        0x0040
 }
 
-bfree.api.Folder.getIconUrl = function(folder_type, size){
+bfree.api.Folder.getIconUrl = function(folder, size){
     var iconName = 'content';
 
-    switch(folder_type){
+    switch(folder.folder_type){
         case bfree.api.Folder.FolderTypes.TRASH:
             iconName = 'recyclebin';
             break;
         case bfree.api.Folder.FolderTypes.SEARCH:
             iconName = 'search';
+            break;
+        case bfree.api.Folder.FolderTypes.SHARE_ROOT:
+            iconName = 'share_root';
             break;
 
     }
@@ -7523,21 +7565,45 @@ bfree.api.Folder.getIconUrl = function(folder_type, size){
     return dojo.replace('/images/mimetypes/{0}/{1}.png', [size, iconName]);
 }
 
+bfree.api.Folder.getTypeLabel = function(folder){
+    var label = 'Content';
+
+    switch(folder.folder_type){
+        case bfree.api.Folder.FolderTypes.TRASH:
+            label = 'Deleted Items';
+            break;
+        case bfree.api.Folder.FolderTypes.SEARCH:
+            label = 'Search Results';
+            break;
+        case bfree.api.Folder.FolderTypes.SHARE_ROOT:
+            label = 'Shared Folders';
+            break;
+        case bfree.api.Folder.FolderTypes.SHARE:
+            label = 'Shared Files';
+            break;
+    }
+
+    return label;
+}
+
 bfree.api.Folder.sort = function(item1, item2){
 
-    //Always put 'Trash' before 'Search' nodes
-    if((item1.is_trash) && (item2.is_search))
-        return -1;
-    if((item1.is_search) && (item2.is_trash))
-        return 1;
+    //ORDER for non-content folder types
+    if((item1.folder_type != bfree.api.Folder.FolderTypes.CONTENT) ||
+        (item2.folder_type != bfree.api.Folder.FolderTypes.CONTENT)){
 
-    //Put 'Trash' and 'Search' before anything else
-    if((item1.is_trash) || (item1.is_search))
-        return -1;
-    if((item2.is_trash) || (item2.is_search))
+        //Order should be:
+        // - Trash
+        // - Search
+        // - Share
+        // - Content....
+        if(item1.folder_type > item2.folder_type)
+            return -1;
         return 1;
+    }
 
-    if(item1.name==item2.name){
+    //Sort by name
+    if(item1.name == item2.name){
         return 0;
     }
 
@@ -7554,6 +7620,7 @@ bfree.api.Folder.permissionIndices = {
 
 }
 
+/*
 bfree.api.Folder.getPermissionSet = function(folder, library, user){
     var arr = new Array();
     var isLibNull = (library == null);
@@ -7579,6 +7646,7 @@ bfree.api.Folder.getPermissionSet = function(folder, library, user){
 
     return arr;
 }
+*/
 
 
 bfree.api.Folder.schema = {
@@ -7587,10 +7655,17 @@ bfree.api.Folder.schema = {
  		'id': {
  			type: 'integer'
  		},
+        'folder_type': {
+            type: 'integer'
+        },
  		'name': {
  			type: 'string',
  			'default': ''
  		},
+        'expiry': {
+            type: ['string', 'object', 'null'],
+            format: 'date-time'
+        },
         'created_at': {
             type: 'string',
             format: 'date-time',
@@ -7641,6 +7716,7 @@ dojo.declare('bfree.api.Folders', [bfree.api._Collection],{
     library: null,
 
     _searchFolder: null,
+    _shareRootFolder: null,
     _trashFolder: null,
 
     _getExistingNames: function(parentItem){
@@ -7676,8 +7752,7 @@ dojo.declare('bfree.api.Folders', [bfree.api._Collection],{
 		this.schema = bfree.api.Folder.schema;
 		this.cache = true;
 
-		this._initialize();
-//        this.store.matchesQuery  = dojo.hitch(this, this._matchesQuery);
+        this._initialize();
         this.store.isUpdateable  = dojo.hitch(this, this._isUpdateable);
     },
 
@@ -7694,23 +7769,42 @@ dojo.declare('bfree.api.Folders', [bfree.api._Collection],{
     getSearchFolder: function(){
 
         if(!this._searchFolder){
-
             this.forEach(function(item){
-                if(item.is_search)
-                    this._searchFolder = item;
+                dojo.every(item.children, function(item, idx){
+                    if(item.isSearch())
+                        this._searchFolder = item;
+                    return (!this._searchFolder);
+                }, this);
             }, this);
         }
 
         return this._searchFolder;
     },
 
+    getShareRootFolder: function(){
+
+        if(!this._shareRootFolder){
+            this.forEach(function(item){
+                dojo.every(item.children, function(item, idx){
+                    if(item.isShareRoot())
+                        this._shareRootFolder = item;
+                    return (!this._shareRootFolder);
+                }, this);
+            }, this);
+        }
+
+        return this._shareRootFolder;
+    },
+
     getTrashFolder: function(){
 
-      if(!this._trashFolder){
-
+        if(!this._trashFolder){
             this.forEach(function(item){
-                if(item.is_trash)
-                    this._trashFolder = item;
+                dojo.every(item.children, function(item, idx){
+                    if(item.isTrash())
+                        this._trashFolder = item;
+                    return (!this._trashFolder);
+                }, this);
             }, this);
         }
 
@@ -7804,6 +7898,10 @@ bfree.api.Cardinality = {
     'Single': 0x01,
     'Multiple': 0x02
 }
+
+bfree.api.PropertyDefinition.compare = function(a, b){
+    return a.sort_id-b.sort_id;
+};
 
 bfree.api.PropertyDefinition.schema = {
  	type: 'object',
@@ -7927,6 +8025,447 @@ bfree.api.PropertyDefinitions.TRGT = '/zones/{0}/libraries/{1}/property_definiti
 
 }
 
+if(!dojo._hasResource['bfree.api.Reference']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.Reference'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 04/04/12
+ * Time: 12:36 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.Reference');
+
+
+
+
+
+
+dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
+    zone: null,
+    library: null,
+
+    constructor: function(args){
+        dojo.safeMixin(this, ((!args) ? { } : args));
+        this.securable_type = bfree.api._Securable.types.Reference;
+    },
+
+    cancelCheckout: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = dojo.replace(bfree.api.Reference.XCKO_TRGT,  [zone.subdomain, library.id, this.getId()]);
+
+        var putData = {
+        };
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return true;
+    },
+
+    checkin: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = dojo.replace(bfree.api.Reference.CKI_TRGT,  [zone.subdomain, library.id, this.getId()]);
+        var putData = dojo.fromJson(dojox.json.ref.toJson(this, false, '', true));;
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return true;
+    },
+
+    checkout: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = dojo.replace(bfree.api.Reference.CKO_TRGT,  [zone.subdomain, library.id, this.getId()]);
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return true;
+    },
+
+    copyLocal: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = (args.version_id) ?
+                        dojo.replace(bfree.api.Reference.CPV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
+                        dojo.replace(bfree.api.Reference.CP_TRGT, [zone.subdomain, library.id, this.getId()]);
+
+        bfree.api.Utilities.saveUrl({
+            url: url,
+            window_name: 'versa_save'
+        });
+
+	},
+
+    file: function(args){
+        var zone = args.zone;
+        var library = args.library;
+        var folder = args.folder;
+
+        var url = dojo.replace(bfree.api.Reference.FILE_TRGT,  [zone.subdomain, library.id, this.getId(), folder.getId()]);
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        //simulate removal from current results.
+        library.getReferences().store.onDelete(this);
+        return true;
+    },
+
+    getPermissionSet: function(folder, library, user){
+        var prmSet = new versa.api.PermissionSet();
+
+        prmSet.setValue(versa.api.PermissionIndices.VIEW, this.hasRights(bfree.api._Securable.permissions.VIEW));
+        prmSet.setValue(versa.api.PermissionIndices.COPY, this.hasRights(bfree.api._Securable.permissions.VIEW));
+        prmSet.setValue(versa.api.PermissionIndices.EDIT, this.hasRights(bfree.api._Securable.permissions.WRITE_METADATA));
+        prmSet.setValue(versa.api.PermissionIndices.MOVE, prmSet.getValue(versa.api.PermissionIndices.EDIT));
+        prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_IN)));
+        prmSet.setValue(versa.api.PermissionIndices.CKI, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name)));
+        prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, prmSet.getValue(versa.api.PermissionIndices.CKI));
+        prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
+        prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL));
+
+        prmSet.setValue(versa.api.PermissionIndices.RESTORE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
+        prmSet.setValue(versa.api.PermissionIndices.DESTROY, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
+
+        return prmSet;
+    },
+
+    getState: function(stateFlag){
+       return ((this.state & stateFlag) == stateFlag);
+    },
+
+    isDeleted: function(){
+        return this.getState(bfree.api.Document.states.DELETED);
+    },
+
+    isShare: function(){
+        return this.reference_type == bfree.api.Reference.types.SHARE;
+    },
+
+    restore: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = dojo.replace(bfree.api.Reference.RESTORE_TRGT,  [zone.subdomain, library.getId(), this.getId()]);
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        //simulate removal from 'recycle bin'.
+        library.getReferences().store.onDelete(this);
+        return true;
+    },
+
+    share: function(args){
+        var zone = args.zone;
+        var library = args.library;
+        var folder = args.folder;
+
+        var url = dojo.replace(bfree.api.Reference.SHARE_TRGT,  [zone.subdomain, library.id, this.getId(), folder.getId()]);
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return true;
+    },
+
+    unshare: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = dojo.replace(bfree.api.Reference.UNSHARE_TRGT,  [zone.subdomain, library.id, this.getId()]);
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        //simulate removal from current results.
+        library.getReferences().store.onDelete(this);
+
+        return true;
+    },
+
+    view: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var url = (args.version_id) ?
+                        dojo.replace(bfree.api.Reference.VWV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
+                        dojo.replace(bfree.api.Reference.VW_TRGT, [zone.subdomain, library.id, this.getId()]);
+
+
+        bfree.api.Utilities.viewUrl({
+            windowBox: args.windowBox,
+            url: url,
+            window_name: 'versa_viewer'
+        });
+	}
+
+});
+
+bfree.api.Reference.VW_TRGT = '/zones/{0}/libraries/{1}/references/{2}/download/?disposition=inline'
+bfree.api.Reference.VWV_TRGT = '/zones/{0}/libraries/{1}/references/{2}/download/?disposition=inline&version_id={3}'
+bfree.api.Reference.CP_TRGT = '/zones/{0}/libraries/{1}/references/{2}/download/?disposition=attachment';
+bfree.api.Reference.CPV_TRGT = '/zones/{0}/libraries/{1}/references/{2}/download/?disposition=attachment&version_id={3}';
+bfree.api.Reference.CKO_TRGT = '/zones/{0}/libraries/{1}/references/{2}/checkout.json';
+bfree.api.Reference.CKI_TRGT  = '/zones/{0}/libraries/{1}/references/{2}/checkin.json';
+bfree.api.Reference.XCKO_TRGT = '/zones/{0}/libraries/{1}/references/{2}/cancel_checkout.json';
+bfree.api.Reference.FILE_TRGT = '/zones/{0}/libraries/{1}/references/{2}/file.json?folder_id={3}';
+bfree.api.Reference.SHARE_TRGT = '/zones/{0}/libraries/{1}/references/{2}/share.json?folder_id={3}'
+bfree.api.Reference.UNSHARE_TRGT = '/zones/{0}/libraries/{1}/references/{2}/unshare.json?'
+bfree.api.Reference.RESTORE_TRGT  = '/zones/{0}/libraries/{1}/references/{2}/restore.json';
+
+bfree.api.Reference.types = {
+    'CONTENT':  0x0000,
+    'SHARE':    0x0011,
+    'TRASH':    0x0012
+}
+
+bfree.api.Reference.schema = {
+ 	type: 'object',
+ 	properties: {
+ 		'id': {
+ 			type: 'integer'
+ 		},
+        'reference_type': {
+            type: 'integer'
+        },
+        'state': {
+            type: 'integer',
+            'default': bfree.api.Document.states.PENDING
+        }
+ 	},
+
+	prototype: new bfree.api.Reference()
+ };
+
+}
+
+if(!dojo._hasResource['bfree.api.References']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.References'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 04/04/12
+ * Time: 12:32 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.References');
+
+
+
+dojo.declare('bfree.api.References', bfree.api._Collection,{
+    library: null,
+    zone: null,
+
+    _isUpdateable: function(request){
+        return false;
+    },
+
+    _softDelete: function(item){
+        var url = dojo.replace(bfree.api.References.SDEL_TRGT,  [this.zone.subdomain, this.library.getId(), item.getId()]);
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return result;
+    },
+
+    constructor: function(args){
+
+        this.zone = args.zone;
+        this.library = args.library;
+        this.target = dojo.replace(bfree.api.References.TRGT, [this.zone.subdomain, this.library.id]);
+		this.schema = bfree.api.Reference.schema;
+		this.cache = false;
+
+		this._initialize();
+        this.store.isUpdateable = dojo.hitch(this, this._isUpdateable);
+    },
+
+    destroy: function(args){
+        var item = args.item;
+
+        if((item.isInstanceOf(bfree.api.Reference)) && (args.soft)){
+            item = this._softDelete(item);
+            this.store.onDelete(item);
+        }
+        else{
+            this.inherited('destroy', arguments);
+        }
+
+    },
+
+    export_query: function(args){
+        var queryStr = dojo.objectToQuery(args.query);
+
+        var sortStr = dojo.replace('sort({0}{1})',
+            [   (args.sort.descending ? '-' : '+'),
+                encodeURIComponent(args.sort.attribute)]) ;
+
+        var frmt = 'json';
+        switch(args.type){
+            case bfree.api.References.ExportTypes.CSV:
+                frmt = 'csv';
+                break;
+            case bfree.api.References.ExportTypes.PDF:
+                frmt = 'pdf';
+                break;
+            case bfree.api.References.ExportTypes.XML:
+                frmt = 'xml'
+                break;
+        }
+
+        var url = dojo.replace(bfree.api.References.EXPORT_TRGT, [args.zone.subdomain, args.library.id, queryStr, sortStr, frmt]);
+
+        if(args.type == bfree.api.Documents.ExportTypes.PDF){
+           bfree.api.Utilities.viewUrl({
+                windowBox: args.windowBox,
+                url: url,
+                window_name: 'versa_save'
+            });
+        }
+        else{
+           bfree.api.Utilities.saveUrl({
+                url: url,
+                window_name: 'versa_save'
+            });
+        }
+    },
+
+    print_query: function(args){
+
+        var queryStr = dojo.objectToQuery(args.query);
+
+        var sortStr = dojo.replace('sort({0}{1})',
+            [   (args.sort.descending ? '-' : '+'),
+                encodeURIComponent(args.sort.attribute)]) ;
+
+        var url = dojo.replace(bfree.api.References.PRINT_TRGT, [args.zone.subdomain, args.library.id, queryStr, sortStr, 'html'])
+
+        bfree.api.Utilities.viewUrl({
+            windowBox: args.windowBox,
+            url: url,
+            window_name: 'versa_printer'
+        });
+
+    }
+
+});
+
+bfree.api.References.ExportTypes = { 'NONE':  0x0000, 'CSV':   0x001, 'PDF':   0x0002, 'XML':   0x0003 }
+
+bfree.api.References.TRGT = '/zones/{0}/libraries/{1}/references';
+bfree.api.References.SDEL_TRGT  = '/zones/{0}/libraries/{1}/references/{2}/soft_delete.json';
+bfree.api.References.PRINT_TRGT = '/zones/{0}/libraries/{1}/references?{2}&{3}';
+bfree.api.References.EXPORT_TRGT = '/zones/{0}/libraries/{1}/references.{4}?{2}&{3}';
+
+}
+
+if(!dojo._hasResource['bfree.api.ViewMapping']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.ViewMapping'] = true;
+/**
+ * @author aarons
+ */
+dojo.provide('bfree.api.ViewMapping');
+
+
+
+
+dojo.declare('bfree.api.ViewMapping', [bfree.api._Object],{
+	constructor: function(/* Object */args){
+        if(args) dojo.safeMixin(this, args);
+	}
+	
+});
+
+bfree.api.ViewMapping.compare = function(item1, item2){
+    return item1.sort_order-item2.sort_order;
+};
+
+bfree.api.ViewMapping.schema = {
+	type: 'object',
+	properties: {
+        'library_id': {
+            type: 'integer'
+        },
+		'folder_id': {
+			type: 'integer'
+		},
+        'user_id': {
+			type: 'integer'
+		},
+        'view_id': {
+			type: 'integer'
+		}
+	}
+};
+
+}
+
+if(!dojo._hasResource['bfree.api.ViewMappings']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.ViewMappings'] = true;
+/**
+ * @author aarons
+ */
+dojo.provide('bfree.api.ViewMappings');
+
+
+
+
+
+dojo.declare('bfree.api.ViewMappings', [bfree.api._Collection],{
+	
+	constructor: function(/* Object */args){
+        this.zone = args.zone;
+        this.library = args.library;
+        this.target = dojo.replace(bfree.api.ViewMappings.TRGT, [this.zone.subdomain, this.library.id]);
+		this.schema = bfree.api.ViewMapping.schema;
+        this.cache = false;
+
+        this._initialize();
+	},
+
+    getMapping: function(folder_id, user_id){
+        return this.query({query:dojo.replace('?folder_id={0}&user_id={1}', [folder_id, user_id])})
+    }
+	
+});
+
+bfree.api.ViewMappings.TRGT='/zones/{0}/libraries/{1}/view_mappings';
+
+}
+
 if(!dojo._hasResource['bfree.api.Library']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.api.Library'] = true;
 /**
@@ -7946,6 +8485,8 @@ dojo.provide('bfree.api.Library');
 
 
 
+
+
 dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
     zone: null,
 
@@ -7954,7 +8495,9 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
     _documentTypes: null,
     _folders: null,
     _propertyDefinitions: null,
+    _references: null,
     _viewDefinitions: null,
+    _viewMappings: null,
     _cellDefinitions: null,
 
     description: null,
@@ -7964,39 +8507,35 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
         this.securable_type = bfree.api._Securable.types.Library
     },
 
-    createDocs: function(){
-         console.log('creating...');
+    createShare: function(args){
 
-        var url = dojo.replace('/zones/{0}/libraries/{1}/seeddocs', [this.zone.subdomain, this.id]);
+        var shareRoot = this.getFolders().getShareRootFolder();
+        var parentInfo = { parent: shareRoot, attribute: 'children' };
 
-        var postData = {
-        };
+        var share = this.getFolders().store.newItem({
+            name: args.name,
+            folder_type: bfree.api.Folder.FolderTypes.SHARE,
+            parent_id: shareRoot.getId(),
+            password: args.password,
+            expiry: args.expiry,
+            seed_id: (args.seed) ? args.seed.getId() : null,
+            children: []
+        }, parentInfo);
 
-        var results = bfree.api.XhrHelper.doPostAction({
-            target: url,
-            postData: postData
-        });
-
-        console.log('done.');
-        return true;
+       return share;
     },
 
-    createTest: function(){
-        console.log('creating...');
+    empty_trash: function(args){
+        var zone = args.zone;
 
-        var url = dojo.replace('/zones/{0}/libraries/{1}/seedtest.json', [this.zone.subdomain, this.id]);
+        var url = dojo.replace(bfree.api.Library.EMPTYTRASH_TRGT,  [zone.subdomain, this.getId()]);
 
-        var postData = {
-        };
-
-        var results = bfree.api.XhrHelper.doPostAction({
+        var result = bfree.api.XhrHelper.doPutAction({
             target: url,
-            postData: postData
+            putData: {}
         });
 
-        console.log('done.');
         return true;
-
     },
 
     getChoiceLists: function(){
@@ -8068,6 +8607,18 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
                 library: this
             })
         }
+        return this._propertyMappings;
+    },
+
+    getReferences: function(){
+        if(!this._references){
+            this._references = new bfree.api.References({
+                zone: this.zone,
+                library: this
+            })
+        }
+
+        return this._references;
     },
 
     getViewDefinitions: function(){
@@ -8080,6 +8631,19 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
         }
 
         return this._viewDefinitions;
+
+    },
+
+    getViewMappings: function(){
+
+        if(!this._viewMappings){
+            this._viewMappings = new bfree.api.ViewMappings({
+                zone: this.zone,
+                library: this
+            });
+        }
+
+        return this._viewMappings;
 
     },
 
@@ -8097,6 +8661,9 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
     }
 
 });
+
+bfree.api.Library.EMPTYTRASH_TRGT = '/zones/{0}/libraries/{1}/empty_trash.json';
+
 
 bfree.api.Library.schema = {
  	type: 'object',
@@ -8497,7 +9064,7 @@ dojo.provide('bfree.api.ViewDefinition');
 
 
 
-dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
+dojo.declare('bfree.api.ViewDefinition', bfree.api._Object,{
 
     _view: null,
 
@@ -8509,7 +9076,7 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
 
         var view = {
             name: this.name,
-            id: this.id,
+            id: this.getId(),
             sort_column: 1,
             cells: []
         };
@@ -8517,14 +9084,13 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
         dojo.forEach(this.cell_definitions, function(item, idx){
 
             var cell = {
-                    field: dojo.replace('{table_name}.{column_name}', item),
-                    name: String.isBlank(item.label) ? '&nbsp;': item.label,
-                    width: item.width,
-                    noresize: item.noresize,
-                    style: item.style,
-                    date_format: item.date_format
-                }
-
+                field: dojo.replace('{table_name}.{column_name}', item),
+                name: String.isBlank(item.label) ? '&nbsp;': item.label,
+                width: item.width,
+                noresize: item.noresize,
+                style: item.style,
+                date_format: item.date_format
+            }
 
             cell.get = this._generateGetFn(item, library);
             cell.formatter = this._generateFormatterFn(item);
@@ -8532,7 +9098,7 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
             view.cells.push(cell);
 
             if(cell.field == this.sort_by)
-                view.sort_column = idx + 1;
+                view.sort_column = (this.is_desc) ? ((idx + 1) * -1) : (idx + 1);
 
         }, this);
 
@@ -8578,28 +9144,30 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
 
     _formatDateTime: function(cellDef, datetime){
         return versa.api.Formatter.formatDateTime(datetime);
-        /*
-		if (cellDef.date_format && cellDef.date_format != "") {
-			//even though it says "selector: 'date'", time can still be included in the date pattern
-			return dojo.date.locale.format(datetime, {selector: 'date', datePattern: cellDef.date_format});
-		}
-		else {
-			//for Hillcrest, only the date matters
-			//use toLocaleString() for date/time
-			//use toLocaleTimeString() for time
-//            return dojo.date.locale.format(datetime, {selector: 'date', datePattern: 'MM/dd/yyyy'});
-//            return bfree.api.Utilities.formatDate(datetime, false);
-//            toLocaleDateString is returning YY-MM-YYYY format
-			return (datetime) ? datetime.toLocaleDateString() : '';
-		}
-		*/
 	},
 
+    getCellByField: function(field){
+        var cell = null;
+
+        dojo.some(this.cell_definitions, function(cell_definition, idx){
+            if(bfree.api.CellDefinition.getDbName(cell_definition) == field)
+                cell = cell_definition;
+            return (cell);
+        }, this);
+
+        return cell;
+    },
+
     getView: function(library){
+
+        /*
         if(!this._view){
             this._view = this._generate(library);
         }
+
         return this._view;
+        */
+        return this._generate(library);
     },
 
     isValid: function(){
@@ -8614,9 +9182,26 @@ dojo.declare('bfree.api.ViewDefinition', [bfree.api._Object],{
         }
 
 		return isValid;
-	}
+	},
+
+    findColumn: function(table, column){
+        for(var i=0;i<this.cell_definitions.length;i++){
+            //turn into method
+            if(this.cell_definitions[i].table_name&&
+               this.cell_definitions[i].column_name&&
+               table==this.cell_definitions[i].table_name&&
+               column==this.cell_definitions[i].column_name){
+                return this.cell_definitions[i];
+            }
+        }
+        return null;
+    }
 
 });
+
+bfree.api.ViewDefinition.getCustomName = function(user, folder){
+    return dojo.replace('{0}.{1}', [user.name, folder.name]);
+}
 
 bfree.api.ViewDefinition._getDocumentAttrFn =  function(rowIndex, item){
     var value = '';
@@ -8666,7 +9251,7 @@ bfree.api.ViewDefinition._getDocumentTypeAttrFn = function(rowIndex, item){
 };
 
 bfree.api.ViewDefinition._getVersionAttrFn = function(rowIndex, item){
-    var value = '';
+    var value = null;
     var viewDef = this[0];
     var cellDef = this[1];
 
@@ -8674,22 +9259,22 @@ bfree.api.ViewDefinition._getVersionAttrFn = function(rowIndex, item){
         return value;
 
     try{
-    switch(cellDef.column_name){
-        case 'binary_content_type':
-            value = (item.current_version) ? item.current_version.binary_content_type : item.binary_content_type;
-            break;
-        case 'version_number':
-            value = item.getFullVersion();
-            break;
-        case 'binary_file_size':
-            value = (item.current_version) ? item.current_version.binary_file_size : item.binary_file_size;
-            break;
-    }
+        switch(cellDef.column_name){
+            case 'binary_content_type':
+                value = item.binary_content_type
+                break;
+            case 'version_number':
+                value = item.major_version_number;
+                break;
+            case 'binary_file_size':
+                value = item.binary_file_size;
+                break;
+        }
     }
     catch(e){
         console.log(e);
     }
-    return value;
+    return (!value) ? '' : value;
 };
 
 
@@ -8728,6 +9313,14 @@ bfree.api.ViewDefinition.schema = {
 		},
         'description': {
             type: 'string'
+        },
+        'is_desc': {
+            type: 'boolean',
+			'default': false
+        },
+        'is_template': {
+            type: 'boolean',
+			'default': false
         },
 		'scope': {
 			type: 'string',
@@ -8786,7 +9379,7 @@ bfree.api.ViewDefinition.schema = {
 			'default': ''
 		}
 	},
-    prototype: new bfree.api.ViewDefinition()
+    prototype: bfree.api.ViewDefinition.prototype
 }
 
 }
@@ -15500,83 +16093,69 @@ dojo.provide('bfree.widget.document.DraggableGridItem');
 
 
 
-
 dojo.declare('bfree.widget.document.DraggableGridItem', [dijit._Widget, dijit._Templated],{
-	templateString: dojo.cache("bfree/widget/document", "template/DraggableGridItem.html", "<div>\n    <div dojoAttachPoint=\"source\">\n\n    </div>\n</div>\n"),
+	templateString: dojo.cache("bfree/widget/document", "template/DraggableGridItem.html", "<div style=\"height:100%;width:100%\">\n    <div dojoAttachPoint=\"source\" style=\"width:100%;height:100%\">\n    </div>\n</div>\n"),
 	widgetsInTemplate: true,
     dnd: null,
+
     document: null,
     data: null,
     grid: null,
 
+    selectedItems: null,
+
     constructor: function(args){
-        this.data=args.data;
-        this.document=args.document;
-        this.grid=args.grid;
+        this.data = args.data;
+        this.document = args.document;
+        this.grid = args.grid;
     },
 
     postCreate: function(){
 		this.inherited('postCreate', arguments);
 
-        this.dnd=new dojo.dnd.Source(this.source,{
+        this.dnd = new dojo.dnd.Source(this.source,{
             accept:[],
             creator: dojo.hitch(this, this.creator)
         });
-
-//        this.dnd.onDndDrop=function(){}
-//        this.dnd.onDrop=function(){}
 
         this.dnd.insertNodes(true, [this.document]);
 	},
 
     creator: function(item, hint){
-        var node;
+        var node = null;
 
-        var selected;
+        if(hint == 'avatar'){
 
-        if(hint=="avatar"){
-            var index=this.grid.getItemIndex(item);
+            //Created a "dragging" item
+            this.selectedItems = this.grid.selection.getSelected();
 
-            if(!this.grid.selection.isSelected(index)){
-                this.grid.selection.clear();
-                this.grid.selection.select(item);
-            }
+            node = dojo.create('tr');
+            var tableNode = dojo.create('table', {
+                style: {borderCollapse: 'collapse'}
+            }, node);
 
-            selected=this.grid.selection.getSelected();
+             dojo.forEach(this.selectedItems, function(item, idx){
+                var rowNode = dojo.create('tr', null, tableNode);
 
-            node=document.createElement("tr");
-            var table=document.createElement("table");
-            table.style.borderCollapse="collapse";
-            node.appendChild(table);
-            dojo.forEach(selected, function(item, idx){
-                var imgSrc = dojo.replace('/icons/{0}?size=16', [encodeURIComponent(item.binary_content_type)]);
-                var img=document.createElement("img");
-                img.src=imgSrc;
-                img.width=16;
-                img.height=16;
-                var tr=document.createElement("tr");
-                var td1=document.createElement("td");
-                td1.appendChild(img);
-                var td2=document.createElement("td");
-                td2.innerHTML=item.name;
-                tr.appendChild(td1);
-                tr.appendChild(td2);
+                var imgCellNode = dojo.create('td', null, rowNode);
+                var imgSrc = bfree.api.Document.getIconUrl(item.binary_content_type, 16);
+                dojo.create('img', {
+                    src: imgSrc,
+                    width: 16, height: 16
+                }, imgCellNode);
 
-                table.appendChild(tr);
-            })
-        }else{
-            node=document.createElement("div");
-            node.innerHTML=this.data;
-            selected=item;
-//            var text=document.createTextNode(item.data);
-//            node.appendChild(text);
+                dojo.create('td', {innerHTML: item.name}, rowNode);
+            }, this);
+
+            this.dnd.itemCount = this.selectedItems.length;
+        }
+        else{
+            //Just a normal grid item; just display normally.
+            node = dojo.create('div', {innerHTML: this.data})
+            this.selectedItems = [item];
         }
 
-        node.type="Document";
-        this.payload=selected;
-
-
-        return {node:node, data:selected}
+        return {node: node, data: this.selectedItems};
     }
 
 });
@@ -15594,12 +16173,26 @@ dojo.provide('bfree.api.CellDefinition');
 
 
 dojo.declare('bfree.api.CellDefinition', [bfree.api._Object],{
-
-    constructor: function(/* Object */args){
+constructor: function(/* Object */args){
         dojo.safeMixin(this, ((!args) ? { } : args));
 	}
 
 });
+
+bfree.api.CellDefinition.clone = function(source){
+    return new bfree.api.CellDefinition({
+        column_order: source.column_order,
+        table_name: source.table_name,
+        column_name: source.column_name,
+        label: source.label,
+        name: source.name,
+        noresize: source.noresize,
+        style: source.style,
+        width: source.width,
+        formatter: source.formatter,
+        date_format: source.date_format
+    });
+};
 
 bfree.api.CellDefinition.compare = function(cellA, cellB){
     return cellA.column_order-cellB.column_order;
@@ -15617,12 +16210,13 @@ bfree.api.CellDefinition.formatStatus = function(data, rowIndex){
     var icon = 'none.16.png';
 
     try{
+
         if((item) && (item.getState(bfree.api.Document.states.CHECKED_OUT))){
             icon = 'cko.16.png';
         }
+
     }
     catch(e){
-        console.log(e);
     }
 
     return dojo.replace('<img name="statusIcon" src="/images/icons/states/{0}" width="16" height="16" style="position:relative;top:1px;left:1px"/>', [icon]);
@@ -15643,18 +16237,41 @@ bfree.api.CellDefinition.formatStatus = function(data, rowIndex){
 //}
 
 bfree.api.CellDefinition.formatIcon = function(data, rowIndex){
-	var item = this.grid.getItem(rowIndex);
 
+    if(!data)
+        return '';
+
+    var item = this.grid.getItem(rowIndex);
 	var imgSrc =  bfree.api.Document.getIconUrl(data, 16);
-    var img = dojo.replace('<img src="{0}" width="16" height="16"/>', [imgSrc]);
 
+    var wrapper = dojo.create('div');
+    var node = dojo.create('div', { style: {width: 16, height:16, position: 'relative' }}, wrapper);
+    dojo.create('img', {src: imgSrc, width: 16, height: 16}, node);
+
+    if(item.isShare()){
+        imgSrc = '/images/icons/states/shared.16.png';
+        dojo.create('img', {src: imgSrc, width: 16, height: 16, style: {position: 'absolute', top:'2px', left:'2px'}}, node);
+    }
+
+    return wrapper.innerHTML;
+
+
+    /*
+    if(data.reference_type == 1)
+        dojo.create('img', {src: '/images/icons/states/reference.16.png', style: {position: 'absolute', top: 0, left: 0}}, node);
+    */
+
+    //var img = dojo.replace('<img src="{0}" width="16" height="16"/>', [imgSrc]);
+
+    /*
     var gridNode = new bfree.widget.document.DraggableGridItem({
-        data: img,
+        data: wrapper.innerHTML,
         document: item,
         grid: this.grid
     });
 
     return gridNode;
+    */
 };
 
 bfree.api.CellDefinition.formatSize = function(data, rowIndex){
@@ -15664,7 +16281,9 @@ bfree.api.CellDefinition.formatSize = function(data, rowIndex){
 	var bytes = bfree.api.Utilities.readablizeBytes({
 		bytes: sizeBytes
 	});
+    return bytes;
 
+    /*
     var item = this.grid.getItem(rowIndex);
 
     var gridNode=new bfree.widget.document.DraggableGridItem({
@@ -15674,9 +16293,14 @@ bfree.api.CellDefinition.formatSize = function(data, rowIndex){
     });
 
     return gridNode;
+    */
 };
 
 bfree.api.CellDefinition.formatData = function(data, rowIndex){
+
+    return data || '';
+
+    /*
     var item = this.grid.getItem(rowIndex);
 
     var gridNode=new bfree.widget.document.DraggableGridItem({
@@ -15686,6 +16310,7 @@ bfree.api.CellDefinition.formatData = function(data, rowIndex){
     });
 
     return gridNode;
+    */
 };
 
 bfree.api.CellDefinition.schema = {
@@ -15914,6 +16539,35 @@ dojo.declare('bfree.api.CellDefinitions', [bfree.api._Collection],{
 	
 });
 
+bfree.api.CellDefinitions.getDefaultWidth = function(data_type_id){
+    var w = 128
+
+    switch(data_type_id){
+        case bfree.api.DataTypes.types.VOID:
+            w = 18;
+            break;
+        case bfree.api.DataTypes.types.BOOLEAN:
+            w = 18;
+            break;
+        case bfree.api.DataTypes.types.INTEGER:
+            w = 64;
+            break;
+        case bfree.api.DataTypes.types.FLOAT:
+            w = 64;
+            break;
+        case bfree.api.DataTypes.types.DATETIME:
+            w = 128;
+            break;
+        case bfree.api.DataTypes.types.STRING:
+            w = 128;
+            break;
+        case bfree.api.DataTypes.types.TEXT:
+            w = 128;
+            break;
+    }
+
+    return w;
+};
 bfree.api.CellDefinitions.TRGT="/zones/{0}/libraries/{1}/cell_definitions"
 
 
@@ -15932,12 +16586,15 @@ dojo.provide('bfree.api.ViewDefinitions');
 
 
 dojo.declare('bfree.api.ViewDefinitions', [bfree.api._Collection],{
-		
+
+    _system: null,
+
 	documentTypes: null,
+
 
     _matchesQuery: function(item,request){
 
-        //query returns array of cell definitins,
+        //query returns array of cell definitions,
         //exclude them.
         if(dojo.isArray(item) || (item.hasOwnProperty('column_order')))
             return false;
@@ -15955,6 +16612,38 @@ dojo.declare('bfree.api.ViewDefinitions', [bfree.api._Collection],{
             }
         }
         return true;
+    },
+
+    copyFromTemplate: function(viewDef, user){
+        var cell_definitions=viewDef.cell_definitions;
+        var toReturn=this.create({
+            cell_definitions: [],
+            created_by: user.name,
+            is_system: false,
+            is_template: false,
+            library_id: viewDef.library_id,
+            name: viewDef.name,
+            scope: viewDef.scope,
+            sort_by: viewDef.sort_by,
+            updated_by: user.name
+        });
+
+        dojo.forEach(cell_definitions, function(cell){
+            toReturn.cell_definitions.push({
+                column_name: cell.column_name,
+                column_order: cell.column_order,
+                date_format: cell.date_format,
+                formatter: cell.formatter,
+                label: cell.label,
+                name: cell.name,
+                noresize: cell.noresize,
+                style: cell.style,
+                table_name: cell.table_name,
+                width: cell.width
+            })
+        }, this);
+
+        return toReturn;
     },
 
     /*
@@ -16076,7 +16765,7 @@ dojo.declare('bfree.api.ViewDefinitions', [bfree.api._Collection],{
 				value = (item.current_version) ? item.current_version.size : 0;
 				break;			
 		}
-	
+
 		return value;
 	},
 	
@@ -16085,13 +16774,44 @@ dojo.declare('bfree.api.ViewDefinitions', [bfree.api._Collection],{
         this.library=args.library;
 		this.target = dojo.replace(bfree.api.ViewDefinitions.TRGT, [this.zone.subdomain, this.library.id]);
 		this.schema = bfree.api.ViewDefinition.schema;
-        this.cache=true;
-        this.cellDefinitions=args.cellDefinitions;
+        this.cache = true;
+        this.cellDefinitions = args.cellDefinitions;
 
         this._initialize();
-        this.store.matchesQuery  = dojo.hitch(this, this._matchesQuery);
+        //this.store.matchesQuery  = dojo.hitch(this, this._matchesQuery);
 	},
-	
+
+    cloneItem: function(source){
+        var clone = this.create({
+            name: source.name,
+            is_system: false,
+            description: source.description,
+            is_template: false,
+            scope: source.scope,
+            sort_by: source.sort_by
+        });
+
+        dojo.forEach(source.cell_definitions, function(cell_definition, idx){
+            clone.cell_definitions.push(bfree.api.CellDefinition.clone(cell_definition));
+        });
+
+        return clone;
+    },
+
+    getSystem: function(){
+
+        if(!this._system){
+            this._system = new Array();
+            this.forEach(function(item){
+                if(item.is_system){
+                    this._system.push(item);
+                }
+            }, this);
+        }
+
+        return this._system;
+    },
+
 	isValidItem: function(args){
 		var isValid = this.inherited(arguments);
 		var item = args.item;
@@ -16112,6 +16832,201 @@ dojo.declare('bfree.api.ViewDefinitions', [bfree.api._Collection],{
 });
 
 bfree.api.ViewDefinitions.TRGT="/zones/{0}/libraries/{1}/view_definitions"
+
+}
+
+if(!dojo._hasResource['bfree.api.SharedItem']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.SharedItem'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 16/04/12
+ * Time: 12:06 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.SharedItem');
+
+
+
+
+
+dojo.declare('bfree.api.SharedItem', bfree.api._Object, {
+    zone: null,
+
+    constructor: function(args){
+        dojo.safeMixin(this, ((!args) ? { } : args));
+
+    },
+
+    copyLocal: function(args){
+        var zone = args.zone;
+        var share = args.share;
+        var form = args.form;
+
+        var url = dojo.replace(bfree.api.SharedItem.CP_TRGT, [zone.subdomain, share.fingerprint, this.getId()]);
+
+        form.set('action', url);
+        form.set('target', '_self');
+        form.set('method', 'post');
+        form.submit();
+
+	},
+
+    view: function(args){
+        var zone = args.zone;
+        var share = args.share;
+        var form = args.form;
+
+        var url = dojo.replace(bfree.api.SharedItem.VW_TRGT, [zone.subdomain, share.fingerprint, this.getId()]);
+
+        bfree.api.Utilities.viewUrl({
+            windowBox: args.windowBox,
+            url: '',
+            window_name: 'versa_viewer'
+        });
+
+        form.set('action', url);
+        form.set('target', 'versa_viewer');
+        form.set('method', 'post');
+        form.submit();
+	}
+
+
+});
+
+bfree.api.SharedItem.VW_TRGT = '/zones/{0}/shares/{1}/download/?item_id={2}&disposition=inline';
+bfree.api.SharedItem.CP_TRGT = '/zones/{0}/shares/{1}/download/?item_id={2}&disposition=attachment';
+
+bfree.api.SharedItem.schema = {
+ 	type: 'object',
+ 	properties: {
+ 		'id': {
+ 			type: 'integer'
+ 		}
+ 	},
+
+	prototype: new bfree.api.SharedItem()
+ };
+
+}
+
+if(!dojo._hasResource['bfree.api.SharedItems']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.SharedItems'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 16/04/12
+ * Time: 9:49 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.SharedItems');
+
+
+
+dojo.declare('bfree.api.SharedItems', bfree.api._Collection,{
+    zone: null,
+    share: null,
+
+    constructor: function(args){
+        this.zone = args.zone;
+        this.share = args.share;
+        this.target = dojo.replace(bfree.api.SharedItems.TRGT, [this.zone.subdomain, this.share.fingerprint]);
+	    this.schema = bfree.api.SharedItem.schema;
+		this.cache = true;
+
+		this._initialize();
+    }
+
+});
+
+bfree.api.SharedItems.TRGT = '/zones/{0}/shares/{1}/shared_items';
+
+}
+
+if(!dojo._hasResource['bfree.api.Share']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.Share'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 15/04/12
+ * Time: 9:31 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.Share');
+
+
+
+
+
+dojo.declare('bfree.api.Share', bfree.api._Object, {
+
+    constructor: function(args){
+        dojo.safeMixin(this, ((!args) ? { } : args));
+    },
+
+    authorize: function(zone){
+        var url = dojo.replace(bfree.api.Share.AUTH_URL, [zone.id, this.fingerprint]);
+
+        var postData = {
+            password: this.password
+        };
+
+        var results = bfree.api.XhrHelper.doPostAction({
+            target: url,
+            postData: postData
+        });
+
+        return true;
+    },
+
+    getSharedItems: function(args){
+        return new bfree.api.SharedItems({zone: args.zone, share: this});
+    }
+
+});
+
+bfree.api.Share.AUTH_URL = '/zones/{0}/shares/{1}/authorize.json';
+
+bfree.api.Share.schema = {
+ 	type: 'object',
+ 	properties: {
+ 		'id': {
+ 			type: 'integer'
+ 		}
+ 	},
+	prototype: new bfree.api.Share()
+ };
+
+}
+
+if(!dojo._hasResource['bfree.api.Shares']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.Shares'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 24/10/11
+ * Time: 9:58 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.Shares');
+
+
+
+dojo.declare('bfree.api.Shares', bfree.api._Collection,{
+
+    constructor: function(args){
+
+        this.zone = args.zone;
+        this.target = dojo.replace(bfree.api.Shares.TRGT, [this.zone.subdomain]);
+		this.schema = bfree.api.Share.schema;
+		this.cache = true;
+
+        this._initialize();
+    }
+
+});
+
+bfree.api.Shares.TRGT = '/zones/{0}/shares';
 
 }
 
@@ -17375,12 +18290,14 @@ dojo.provide('bfree.api.Zone');
 
 
 
+
 dojo.declare('bfree.api.Zone', [bfree.api._Object,bfree.api._Configurable], {
     subdomain: null,
 
     _groups: null,
     _libraries: null,
     _roles: null,
+    _shares: null,
     _users: null,
     _documentTypes: new Array(),
     _propertyDefinitions: new Array(),
@@ -17434,6 +18351,16 @@ dojo.declare('bfree.api.Zone', [bfree.api._Object,bfree.api._Configurable], {
         }
 
         return this._roles;
+    },
+
+    getShares: function(){
+        if(!this._shares){
+            this._shares = new bfree.api.Shares({
+                zone: this
+            });
+        }
+
+        return this._shares;
     },
 
     getUsers: function(){
@@ -23269,6 +24196,7 @@ dojo.declare('bfree.widget._DialogWidget', null,{
 
     dialog: null,
 	dialogResult: 0x00,
+    isLoaded: false,
     returnValue: null,
 
 	isDirty: false,
@@ -23276,6 +24204,11 @@ dojo.declare('bfree.widget._DialogWidget', null,{
 	_closeDialog: function(args){
 		this.onDialogClose(this.dialogResult, this.returnValue);
 	},
+
+    _loadComplete: function(){
+        this.isLoaded = true;
+        this.onWidgetLoaded();
+    },
 
 	_setIsDirtyAttr: function(value){
 		var isChanged = (this.isDirty != value);
@@ -39928,6 +40861,7 @@ dojo.declare('bfree.widget.zone.Logon', [dijit._Widget, dijit._Templated],{
 
     startup: function(){
         this.inherited('startup', arguments);
+
     }
 
 });
@@ -39963,7 +40897,8 @@ bfree.widget.Bfree.ObjectTypes = {
     'VIEW_DEF':     0x000B,
     'DOCUMENT':     0x000C,
     'VERSION':      0x000D,
-    'FOLDER':       0x000E,
+    'FOLDER':       0x0010,
+    'SHARE':        0x0011,
     'QUOTA':        0x00F0
 }
 
@@ -39997,6 +40932,9 @@ bfree.widget.Bfree.Commands = {
     'DESTROY':              0x001A,
     'NEXT':                 0x001B,
     'PREV':                 0x001C,
+    'SHARE':                0x001D,
+    'UNSHARE':              0x001E,
+    'RENAME':               0x001F,
     'ADMIN':                0x00FF,
 
     'EDIT_USER':            0x0401,
@@ -40008,7 +40946,11 @@ bfree.widget.Bfree.Commands = {
     'ADMIN_CHOICE_LISTS':   0xF005,
 
     'HELP':         0x00FF,
-    'LOGOFF':       0xFFFF
+    'LOGOFF':       0xFFFF,
+
+    'COLUMN_TOGGLE':        0xE001,
+    'COLUMN_RESIZE':        0xE002,
+    'COLUMN_REORDER':       0xE003
 };
 
 dojo.has = function(array, item){
@@ -40880,7 +41822,7 @@ dojo.declare('versa.widget.error.Show', [dijit._Widget, dijit._Templated, bfree.
         this._setMessage();
 
         if( this._wdgStack.getChildren().length > 1){
-            this.messageNode.resize({h: 112});
+            this.messageNode.resize({h: 108});
             dojo.style(this.pageNode.domNode, {display: 'block'});
             this.errorNode.resize();
         }
@@ -51581,9 +52523,12 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
                 }
             }
 
-            if(!this._acl.hasAccess(this.zone, this.activeUser, this.activeGroup)){
+            var hasAccess = (this._acl.inherits) ?
+                                this._parentAcl.hasAccess(this.zone, this.activeUser, this.activeGroup) :
+                                this._acl.hasAccess(this.zone, this.activeUser, this.activeGroup);
+            if(!hasAccess){
                 var msg = 'Cannot update permissions: The current permissions are set so that you will no longer have access to the item.';
-                throw new Error(msg)
+                throw new Error(msg);
             }
 
             this.item.setAcl(this.zone, this._acl);
@@ -51605,7 +52550,7 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
 
         try{
 
-            if(this.item.isInstanceOf(bfree.api.Document)){
+            if(this.item.isInstanceOf(bfree.api.Reference)){
                 parentItem = (this.item.folder_id) ?
                                     this.library.getFolders().fetchById({id: this.item.folder_id}) :
                                     this.library;
@@ -51633,6 +52578,7 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
         finally{
             this.onWidgetLoaded();
             this._isLoaded = true;
+            this._setState();
         }
 
     },
@@ -51697,6 +52643,7 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
         }
 
         if(is_checked){
+            this._cmbEveryone.set('value', this._parentAcl.getEveryone(this.zone).role_id);
             this._grdAcl.set('activeItem', this._parentAcl);
             this._grdAcl.selection.clear();
         }
@@ -51803,15 +52750,16 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
-        if(this.item.isInstanceOf(bfree.api.Library)){
-            this.type = 'Library';
-            dojo.style(this.inheritNode.domNode, {display: 'none'});
-        }else if(this.item.isInstanceOf(bfree.api.Document)){
-            this.type = 'Document';
-            this.lblInheritNode.innerHTML = 'Inherit from Folder';
-        }else if(this.item.isInstanceOf(bfree.api.Folder)){
+        if(this.item.isInstanceOf(bfree.api.Folder)){
             this.type = 'Folder';
             this.lblInheritNode.innerHTML = 'Inherit from Parent';
+            if(this.item.isRoot() || this.item.isShare()){
+                dojo.style(this.inheritNode.domNode, {display: 'none'});
+            }
+        }
+        else if(this.item.isInstanceOf(bfree.api.Reference)){
+            this.type = 'Reference';
+            this.lblInheritNode.innerHTML = (this.item.isShare()) ? 'Inherit for Share' : 'Inherit from Folder';
         }
 
         this._chkInherit = new dijit.form.CheckBox({
@@ -52463,9 +53411,7 @@ dojo.declare('bfree.widget.choiceList.Grid', [bfree.widget._Grid], {
 
 	postCreate: function(){
 		this.inherited('postCreate', arguments);
-
         this.set('structure', bfree.widget.choiceList.Grid.view);
-        //this.set('sortInfo', 2);
     },
 
     startup: function(){
@@ -54378,37 +55324,4243 @@ dojo.declare('bfree.widget.document.version.Accessor', null,{
 
 }
 
-if(!dojo._hasResource['bfree.widget.Utils']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.Utils'] = true;
+if(!dojo._hasResource['bfree.api.ItemFileWriteStore']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.ItemFileWriteStore'] = true;
 /**
  * Created by JetBrains RubyMine.
  * User: scotth
- * Date: 05/10/11
- * Time: 12:40 PM
+ * Date: 10/11/11
+ * Time: 3:35 PM
  * To change this template use File | Settings | File Templates.
  */
-dojo.provide('bfree.widget.Utils');
+dojo.provide('bfree.api.ItemFileWriteStore');
 
-dojo.declare('bfree.widget.Utils', null,{
+
+dojo.declare('bfree.api.ItemFileWriteStore', [dojo.data.ItemFileWriteStore],{
+
+    fetchItemById: function(id){
+        var item = null;
+
+         this.fetchItemByIdentity({
+           identity: id,
+           onItem: function(fndItem){ item = fndItem; }
+        });
+
+        return item;
+    },
+
+    generateUniqueId: function(){
+
+        var _id = null;
+        var isDup = true;
+
+        do{
+            _id = (new Date()).getTime();
+            this.fetchItemByIdentity({
+               identity: _id,
+               onItem: function(item){ isDup = (item != null); }
+           });
+        }while(isDup);
+
+        return _id;
+    }
+
 });
 
-bfree.widget.Utils.units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB' ];
-
-bfree.widget.Utils.readablizeBytes = function(args){
-
-    var bytes = args.bytes;
-
-    if((bytes == null) || (bytes == Number.NaN))
-        return '???';
-
-    if(bytes < 1)
-        return '0 bytes';
-
-    var e = Math.floor(Math.log(bytes) / Math.log(1024));
-    return (bytes / Math.pow(1024, Math.floor(e))).toFixed(2) + ' ' + bfree.widget.Utils.units[e];
 }
 
+if(!dojo._hasResource['bfree.widget.BooleanSelect']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.BooleanSelect'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 22/11/11
+ * Time: 11:15 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.BooleanSelect');
 
+
+
+
+dojo.declare('bfree.widget.BooleanSelect', [bfree.widget.FilteringSelect],
+{
+
+	constructor: function(/*Object*/args){
+        this.store = new bfree.api.ItemFileWriteStore({
+            data: {
+                identifier: 'id',
+                label: 'name',
+                items: [
+                    { id: 0, name: 'false' },
+                    {id: 1, name: 'true' }
+                ]
+            }
+        });
+	},
+
+	postCreate: function(){
+		this.inherited('postCreate', arguments);
+		this._setDisabledAttr(this.disabled);
+	},
+
+	_setDisabledAttr: function(val){
+		this.inherited(arguments);
+
+		var newClass = ((this.disabledIconClass != null) && (val)) ? this.disabledIconClass : this._iconClass;
+		this.set('iconClass', newClass)
+	}
+
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.DateTextBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.DateTextBox'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 18/11/11
+ * Time: 4:24 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.DateTextBox');
+
+
+dojo.declare('bfree.widget.DateTextBox', [dijit.form.DateTextBox],
+{
+
+    postCreate: function(){
+		this.inherited('postCreate', arguments);
+	},
+
+    reset: function(){
+        this.inherited('reset', arguments);
+        this._hasBeenBlurred = true;
+    },
+
+    startup: function(){
+        this._hasBeenBlurred = true;
+        this.inherited('startup', arguments);
+        this.validate();
+    }
+
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.NumberSpinner']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.NumberSpinner'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 18/11/11
+ * Time: 4:31 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.NumberSpinner');
+
+
+dojo.declare('bfree.widget.NumberSpinner', [dijit.form.NumberSpinner],
+{
+
+
+    adjust: function(val, delta){
+        var tc = this.constraints,
+			v = isNaN(val),
+			gotMax = !isNaN(tc.max),
+			gotMin = !isNaN(tc.min)
+		;
+		if(v && delta != 0){ // blank or invalid value and they want to spin, so create defaults
+			val = 0;
+		}
+		var newval = val + delta;
+		if(v || isNaN(newval)){ return val; }
+		if(gotMax && (newval > tc.max)){
+			newval = tc.max;
+		}
+		if(gotMin && (newval < tc.min)){
+			newval = tc.min;
+		}
+		return newval;
+    },
+
+
+    constructor: function(args){
+
+    },
+
+	postCreate: function(){
+		this.inherited('postCreate', arguments);
+	},
+
+    reset: function(){
+        this.inherited('reset', arguments);
+        this._hasBeenBlurred = true;
+    },
+
+    startup: function(){
+        this._hasBeenBlurred = true;
+        this.inherited('startup', arguments);
+        this.validate();
+    }
+
+});
+
+}
+
+if(!dojo._hasResource["dijit.form.SimpleTextarea"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dijit.form.SimpleTextarea"] = true;
+dojo.provide("dijit.form.SimpleTextarea");
+
+
+
+dojo.declare("dijit.form.SimpleTextarea",
+	dijit.form.TextBox,
+	{
+	// summary:
+	//		A simple textarea that degrades, and responds to
+	// 		minimal LayoutContainer usage, and works with dijit.form.Form.
+	//		Doesn't automatically size according to input, like Textarea.
+	//
+	// example:
+	//	|	<textarea dojoType="dijit.form.SimpleTextarea" name="foo" value="bar" rows=30 cols=40></textarea>
+	//
+	// example:
+	//	|	new dijit.form.SimpleTextarea({ rows:20, cols:30 }, "foo");
+
+	baseClass: "dijitTextBox dijitTextArea",
+
+	attributeMap: dojo.delegate(dijit.form._FormValueWidget.prototype.attributeMap, {
+		rows:"textbox", cols: "textbox"
+	}),
+
+	// rows: Number
+	//		The number of rows of text.
+	rows: "3",
+
+	// rows: Number
+	//		The number of characters per line.
+	cols: "20",
+
+	templateString: "<textarea ${!nameAttrSetting} dojoAttachPoint='focusNode,containerNode,textbox' autocomplete='off'></textarea>",
+
+	postMixInProperties: function(){
+		// Copy value from srcNodeRef, unless user specified a value explicitly (or there is no srcNodeRef)
+		// TODO: parser will handle this in 2.0
+		if(!this.value && this.srcNodeRef){
+			this.value = this.srcNodeRef.value;
+		}
+		this.inherited(arguments);
+	},
+
+	buildRendering: function(){
+		this.inherited(arguments);
+		if(dojo.isIE && this.cols){ // attribute selectors is not supported in IE6
+			dojo.addClass(this.textbox, "dijitTextAreaCols");
+		}
+	},
+
+	filter: function(/*String*/ value){
+		// Override TextBox.filter to deal with newlines... specifically (IIRC) this is for IE which writes newlines
+		// as \r\n instead of just \n
+		if(value){
+			value = value.replace(/\r/g,"");
+		}
+		return this.inherited(arguments);
+	},
+
+	_previousValue: "",
+	_onInput: function(/*Event?*/ e){
+		// Override TextBox._onInput() to enforce maxLength restriction
+		if(this.maxLength){
+			var maxLength = parseInt(this.maxLength);
+			var value = this.textbox.value.replace(/\r/g,'');
+			var overflow = value.length - maxLength;
+			if(overflow > 0){
+				if(e){ dojo.stopEvent(e); }
+				var textarea = this.textbox;
+				if(textarea.selectionStart){
+					var pos = textarea.selectionStart;
+					var cr = 0;
+					if(dojo.isOpera){
+						cr = (this.textbox.value.substring(0,pos).match(/\r/g) || []).length;
+					}
+					this.textbox.value = value.substring(0,pos-overflow-cr)+value.substring(pos-cr);
+					textarea.setSelectionRange(pos-overflow, pos-overflow);
+				}else if(dojo.doc.selection){ //IE
+					textarea.focus();
+					var range = dojo.doc.selection.createRange();
+					// delete overflow characters
+					range.moveStart("character", -overflow);
+					range.text = '';
+					// show cursor
+					range.select();
+				}
+			}
+			this._previousValue = this.textbox.value;
+		}
+		this.inherited(arguments);
+	}
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.propdef.Widget']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.propdef.Widget'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 14/11/11
+ * Time: 4:54 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.propdef.Widget');
+
+
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.propdef.Widget', null,{
+});
+
+bfree.widget.propdef.Widget.generateWdgName = function(name){
+    return dojo.replace('wdg_{0}', [name]);
+};
+bfree.widget.propdef.Widget.resolveWdgName = function(wdgName){
+    return wdgName.replace('wdg_', '');
+};
+
+bfree.widget.propdef.Widget.formats = {'SHORT': 0x00, 'LONG': 0x01}
+bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format, defaultValue, maxLength){
+    var wdg = null;
+
+    if(dataType.isString() || ((dataType.isText()) && (format == bfree.widget.propdef.Widget.formats.SHORT))){
+        wdg = new bfree.widget.ValidationTextBox({
+            id: wdgId,
+            intermediateChanges: true,
+            label: label,
+            scrollOnFocus: false,
+            selectOnClick: true,
+            style: 'width:100%',
+            value: defaultValue,
+            maxLength: maxLength
+        });
+    }
+    else if(dataType.isDateTime()){
+        wdg = new bfree.widget.DateTextBox({
+            id: wdgId,
+            label: label,
+            scrollOnFocus: false,
+            selectOnClick: true,
+            style: 'width:100%',
+            value: defaultValue
+        });
+    }
+    else if(dataType.isText()){
+        wdg = new dijit.form.SimpleTextarea({
+            id: wdgId,
+            intermediateChanges: true,
+            label: label,
+            'class': 'bfree',
+            scrollOnFocus: false,
+            selectOnClick: true,
+            style: 'resize:none;width:100%',
+            value: defaultValue,
+            maxLength: maxLength
+        });
+
+    }
+    else if((dataType.isBoolean()) && ((!format) || (format == bfree.widget.propdef.Widget.formats.SHORT))){
+
+        wdg = new dijit.form.CheckBox({
+            id: wdgId,
+            label: label,
+            scrollOnFocus: false,
+            checked: defaultValue
+        });
+    }
+    else if((dataType.isBoolean()) && (format == bfree.widget.propdef.Widget.formats.LONG)){
+        wdg = new bfree.widget.BooleanSelect({
+            id: wdgId,
+            label: label,
+            scrollOnFocus: false,
+            style: 'width:100%',
+            value: defaultValue
+        });
+    }
+    else if(dataType.isInteger()){
+        wdg = new bfree.widget.NumberSpinner({
+            id: wdgId,
+            label: label,
+            smallDelta: 1,
+            largeDelta:10,
+            constraints: { fractional: false, min: -2147483648, max: 2147483647 },
+            scrollOnFocus: false,
+            selectOnClick: true,
+            style: 'width:100%',
+            value: defaultValue?defaultValue:0
+        });
+    }
+    else if(dataType.isFloat()){
+        wdg = new bfree.widget.NumberSpinner({
+            id: wdgId,
+            label: label,
+            smallDelta: 1,
+            largeDelta:10,
+            constraints: { places: '0,4' },
+            scrollOnFocus: false,
+            selectOnClick: true,
+            style: 'width:100%',
+            value: defaultValue?defaultValue:0
+        });
+    }
+
+    return wdg;
+}
+
+bfree.widget.propdef.Widget.getChoiceListWidget = function(wdgId, label, choiceList, showNone){
+    var wdg = null;
+    var valueStore = bfree.widget.propdef.Widget.generateStore(choiceList, showNone);
+
+    wdg = new bfree.widget.FilteringSelect({
+        id: wdgId,
+        label: label,
+        query: {},
+        store: valueStore,
+        scrollOnFocus: false,
+        searchAttr: 'display'
+    });
+
+    return wdg;
+}
+
+bfree.widget.propdef.Widget.generate = function(propertyMapping, propertyDefinition, choiceList){
+
+    var wdg = null;
+    var dataTypes = bfree.api.Application.getDataTypes();
+    var dataType = dataTypes.fetchById({id: propertyDefinition.data_type_id});
+    var id = bfree.widget.propdef.Widget.generateWdgName(propertyDefinition.getDbName());
+
+    if(choiceList){
+        wdg = bfree.widget.propdef.Widget.getChoiceListWidget(id, propertyDefinition.name, choiceList);
+    }
+    else{
+        wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name, bfree.widget.propdef.Widget.formats.LONG, propertyMapping.default_value, propertyDefinition.max_length);
+    }
+
+    wdg.set('required', propertyMapping.is_required);
+//    if(dataType.isFloat()||dataType.isInteger()){
+//        wdg.set('value', propertyMapping.default_value?propertyMapping.default_value:0);
+//    }
+
+
+    return wdg;
+}
+
+bfree.widget.propdef.Widget.generateStore = function(choiceList, showNone){
+    var items = [];
+
+    if(showNone){
+        items.push({
+            id: null,
+            display: 'None'
+        });
+    }
+
+    dojo.forEach(choiceList.choice_values, function(item, idx){
+        items.push({
+            id: item.value,
+            display: item.name
+        });
+    }, this);
+
+    return new bfree.api.ItemFileWriteStore({
+        data: {
+            identifier: 'id',
+            label: 'display',
+            items: items
+        }
+    });
+}
+
+}
+
+if(!dojo._hasResource['bfree.widget.doctype.properties.Editor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.doctype.properties.Editor'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 14/11/11
+ * Time: 2:00 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.doctype.properties.Editor');
+
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.doctype.properties.Editor', [dijit._Widget, dijit._Templated],{
+    templateString: dojo.cache("bfree/widget/doctype/properties", "template/Editor.html", "<div style=\"padding:0 8px 0 0;height:100%;width:100%\">\n\n    <div dojoAttachPoint=\"tableNode\"></div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _tblProperties: null,
+
+    activeItem: null,
+    choiceLists: null,
+    propertyDefinitions: null,
+
+    _onChange: function(id, newValue){
+        this.onValueChange(bfree.widget.propdef.Widget.resolveWdgName(id), newValue);
+    },
+
+    _setActiveItemAttr: function(item){
+
+        this.activeItem = item;
+
+        dojo.forEach(this.activeItem.property_mappings, function(item, idx){
+
+            var propertyDefinition = this.propertyDefinitions.fetchById({id: item.property_definition_id});
+            var wdg = null;
+            var choiceList = null;
+            if(item.choice_list_id){
+                choiceList = this.choiceLists.fetchById({id: item.choice_list_id });
+            }
+            wdg = bfree.widget.propdef.Widget.generate(item, propertyDefinition, choiceList);
+
+            if(wdg){
+                this._tblProperties.addChild(wdg);
+                wdg.onChange = dojo.hitch(this, this._onChange, wdg.id);
+            }
+
+        }, this);
+
+       this._tblProperties.refresh();
+       this.onLoaded();
+    },
+
+    _setDisabledAttr: function(is_disabled){
+        this._tblProperties.set('disabled', is_disabled);
+
+        var widgets = this._tblProperties.getChildren();
+        dojo.forEach(widgets, function(widget,idx){
+            widget.set('disabled', is_disabled)
+        }, this);
+
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        if(this._tblProperties){
+            this._tblProperties.destroyDescendants();
+            this._tblProperties.destroy();
+            this._tblProperties = null;
+        }
+
+        this.inherited('destroy', arguments);
+    },
+
+    focus: function(){
+
+    },
+
+    onLoaded: function(){
+    },
+
+    onValueChange: function(id, value){
+
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this._tblProperties = new bfree.widget.PropertyTable({
+            id: 'tblProps1',
+            customClass: 'versa',
+            showLabels: true,
+            cols: 1,
+            labelWidth: 88,
+            style: 'width:100%'
+        }, this.tableNode);
+
+    },
+
+
+    setValue: function(property, value){
+
+        var wdgName = bfree.widget.propdef.Widget.generateWdgName(property);
+        var wdg = dijit.byId(wdgName);
+        if(wdg){
+            if(wdg.declaredClass=="bfree.widget.NumberSpinner"){
+                wdg.set('value', value?value:0);
+            }else{
+                wdg.set('value', value);
+            }
+        }
+
+    },
+
+    setValues: function(item){
+        for(var propName in item){
+            var uniqueName = dojo.replace('documents.{0}', [propName]);
+            this.setValue(uniqueName, item[propName]);
+        }
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this._tblProperties.startup();
+    }
+
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.doctype.InstanceEditor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.doctype.InstanceEditor'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 14/11/11
+ * Time: 11:08 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.doctype.InstanceEditor');
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templated],{
+    templateString: dojo.cache("bfree/widget/doctype", "template/InstanceEditor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        liveSplitters=\"true\"\n        style=\"height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"top\"\n            style=\"padding:8px 0 8px 0;height:24px;\">\n\n        <div dojoAttachPoint=\"tableNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            class=\"highlightPane\">\n\n        <div dojoAttachPoint=\"editorNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _cmbDocTypes:  null,
+    _propertyEditor: null,
+
+    activeItem: null,
+    choiceLists: null,
+    disabled: false,
+    documentTypes: null,
+    propertyDefinitions: null,
+    disableDocumentType: false,
+
+    _onChange: function(newValue){
+
+        if(String.isBlank(newValue)){
+            this.activeItem = null;
+        }
+        else{
+            this.activeItem = this.documentTypes.fetchById({id: newValue});
+        }
+
+        if(this._propertyEditor){
+           this._propertyEditor.destroy();
+           this._propertyEditor = null;
+        }
+        this._propertyEditor = new bfree.widget.doctype.properties.Editor({
+            id: 'propertyEditor1',
+            choiceLists: this.choiceLists,
+            propertyDefinitions: this.propertyDefinitions,
+            onLoaded: dojo.hitch(this, this._onLoaded),
+            onValueChange: dojo.hitch(this, this._onValueChange)
+        });
+
+        this._propertyEditor.placeAt(this.editorNode);
+        if(this.activeItem)
+            this._propertyEditor.set('activeItem', this.activeItem);
+        this._propertyEditor.set('disabled', this.disabled);
+
+        this.onChange(this.activeItem);
+    },
+
+    _onLoaded: function(){
+        this.onChange(this.activeItem);
+    },
+
+    _onValueChange: function(id, value){
+        this.onValueChange(id, value);
+    },
+
+    _setActiveItemAttr: function(item){
+        this._cmbDocTypes.reset();
+        this.activeItem = item;
+        this._cmbDocTypes.set('value', item.id);
+        this._cmbDocTypes.set('disabled', (this.activeItem == null)||this.disableDocumentType);
+    },
+
+    _setDisabledAttr: function(value){
+        this.disabled = value;
+
+        this._cmbDocTypes.set('disabled', this.disabled||this.disableDocumentType);
+
+        if(this._propertyEditor)
+            this._propertyEditor.set('disabled', this.disabled);
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        if(this._tblProperties){
+            this._tblProperties.destroyDescendants();
+            this._tblProperties.destroy();
+            this._tblProperties = null;
+        }
+
+        if(this._propertyEditor){
+            this._propertyEditor.destroy();
+            this._propertyEditor = null;
+        }
+
+        this.inherited('destroy', arguments);
+    },
+
+    focus: function(){
+
+    },
+
+    onChange: function(){
+
+    },
+
+    onValueChange: function(){
+
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this._tblProperties = new bfree.widget.PropertyTable({
+            id: 'tblDocTypes1',
+            customClass: 'versa',
+            showLabels: true,
+            cols: 1,
+            labelWidth: 88,
+            style: 'width:100%'
+        }, this.tableNode);
+
+        this._cmbDocTypes = new dijit.form.FilteringSelect({
+            id: 'cmbDocTypes',
+            label: 'Document Type',
+            store: this.documentTypes.store,
+            searchAttr: 'name',
+            disabled: true,
+            onChange: dojo.hitch(this, this._onChange)
+        });
+        this._tblProperties.addChild(this._cmbDocTypes);
+
+    },
+
+    resize: function(){
+        this.inherited('resize', arguments);
+        this.mainNode.resize();
+    },
+
+    setValues: function(item){
+        this._propertyEditor.setValues(item);
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+    }
+
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.Editor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.Editor'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 14/11/11
+ * Time: 11:02 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.Editor');
+
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
+    templateString: dojo.cache("bfree/widget/document", "template/Editor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:0;height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            style=\"padding:0 8px 8px 8px\">\n\n        <div dojoAttachPoint=\"docTypeEditorNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+    disableDocumentType: false,
+
+    _choiceLists: null,
+    _documentTypes: null,
+    _docTypeEditor: null,
+    _propertyDefinitions: null,
+
+    activeItem: null,
+    library: null,
+
+    _btnAdd_onClick: function(evt){
+        this.onSubmit();
+    },
+
+    _docTypeEditor_onChange: function(documentType){
+        var state = this.activeItem.state;
+
+        if(documentType){
+            if(documentType.id != this.activeItem.document_type_id){
+                this.activeItem.document_type_id = documentType.id;
+                this.activeItem.validate({library: this.library});
+            }
+
+            dojo.forEach(documentType.property_mappings, function(item, idx){
+                var propertyDefinition = this._propertyDefinitions.fetchById({id: item.property_definition_id});
+                if(!propertyDefinition.is_system&&item.default_value){
+                    this.library.getDocuments().setValue(this.activeItem, propertyDefinition.column_name, item.default_value);
+                }
+            }, this);
+
+
+            this._docTypeEditor.setValues(this.activeItem);
+        }
+        else{
+            this.activeItem.document_type_id = null;
+            this.activeItem.validate({library: this.library});
+        }
+
+        if(state != this.activeItem.state)
+            this.onValidChange(this.activeItem);
+    },
+
+    _docTypeEditor_onValueChange: function(id, value){
+
+        var property_id = id.replace('documents.', '');
+        if(this.activeItem[property_id] != value){
+            var state = this.activeItem.state;
+            this.activeItem[property_id] = value;
+            this.onValueChange(property_id, value);
+
+            this.activeItem.validate({library: this.library});
+            if(state != this.activeItem.state)
+                this.onValidChange(this.activeItem);
+        }
+
+    },
+
+    _setActiveItemAttr: function(item){
+        this.activeItem = item;
+
+        if(this.activeItem){
+
+            var document_type = this._documentTypes.fetchById({id:item.document_type_id});
+
+            var isDisabled = this.activeItem.getState(bfree.api.Document.states.CHECKED_IN) ||
+                                this.activeItem.getState(bfree.api.Document.states.ERROR);
+
+            this._docTypeEditor.set('activeItem', document_type);
+            this._docTypeEditor.set('disabled', isDisabled);
+        }
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        if(this._docTypeEditor){
+            this._docTypeEditor.destroy();
+            this._docTypeEditor = null;
+        }
+
+        this.inherited('destroy', arguments);
+    },
+
+    focus: function(){
+
+    },
+
+    onSubmit: function(){
+
+    },
+
+    onValidChange: function(item){
+
+    },
+
+    onValueChange: function(property_id, value){
+
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this._documentTypes = this.library.getDocumentTypes();
+        this._documentTypes.refresh();
+
+        this._propertyDefinitions = this.library.getPropertyDefinitions();
+        this._propertyDefinitions.refresh();
+
+        this._choiceLists = this.library.getChoiceLists();
+        this._choiceLists.refresh();
+
+        this._docTypeEditor = new bfree.widget.doctype.InstanceEditor({
+            id: 'doctypeeditor1',
+            choiceLists: this._choiceLists,
+            documentTypes: this._documentTypes,
+            propertyDefinitions: this._propertyDefinitions,
+            disableDocumentType: this.disableDocumentType,
+            onChange: dojo.hitch(this, this._docTypeEditor_onChange),
+            onValueChange: dojo.hitch(this, this._docTypeEditor_onValueChange)
+        }, this.docTypeEditorNode);
+
+    },
+
+    resize: function(){
+        this.inherited('resize', arguments);
+        this.mainNode.resize();
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+    }
+
+});
+
+}
+
+if(!dojo._hasResource["dojox.embed.Flash"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dojox.embed.Flash"] = true;
+dojo.provide("dojox.embed.Flash");
+
+(function(){
+	/*******************************************************
+		dojox.embed.Flash
+
+		Base functionality to insert a flash movie into
+		a document on the fly.
+
+		Usage:
+		var movie=new dojox.embed.Flash({ args }, containerNode);
+	 ******************************************************/
+	var fMarkup, fVersion;
+	var minimumVersion = 9; // anything below this will throw an error (may overwrite)
+	var keyBase = "dojox-embed-flash-", keyCount=0;
+	var _baseKwArgs = {
+		expressInstall: false,
+		width: 320,
+		height: 240,
+		swLiveConnect: "true",
+		allowScriptAccess: "sameDomain",
+		allowNetworking:"all",
+		style: null,
+		redirect: null
+	};
+
+	function prep(kwArgs){
+		// console.warn("KWARGS:", kwArgs)
+		kwArgs = dojo.delegate(_baseKwArgs, kwArgs);
+
+		if(!("path" in kwArgs)){
+			console.error("dojox.embed.Flash(ctor):: no path reference to a Flash movie was provided.");
+			return null;
+		}
+
+		if(!("id" in kwArgs)){
+			kwArgs.id = (keyBase + keyCount++);
+		}
+		return kwArgs;
+	}
+
+	if(dojo.isIE){
+		fMarkup = function(kwArgs){
+			kwArgs = prep(kwArgs);
+			if(!kwArgs){ return null; }
+
+			var p;
+			var path = kwArgs.path;
+			if(kwArgs.vars){
+				var a = [];
+				for(p in kwArgs.vars){
+					a.push(p + '=' + kwArgs.vars[p]);
+				}
+				kwArgs.params.FlashVars = a.join("&");
+				delete kwArgs.vars;
+			}
+			// FIXME: really? +'s?
+			var s = '<object id="' + kwArgs.id + '" '
+				+ 'classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" '
+				+ 'width="' + kwArgs.width + '" '
+				+ 'height="' + kwArgs.height + '"'
+				+ ((kwArgs.style)?' style="' + kwArgs.style + '"':'')
+				+ '>'
+				+ '<param name="movie" value="' + path + '" />';
+			if(kwArgs.params){
+				for(p in kwArgs.params){
+					s += '<param name="' + p + '" value="' + kwArgs.params[p] + '" />';
+				}
+			}
+			s += '</object>';
+			return { id: kwArgs.id, markup: s };
+		};
+
+		fVersion = (function(){
+			var testVersion = 10, testObj = null;
+			while(!testObj && testVersion > 7){
+				try {
+					testObj = new ActiveXObject("ShockwaveFlash.ShockwaveFlash." + testVersion--);
+				}catch(e){ }
+			}
+			if(testObj){
+				var v = testObj.GetVariable("$version").split(" ")[1].split(",");
+				return {
+					major: (v[0]!=null) ? parseInt(v[0]) : 0,
+					minor: (v[1]!=null) ? parseInt(v[1]) : 0,
+					rev: (v[2]!=null) ? parseInt(v[2]) : 0
+				};
+			}
+			return { major: 0, minor: 0, rev: 0 };
+		})();
+
+		//	attach some cleanup for IE, thanks to deconcept :)
+		dojo.addOnUnload(function(){
+			var dummy = function(){};
+			var objs = dojo.query("object").
+				reverse().
+				style("display", "none").
+				forEach(function(i){
+					for(var p in i){
+						if((p != "FlashVars") && dojo.isFunction(i[p])){
+							try{
+								i[p] = dummy;
+							}catch(e){}
+						}
+					}
+				});
+		});
+
+		//	TODO: ...and double check this fix; is IE really firing onbeforeunload with any kind of href="#" link?
+		/*
+		var beforeUnloadHandle = dojo.connect(dojo.global, "onbeforeunload", function(){
+			try{
+				if(__flash_unloadHandler){ __flash_unloadHandler=function(){ }; }
+				if(__flash_savedUnloadHandler){ __flash_savedUnloadHandler=function(){ }; }
+			} catch(e){ }
+			dojo.disconnect(beforeUnloadHandle);
+		});
+		*/
+	} else {
+		//	*** Sane browsers branch ******************************************************************
+		fMarkup = function(kwArgs){
+			kwArgs = prep(kwArgs);
+			if(!kwArgs){ return null; }
+
+			var p;
+			var path = kwArgs.path;
+			if(kwArgs.vars){
+				var a = [];
+				for(p in kwArgs.vars){
+					a.push(p + '=' + kwArgs.vars[p]);
+				}
+				kwArgs.params.flashVars = a.join("&");
+				delete kwArgs.vars;
+			}
+			var s = '<embed type="application/x-shockwave-flash" '
+				+ 'src="' + path + '" '
+				+ 'id="' + kwArgs.id + '" '
+				+ 'width="' + kwArgs.width + '" '
+				+ 'height="' + kwArgs.height + '"'
+				+ ((kwArgs.style)?' style="' + kwArgs.style + '" ':'')
+
+				+ 'pluginspage="' + window.location.protocol + '//www.adobe.com/go/getflashplayer" ';
+			if(kwArgs.params){
+				for(p in kwArgs.params){
+					s += ' ' + p + '="' + kwArgs.params[p] + '"';
+				}
+			}
+			s += ' />';
+			return { id: kwArgs.id, markup: s };
+		};
+
+		fVersion=(function(){
+			var plugin = navigator.plugins["Shockwave Flash"];
+			if(plugin && plugin.description){
+				var v = plugin.description.replace(/([a-zA-Z]|\s)+/, "").replace(/(\s+r|\s+b[0-9]+)/, ".").split(".");
+				return {
+					major: (v[0]!=null) ? parseInt(v[0]) : 0,
+					minor: (v[1]!=null) ? parseInt(v[1]) : 0,
+					rev: (v[2]!=null) ? parseInt(v[2]) : 0
+				};
+			}
+			return { major: 0, minor: 0, rev: 0 };
+		})();
+	}
+
+
+/*=====
+dojox.embed.__flashArgs = function(path, id, width, height, style, params, vars, expressInstall, redirect){
+	//	path: String
+	//		The URL of the movie to embed.
+	//	id: String?
+	//		A unique key that will be used as the id of the created markup.  If you don't
+	//		provide this, a unique key will be generated.
+	//	width: Number?
+	//		The width of the embedded movie; the default value is 320px.
+	//	height: Number?
+	//		The height of the embedded movie; the default value is 240px
+	//	minimumVersion: Number ?
+	//		The minimum targeted version of the Flash Player (defaults to 9)
+	//	style: String?
+	//		Any CSS style information (i.e. style="background-color:transparent") you want
+	//		to define on the markup.
+	//	params: Object?
+	//		A set of key/value pairs that you want to define in the resultant markup.
+	//	vars: Object?
+	//		A set of key/value pairs that the Flash movie will interpret as FlashVars.
+	//	expressInstall: Boolean?
+	//		Whether or not to include any kind of expressInstall info. Default is false.
+	//	redirect: String?
+	//		A url to redirect the browser to if the current Flash version is not supported.
+	this.id=id;
+	this.path=path;
+	this.width=width;
+	this.minimumVersion=minimumVersion;
+	this.height=height;
+	this.style=style;
+	this.params=params;
+	this.vars=vars;
+	this.expressInstall=expressInstall;
+	this.redirect=redirect;
+}
+=====*/
+
+	//	the main entry point
+	dojox.embed.Flash = function(/*dojox.embed.__flashArgs*/ kwArgs, /*DOMNode*/ node){
+		//	summary:
+		//		Create a wrapper object around a Flash movie; this is the DojoX equivilent
+		//		to SWFObject.
+		//
+		//	description:
+		//		Creates a wrapper object around a Flash movie.  Wrapper object will
+		//		insert the movie reference in node; when the browser first starts
+		//		grabbing the movie, onReady will be fired; when the movie has finished
+		//		loading, it will fire onLoad.
+		//
+		//		If your movie uses ExternalInterface, you should use the onLoad event
+		//		to do any kind of proxy setup (see dojox.embed.Flash.proxy); this seems
+		//		to be the only consistent time calling EI methods are stable (since the
+		//		Flash movie will shoot several methods into the window object before
+		//		EI callbacks can be used properly).
+		//
+		//		*Important note*:  this code includes a workaround for the Eolas "fix" from
+		//		Microsoft; in order to work around the "click to activate this control" message
+		//		on any embedded Flash movie, this code will load a separate, non-dojo.require
+		//		javascript file in order to write the Flash movie into the document.  As such
+		//		it cannot be used with Dojo's scope map techniques for working with multiple
+		//		versions of Dojo on the same page.
+		//
+		//	kwArgs: dojox.embed.__flashArgs
+		//		The various arguments that will be used to help define the Flash movie.
+		//	node: DomNode
+		//		The node where the embed object will be placed
+		//
+		//	example:
+		//		Embed a flash movie in a document using the new operator, and get a reference to it.
+		//	|	var movie = new dojox.embed.Flash({
+		//	|		path: "path/to/my/movie.swf",
+		//	|		width: 400,
+		//	|		height: 300
+		//	|	}, myWrapperNode, "testLoaded");
+		//
+		//	example:
+		//		Embed a flash movie in a document without using the new operator.
+		//	|	var movie = dojox.embed.Flash({
+		//	|		path: "path/to/my/movie.swf",
+		//	|		width: 400,
+		//	|		height: 300,
+		//	|		style: "position:absolute;top:0;left:0"
+		//	|	}, myWrapperNode, "testLoaded");
+		//
+		// File can only be run from a server, due to SWF dependency.
+		if(location.href.toLowerCase().indexOf("file://")>-1){
+			throw new Error("dojox.embed.Flash can't be run directly from a file. To instatiate the required SWF correctly it must be run from a server, like localHost.");
+		}
+
+		//	available: Number
+		//		If there is a flash player available, and if so what version.
+		this.available = dojox.embed.Flash.available;
+
+		//	minimumVersion: Number
+		//		The minimum version of Flash required to run this movie.
+		this.minimumVersion = kwArgs.minimumVersion || minimumVersion;
+		//console.log("AVAILABLE:", this);
+
+		//	id: String
+		//		The id of the DOMNode to be used for this movie.  Can be used with dojo.byId to get a reference.
+		this.id = null;
+
+		//	movie: FlashObject
+		//		A reference to the movie itself.
+		this.movie = null;
+
+		//	domNode: DOMNode
+		//		A reference to the DOMNode that contains this movie.
+		this.domNode = null;
+		if(node){
+			node = dojo.byId(node);
+		}
+		// setTimeout Fixes #8743 - creating double SWFs
+		// also allows time for code to attach to onError
+		setTimeout(dojo.hitch(this, function(){
+			if(kwArgs.expressInstall || this.available && this.available >= this.minimumVersion){
+				if(kwArgs && node){
+					this.init(kwArgs, node);
+				}else{
+					this.onError("embed.Flash was not provided with the proper arguments.");
+				}
+			}else{
+				if(!this.available){
+					this.onError("Flash is not installed.");
+				}else{
+					this.onError("Flash version detected: "+this.available+" is out of date. Minimum required: "+this.minimumVersion);
+				}
+			}
+		}), 100);
+	};
+
+	dojo.extend(dojox.embed.Flash, {
+		onReady: function(/*HTMLObject*/ movie){
+			console.warn("embed.Flash.movie.onReady:", movie)
+			//	summary:
+			//		Stub function for you to attach to when the movie reference is first
+			//		pushed into the document.
+		},
+		onLoad: function(/*HTMLObject*/ movie){
+			console.warn("embed.Flash.movie.onLoad:", movie)
+			//	summary:
+			//		Stub function for you to attach to when the movie has finished downloading
+			//		and is ready to be manipulated.
+		},
+		onError: function(msg){
+
+		},
+		_onload: function(){
+			// summary:
+			//	Internal. Cleans up before calling onLoad.
+			clearInterval(this._poller);
+			delete this._poller;
+			delete this._pollCount;
+			delete this._pollMax;
+			this.onLoad(this.movie);
+		},
+		init: function(/*dojox.embed.__flashArgs*/ kwArgs, /*DOMNode?*/ node){
+			console.log("embed.Flash.movie.init")
+			//	summary
+			//		Initialize (i.e. place and load) the movie based on kwArgs.
+			this.destroy();		//	ensure we are clean first.
+			node = dojo.byId(node || this.domNode);
+			if(!node){ throw new Error("dojox.embed.Flash: no domNode reference has been passed."); }
+
+			// vars to help determine load status
+			var p = 0, testLoaded=false;
+			this._poller = null; this._pollCount = 0; this._pollMax = 15; this.pollTime = 100;
+
+			if(dojox.embed.Flash.initialized){
+
+				this.id = dojox.embed.Flash.place(kwArgs, node);
+				this.domNode = node;
+
+				setTimeout(dojo.hitch(this, function(){
+					this.movie = this.byId(this.id, kwArgs.doc);
+					this.onReady(this.movie);
+
+					this._poller = setInterval(dojo.hitch(this, function(){
+
+						// catch errors if not quite ready.
+						try{
+							p = this.movie.PercentLoaded();
+						}catch(e){
+							/* squelch */
+							console.warn("this.movie.PercentLoaded() failed");
+						}
+
+						if(p == 100){
+							// if percent = 100, movie is fully loaded and we're communicating
+							this._onload();
+
+						}else if(p==0 && this._pollCount++ > this._pollMax){
+							// after several attempts, we're not past zero.
+							// FIXME: What if we get stuck on 33% or something?
+							clearInterval(this._poller);
+							throw new Error("Building SWF failed.");
+						}
+					}), this.pollTime);
+				}), 1);
+			}
+		},
+		_destroy: function(){
+			//	summary
+			//		Kill the movie and reset all the properties of this object.
+			try{
+				this.domNode.removeChild(this.movie);
+			}catch(e){}
+			this.id = this.movie = this.domNode = null;
+		},
+		destroy: function(){
+			//	summary
+			//		Public interface for destroying all the properties in this object.
+			//		Will also clean all proxied methods.
+			if(!this.movie){ return; }
+
+			//	remove any proxy functions
+			var test = dojo.delegate({
+				id: true,
+				movie: true,
+				domNode: true,
+				onReady: true,
+				onLoad: true
+			});
+			for(var p in this){
+				if(!test[p]){
+					delete this[p];
+				}
+			}
+
+			//	poll the movie
+			if(this._poller){
+				//	wait until onLoad to destroy
+				dojo.connect(this, "onLoad", this, "_destroy");
+			} else {
+				this._destroy();
+			}
+		},
+		byId: function (movieName, doc){
+			// 	summary:
+			//		Gets Flash movie by id.
+			//	description:
+			//		Probably includes methods for outdated
+			//		browsers, but this should catch all cases.
+			// arguments:
+			//		movieName: String
+			//			The name of the SWF
+			//		doc: Object
+			//			The document, if not current window
+			//			(not fully supported)
+			//	example:
+			//	| var movie = dojox.embed.Flash.byId("myId");
+			//
+			doc = doc || document;
+			if(doc.embeds[movieName]){
+				return doc.embeds[movieName];
+			}
+			if(doc[movieName]){
+				return doc[movieName];
+			}
+			if(window[movieName]){
+				return window[movieName];
+			}
+			if(document[movieName]){
+				return document[movieName];
+			}
+			return null;
+		}
+	});
+
+	//	expose information through the constructor function itself.
+	dojo.mixin(dojox.embed.Flash, {
+		//	summary:
+		//		A singleton object used internally to get information
+		//		about the Flash player available in a browser, and
+		//		as the factory for generating and placing markup in a
+		//		document.
+		//
+		//	minSupported: Number
+		//		The minimum supported version of the Flash Player, defaults to 8.
+		//	available: Number
+		//		Used as both a detection (i.e. if(dojox.embed.Flash.available){ })
+		//		and as a variable holding the major version of the player installed.
+		//	supported: Boolean
+		//		Whether or not the Flash Player installed is supported by dojox.embed.
+		//	version: Object
+		//		The version of the installed Flash Player; takes the form of
+		//		{ major, minor, rev }.  To get the major version, you'd do this:
+		//		var v=dojox.embed.Flash.version.major;
+		//	initialized: Boolean
+		//		Whether or not the Flash engine is available for use.
+		//	onInitialize: Function
+		//		A stub you can connect to if you are looking to fire code when the
+		//		engine becomes available.  A note: DO NOT use this event to
+		//		place a movie in a document; it will usually fire before DOMContentLoaded
+		//		is fired, and you will get an error.  Use dojo.addOnLoad instead.
+		minSupported : 8,
+		available: fVersion.major,
+		supported: (fVersion.major >= fVersion.required),
+		minimumRequired: fVersion.required,
+		version: fVersion,
+		initialized: false,
+		onInitialize: function(){
+			dojox.embed.Flash.initialized = true;
+		},
+		__ie_markup__: function(kwArgs){
+			return fMarkup(kwArgs);
+		},
+		proxy: function(/*dojox.embed.Flash*/ obj, /*Array|String*/ methods){
+			//	summary:
+			//		Create the set of passed methods on the dojox.embed.Flash object
+			//		so that you can call that object directly, as opposed to having to
+			//		delve into the internal movie to do this.  Intended to make working
+			//		with Flash movies that use ExternalInterface much easier to use.
+			//
+			//	example:
+			//		Create "setMessage" and "getMessage" methods on foo.
+			//	|	var foo = new dojox.embed.Flash(args, someNode);
+			//	|	dojo.connect(foo, "onLoad", dojo.hitch(foo, function(){
+			//	|		dojox.embed.Flash.proxy(this, [ "setMessage", "getMessage" ]);
+			//	|		this.setMessage("dojox.embed.Flash.proxy is pretty cool...");
+			//	|		console.log(this.getMessage());
+			//	|	}));
+			dojo.forEach((dojo.isArray(methods) ? methods : [ methods ]), function(item){
+				this[item] = dojo.hitch(this, function(){
+					return (function(){
+						return eval(this.movie.CallFunction(
+							'<invoke name="' + item + '" returntype="javascript">'
+							+ '<arguments>'
+							+ dojo.map(arguments, function(item){
+								// FIXME:
+								//		investigate if __flash__toXML will
+								//		accept direct application via map()
+								//		(e.g., does it ignore args past the
+								//		first? or does it blow up?)
+								return __flash__toXML(item);
+							}).join("")
+							+ '</arguments>'
+							+ '</invoke>'
+						));
+					}).apply(this, arguments||[]);
+				});
+			}, obj);
+		}
+	});
+
+	/*if(dojo.isIE){
+		//	Ugh!
+		if(dojo._initFired){
+			var e = document.createElement("script");
+			e.type = "text/javascript";
+			e.src = dojo.moduleUrl("dojox", "embed/IE/flash.js");
+			document.getElementsByTagName("head")[0].appendChild(e);
+		}else{
+			//	we can use document.write.  What a kludge.
+			document.write('<scr'+'ipt type="text/javascript" src="' + dojo.moduleUrl("dojox", "embed/IE/flash.js") + '">'
+				+ '</scr'+'ipt>');
+		}
+	}else{*/
+		dojox.embed.Flash.place = function(kwArgs, node){
+			var o = fMarkup(kwArgs);
+			node = dojo.byId(node);
+			if(!node){
+				node = dojo.doc.createElement("div");
+				node.id = o.id+"-container";
+				dojo.body().appendChild(node);
+			}
+			if(o){
+				node.innerHTML = o.markup;
+				return o.id;
+			}
+			return null;
+		}
+		dojox.embed.Flash.onInitialize();
+	//}
+})();
+
+}
+
+if(!dojo._hasResource['bfree.api.Uploader']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.Uploader'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 14/12/11
+ * Time: 11:20 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.api.Uploader');
+
+
+
+dojo.declare('bfree.api.Uploader', null, {
+
+});
+
+bfree.api.Uploader.useFlash = function(){
+
+    //Both HTML5/Flash uploaders fail with Opera so force IFrame
+    if(dojo.isOpera)
+        return false;
+
+    return dojox.embed.Flash.available;
+}
+
+bfree.api.Uploader.CLEAN_TRGT  = '/zones/{0}/uploader/clean.json';
+bfree.api.Uploader.PRV_TRGT = '/zones/{0}/uploader/preview?file={1}&authenticity_token={2}'
+bfree.api.Uploader.DL_TRGT = '/zones/{0}/uploader/download?file={1}';
+bfree.api.Uploader.UL_TRGT = '/zones/{0}/uploader/upload?pkg={1}';
+
+bfree.api.Uploader.getDownloadUrl = function(args){
+    return dojo.replace(bfree.api.Uploader.DL_TRGT, [args.zone.subdomain, encodeURIComponent(args.item.file)])
+}
+
+bfree.api.Uploader.getPreviewUrl = function(args){
+    var file_name = (args.item) ? args.item.binary_file_name : '';
+    return dojo.replace(bfree.api.Uploader.PRV_TRGT, [args.zone.subdomain, encodeURIComponent(file_name), bfree.api.XhrHelper.authenticity_token])
+}
+
+bfree.api.Uploader.getUploadUrl = function(args){
+    return dojo.replace(bfree.api.Uploader.UL_TRGT, [args.zone.subdomain, args.isPackage])
+}
+
+bfree.api.Uploader.clean = function(args){
+
+    var url = dojo.replace(bfree.api.Uploader.CLEAN_TRGT, [args.zone.subdomain]);
+
+    var postData = {
+    };
+
+    var results = bfree.api.XhrHelper.doPostAction({
+        target: url,
+        postData: postData
+    });
+
+}
+
+}
+
+if(!dojo._hasResource["dojox.form.uploader.Base"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dojox.form.uploader.Base"] = true;
+dojo.provide("dojox.form.uploader.Base");
+
+
+
+
+dojo.declare("dojox.form.uploader.Base", [dijit._Widget, dijit._Templated], {
+	//
+	// Version: 1.6
+	//
+	// summary:
+	// 		The Base class used for dojox.form.Uploader and dojox.form.uploader.FileList.
+	//
+	// 	description:
+	// 		Should not be used as a standalone. To be mixed in with other classes.
+	//
+
+	getForm: function(){
+		// summary:
+		// 		Finds the parent form of the Uploader, if it exists.
+		//
+		if(!this.form){
+			var n = this.domNode;
+			while(n && n.tagName && n !== document.body){
+				if(n.tagName.toLowerCase() == "form"){
+					this.form = n;
+					break;
+				}
+				n = n.parentNode;
+			}
+		}
+		return this.form // Node;
+	},
+
+	getUrl: function(){
+		// summary:
+		// 		Finds the URL to upload to, whether it be the action in the parent form, this.url or
+		// 		this.uploadUrl
+		//
+		if(this.uploadUrl) this.url = this.uploadUrl;
+		if(this.url) return this.url;
+		if(this.getForm()) this.url = this.form.action;
+		return this.url; // String
+	},
+
+
+	connectForm: function(){
+		//console.log("connectForm...", this.url, !!this.uploadUrl, !!this.getForm())
+
+		this.url = this.getUrl();
+
+		if(!this._fcon && !!this.getForm()){
+			this._fcon = true;
+			this.connect(this.form, "onsubmit", function(evt){
+				dojo.stopEvent(evt);
+				this.submit(dojo.formToObject(this.form));
+			});
+			//console.log("----------------form connected:", this.url)
+		}
+		//console.log("form:", this.form, this.url);
+	},
+
+	supports: function(what){
+		//	summary:
+		// 		Does feature testing for uploader capabilities. (No browser sniffing - yay)
+		//
+		if(!this._hascache){
+			this._hascache = {
+				testDiv: dojo.create("div"),
+				testInput: dojo.create("input", {type:"file"}),
+				xhr:!!window.XMLHttpRequest ? new XMLHttpRequest() : {}
+			};
+			dojo.style(this._hascache.testDiv, "opacity", .7);
+		}
+		switch(what){
+			case "FormData":
+				return !!window.FormData;
+			case "sendAsBinary":
+				return !!this._hascache.xhr.sendAsBinary;
+			case "opacity":
+				return dojo.style(this._hascache.testDiv, "opacity") == .7;
+			case "multiple":
+				if(this.force == "flash" || this.force == "iframe") return false;
+				var res = dojo.attr(this._hascache.testInput, "multiple");
+				return res===true || res===false; // IE will be undefined
+		}
+		return false; // Boolean
+	},
+	getMimeType: function(){
+		//	summary:
+		//		Returns the mime type that should be used in an HTML5 upload form. Return result
+		//		may change as the current use is very generic.
+		//
+		return "application/octet-stream"; //image/gif
+	},
+	getFileType: function(/* String */name){
+		// summary:
+		// 		Gets the extension of a file
+		return name.substring(name.lastIndexOf(".")+1).toUpperCase(); // String
+	},
+	convertBytes: function(bytes){
+		// summary:
+		// 		Converts bytes. Returns an object with all conversions. The "value" property is
+		// 		considered the most likely desired result.
+		//
+		var kb = Math.round(bytes/1024*100000)/100000;
+		var mb = Math.round(bytes/1048576*100000)/100000;
+		var gb = Math.round(bytes/1073741824*100000)/100000;
+		var value = bytes;
+		if(kb>1) value = kb.toFixed(1)+" kb";
+		if(mb>1) value = mb.toFixed(1)+" mb";
+		if(gb>1) value = gb.toFixed(1)+" gb";
+		return {
+			kb:kb,
+			mb:mb,
+			gb:gb,
+			bytes:bytes,
+			value: value
+		}; // Object
+	}
+});
+
+}
+
+if(!dojo._hasResource["dojox.form.Uploader"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dojox.form.Uploader"] = true;
+dojo.provide("dojox.form.Uploader");
+dojo.experimental("dojox.form.Uploader");
+
+
+
+	//
+	// TODO:
+	//		i18n
+	//		label via innerHTML
+	//		Doc and or test what can be extended.
+	//		Doc custom file events
+	//		Use new FileReader() for thumbnails
+	//		flashFieldName should default to Flash
+	//		get('value'); and set warning
+	//
+
+dojo.declare("dojox.form.Uploader", [dojox.form.uploader.Base], {
+	//
+	// Version: 1.6
+	//
+	// summary:
+	//		A widget that creates a stylable file-input button, with optional multi-file selection,
+	//		using only HTML elements. Non-HTML5 browsers have fallback options of Flash or an iframe.
+	//
+	//	description:
+	//		A bare-bones, stylable file-input button, with optional multi-file selection. The list
+	//		of files is not displayed, that is for you to handle by connecting to the onChange
+	//		event, or use the dojox.form.uploader.FileList.
+	//
+	//		Uploader without plugins does not have any ability to upload - it is for use in forms
+	//		where you handle the upload either by a standard POST or with Ajax using an iFrame. This
+	//		class is for convenience of multiple files only. No progress events are available.
+	//
+	//		If the browser supports a file-input with the "multiple" attribute, that will be used.
+	//		If the browser does not support "multiple" (ergo, IE) multiple inputs are used,
+	//		one for each selection.
+	//
+	//
+	//	uploadOnSelect: Boolean
+	//		If true, uploads imediately after a file has been selected. If false,
+	//		waits for upload() to be called.
+	uploadOnSelect:false,
+	//	tabIndex: Number|String
+	//		The tab order in the DOM.
+	tabIndex:0,
+	//	multiple: Boolean
+	//		If true and flash mode, multiple files may be selected from the dialog.
+	multiple:false,
+	//
+	//	label: String
+	//		The text used in the button that when clicked, opens a system Browse Dialog.
+	label:"Upload...",
+	//
+	// url: String
+	//		The url targeted for upload. An absolute URL is preferred. Relative URLs are
+	//		changed to absolute.
+	url:"",
+	//
+	//	name: String
+	//		The name attribute needs to end with square brackets: [] as this is the standard way
+	//		of handling an attribute "array". This requires a slightly different technique on the
+	//		server.
+	name:"uploadedfile",
+	//
+	//	flashFieldName: String
+	//		If set, this will be the name of the field of the flash uploaded files that the server
+	//		is expecting. If not set, "Flash" is appended to the "name" property.
+	flashFieldName:"",
+	//
+	//	uploadType: String [readonly]
+	//		The type of uploader being used. As an alternative to determining the upload type on the
+	//		server based on the fieldName, this property could be sent to the server to help
+	//		determine what type of parsing should be used.
+	uploadType:"form",
+	//
+	_nameIndex:0,
+	widgetsInTemplate:true,
+	templateString:'<div class="dojoxFileInput"><div dojoType="dijit.form.Button" dojoAttachPoint="button">${label}</div></div>',
+
+	postMixInProperties: function(){
+		this._inputs = [];
+		this._getButtonStyle(this.srcNodeRef);
+		this.inherited(arguments);
+	},
+	postCreate: function(){
+		var restore = false;
+		var parent = this.domNode.parentNode;
+		var position = this._getNodePosition(this.domNode);
+		if(!this.btnSize.w || !this.btnSize.h) {
+			dojo.body().appendChild(this.domNode);
+			this._getButtonStyle(this.domNode);
+			restore = true;
+		}
+		this._setButtonStyle();
+		if(restore){
+			dojo.place(this.domNode, position.node, position.pos)
+		}
+		this.inherited(arguments);
+	},
+
+	/*************************
+	 *	   Public Events	 *
+	 *************************/
+
+	onChange: function(/* Array */fileArray){
+		//	summary:
+		// 		stub to connect
+		// 		Fires when files are selected
+		// 		Event is an array of last files selected
+	},
+
+	onBegin: function(/* Array */dataArray){
+		// summary:
+		// 		Fires when upload begins
+	},
+
+	onProgress: function(/* Object */customEvent){
+		// summary:
+		// 		Stub to connect
+		// 		Fires on upload progress. Event is a normalized object of common properties
+		// 		from HTML5 uploaders and the Flash uploader. Will not fire for IFrame.
+		// customEvent:
+		// 		bytesLoaded: Number
+		// 			Amount of bytes uploaded so far of entire payload (all files)
+		//		bytesTotal: Number
+		//			Amount of bytes of entire payload (all files)
+		//		type: String
+		//			Type of event (progress or load)
+		//		timeStamp: Number
+		//			Timestamp of when event occurred
+	},
+
+	onComplete: function(/* Object */customEvent){
+		// summary:
+		// 		stub to connect
+		// 		Fires when all files have uploaded
+		// 		Event is an array of all files
+		this.reset();
+	},
+
+	onCancel: function(){
+		// summary:
+		// 		Stub to connect
+		// 		Fires when dialog box has been closed
+		//		without a file selection
+	},
+
+	onAbort: function(){
+		// summary:
+		// 		Stub to connect
+		// 		Fires when upload in progress was canceled
+	},
+
+	onError: function(/* Object or String */evtObject){
+		// summary:
+		//		Fires on errors
+		//
+		//FIXME: Unsure of a standard form of error events
+	},
+
+	/*************************
+	 *	   Public Methods	 *
+	 *************************/
+
+	upload: function(/*Object ? */formData){
+		// summary:
+		// 		When called, begins file upload. Only supported with plugins.
+	},
+
+	submit: function(/* form Node ? */form){
+		// summary:
+		//		If Uploader is in a form, and other data should be sent along with the files, use
+		//		this instead of form submit. Only supported with plugins.
+	},
+
+	reset: function(){
+		// summary
+		// 		Resets entire input, clearing all files.
+		// 		NOTE:
+		// 		Removing individual files is not yet supported, because the HTML5 uploaders can't
+		// 		be edited.
+		// 		TODO:
+		// 		Add this ability by effectively, not uploading them
+		//
+		this._disconnectButton();
+		dojo.forEach(this._inputs, dojo.destroy, dojo);
+		this._inputs = [];
+		this._nameIndex = 0;
+		this._createInput();
+	},
+
+	getFileList: function(){
+		// summary:
+		// 		Returns a list of selected files.
+		//
+		var fileArray = [];
+		if(this.supports("multiple")){
+			dojo.forEach(this.inputNode.files, function(f, i){
+				fileArray.push({
+					index:i,
+					name:f.name,
+					size:f.size,
+					type:f.type
+				});
+			}, this);
+		}else{
+			dojo.forEach(this._inputs, function(n, i){
+				fileArray.push({
+					index:i,
+					name:n.value.substring(n.value.lastIndexOf("\\")+1),
+					size:0,
+					type:n.value.substring(n.value.lastIndexOf(".")+1)
+				});
+			}, this)
+
+		}
+		return fileArray; // Array
+	},
+
+	/*********************************************
+	 *	   Private Property. Get off my lawn.	 *
+	 *********************************************/
+
+	_getValueAttr: function(){
+		// summary:
+		//		Internal. To get disabled use: uploader.get("disabled");
+		return this.getFileList();
+	},
+
+	_setValueAttr: function(disabled){
+		console.error("Uploader value is read only");
+	},
+
+	_getDisabledAttr: function(){
+		// summary:
+		//		Internal. To get disabled use: uploader.get("disabled");
+		return this._disabled;
+	},
+
+	_setDisabledAttr: function(disabled){
+		// summary:
+		//		Internal. To set disabled use: uploader.set("disabled", true);
+		if(this._disabled == disabled){ return; }
+		this.button.set('disabled', disabled);
+		dojo.style(this.inputNode, "display", disabled ? "none" : "block");
+	},
+
+	_getNodePosition: function(node){
+		if(node.previousSibling){
+			return {
+				node:node.previousSibling,
+				pos:"after"
+			}
+		}
+		return {
+			node:node.nextSibling,
+			pos:"before"
+		}
+	},
+
+	_getButtonStyle: function(node){
+		if(!node){
+			// we don't want this to happen. But if it does, try and display *something*.
+			this.btnSize = {
+				w:200,
+				h:25
+			};
+		}else{
+			this.btnSize = dojo.marginBox(node);
+		}
+	},
+
+	_setButtonStyle: function(){
+		var hasParent = true;
+		if(!this.domNode.parentNode || !this.domNode.parentNode.tagName){
+			document.body.appendChild(this.domNode);
+			hasParent = false;
+		}
+
+		dojo.style(this.domNode, {
+			width:this.btnSize.w+"px",
+			height:(this.btnSize.h+4)+"px",
+			overflow:"hidden",
+			position:"relative"
+		});
+
+		this.inputNodeFontSize = Math.max(2, Math.max(Math.ceil(this.btnSize.w / 60), Math.ceil(this.btnSize.h / 15)));
+		this._createInput();
+
+		dojo.style(this.button.domNode, {
+			margin:"0px",
+			display:"block",
+			verticalAlign:"top" // IE fix
+
+		});
+
+		dojo.style(this.button.domNode.firstChild, {
+			margin:"0px",
+			display:"block"
+			//height:this.btnSize.h+"px"
+		});
+
+		if(!hasParent){
+			document.body.removeChild(this.domNode);
+		}
+	},
+
+	_createInput: function(){
+
+		if(this._inputs.length){
+			dojo.style(this.inputNode, {
+				top:"500px"
+			});
+			this._disconnectButton();
+			this._nameIndex++;
+		}
+
+		var name;
+		if(this.supports("multiple")){
+			// FF3.5+, WebKit
+			name = this.name+"s[]";
+		}else{
+			// <=IE8
+			name = this.name + (this.multiple ? this._nameIndex : "");
+		}
+		this.inputNode = dojo.create("input", {type:"file", name:name, className:"dojoxInputNode"}, this.domNode, "first");
+		if(this.supports("multiple") && this.multiple){
+			dojo.attr(this.inputNode, "multiple", true);
+		}
+		this._inputs.push(this.inputNode);
+
+
+		dojo.style(this.inputNode, {
+			fontSize:this.inputNodeFontSize+"em"
+		});
+		var size = dojo.marginBox(this.inputNode);
+
+		dojo.style(this.inputNode, {
+			position:"absolute",
+			top:"-2px",
+			left:"-"+(size.w-this.btnSize.w-2)+"px",
+			opacity:0
+		});
+		this._connectButton();
+	},
+
+	_connectButton: function(){
+		this._cons = [];
+		var cs = dojo.hitch(this, function(nm){
+			this._cons.push(dojo.connect(this.inputNode, nm, this, function(evt){
+				this.button._cssMouseEvent({type:nm})
+			}));
+		});
+		cs("mouseover");
+		cs("mouseout");
+		cs("mousedown");
+		this._cons.push(dojo.connect(this.inputNode, "change", this, function(evt){
+			this.onChange(this.getFileList(evt));
+			if(!this.supports("multiple") && this.multiple) this._createInput();
+		}));
+
+		this.button.set('tabIndex', -1);
+		if(this.tabIndex > -1){
+			this.inputNode.tabIndex = this.tabIndex;
+			var restoreBorderStyle = dojo.style(this.button.domNode.firstChild, "border");
+			this._cons.push(dojo.connect(this.inputNode, "focus", this, function(){
+				dojo.style(this.button.domNode.firstChild, "border", "1px dashed #ccc");
+			}));
+			this._cons.push(dojo.connect(this.inputNode, "blur", this, function(){
+				dojo.style(this.button.domNode.firstChild, "border", restoreBorderStyle);
+			}));
+		}
+	},
+
+	_disconnectButton: function(){
+		dojo.forEach(this._cons, dojo.disconnect, dojo);
+	}
+});
+
+(function(){
+	dojox.form.UploaderOrg = dojox.form.Uploader;
+	var extensions = [dojox.form.UploaderOrg];
+	dojox.form.addUploaderPlugin = function(plug){
+		// summary:
+		// 		Handle Uploader plugins. When the dojox.form.addUploaderPlugin() function is called,
+		// 		the dojox.form.Uploader is recreated using the new plugin (mixin).
+		//
+		extensions.push(plug);
+		dojo.declare("dojox.form.Uploader", extensions, {});
+	}
+})();
+
+}
+
+if(!dojo._hasResource['bfree.widget.Uploader']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.Uploader'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 09/11/11
+ * Time: 2:23 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.Uploader');
+
+
+
+
+
+if(bfree.api.Uploader.useFlash()){
+    dojo['require']('dojox.form.uploader.plugins.Flash');
+}
+else{
+    dojo['require']('dojox.form.uploader.plugins.IFrame');
+}
+
+dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
+{
+    documents:0,
+    maxDocuments:50,
+
+    _createFlashUploader: function(){
+		// summary:
+		//		Internal. Creates Flash Uploader
+		//
+		var url = this.getUrl();
+		if(url){
+			if(url.toLowerCase().indexOf("http")<0 && url.indexOf("/")!=0){
+				// Appears to be a relative path. Attempt to
+				//	convert it to absolute, so it will better
+				//target the SWF.
+				//
+				var loc = window.location.href.split("/");
+				loc.pop();
+				loc = loc.join("/")+"/";
+				url = loc+url;
+			}
+		}else{
+			console.warn("Warning: no uploadUrl provided.");
+		}
+
+		this.inputNode = dojo.create("div", {className:"dojoxFlashNode"}, this.domNode, "first");
+		dojo.style(this.inputNode, {
+			position:"absolute",
+			top:"-2px",
+			width:this.btnSize.w+"px",
+			height:this.btnSize.h+"px",
+			opacity:0
+		});
+
+		var w = this.btnSize.w + 8;
+		var h = this.btnSize.h + 8;
+
+		var args = {
+			expressInstall:true,
+			path: (this.swfPath.uri || this.swfPath) + "?cb_" + (new Date().getTime()),
+			width: w,
+			height: h,
+			allowScriptAccess:"always",
+			allowNetworking:"all",
+			vars: {
+				uploadDataFieldName: this.flashFieldName || this.name+"Flash",
+				uploadUrl: url,
+				uploadOnSelect: this.uploadOnSelect,
+				deferredUploading:this.deferredUploading || 0,
+				selectMultipleFiles: this.multiple,
+				id: this.id,
+				isDebug: this.isDebug,
+				noReturnCheck: this.skipServerCheck,
+				serverTimeout:this.serverTimeout
+			},
+			params: {
+				scale:"noscale",
+				wmode:"transparent",
+				wmode:"opaque",
+				allowScriptAccess:"always",
+				allowNetworking:"all"
+			}
+
+		};
+
+		this.flashObject = new dojox.embed.Flash(args, this.inputNode);
+		this.flashObject.onError = dojo.hitch(function(msg){
+			console.error("Flash Error: " + msg);
+		});
+		this.flashObject.onReady = dojo.hitch(this, function(){
+			this.onReady(this);
+		});
+		this.flashObject.onLoad = dojo.hitch(this, function(mov){
+			this.flashMovie = mov;
+			this.flashReady = true;
+
+			this.onLoad(this);
+		});
+		this._connectFlash();
+	},
+
+
+    _upload: function(evt){
+
+        if((this.documents+evt.length)>this.maxDocuments){
+            alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
+            return;
+        }
+
+        this.documents+=evt.length
+
+        this.onBeforeUpload(evt);
+        if(this.uploadType == 'iframe'){
+            this.upload({
+                preventDefault: function(){ },
+                stopPropagation: function(){ }
+            });
+        }
+        else{
+            this.upload({
+                authenticity_token: bfree.api.XhrHelper.authenticity_token,
+                upload_type: this.uploadType
+            });
+        }
+
+    },
+
+    onAfterUpload: function(items){
+
+    },
+
+    onBeforeUpload: function(items){
+
+    },
+
+    constructor: function(args){
+        this.documents=0;
+        this.uploadOnSelect = false;
+        if(dojo.isOpera){
+            this.force = 'iframe';
+        }
+    },
+
+    onChange: function(evt){
+        var fnRef = bfree.widget.Uploader.buildUploadFnRef(this, evt);
+		setTimeout(fnRef, 1000);
+    },
+
+    onComplete: function(evt){
+        var uploaded_files = [];
+
+        try{
+            this.reset();
+
+            if(evt.hasOwnProperty('uploadedfiles')){
+                uploaded_files = evt.uploadedfiles;
+            }
+            else if(bfree.api.Utilities.isArray(evt)){
+                for(var i = 0; i < evt.length; i++){
+                    uploaded_files.push({
+                        name: decodeURI(evt[i].name),
+                        content_type:  evt[i].type,
+                        size: evt[i].size,
+                        error: evt[i].error
+                    });
+                }
+            }
+            else{
+                uploaded_files.push({
+                    name: decodeURI(evt.name),
+                    content_type: evt.type,
+                    size: evt.size,
+                    error: evt.error
+                });
+            }
+        }
+        catch(e){
+            console.log(e.message);
+        }
+
+        this.onAfterUpload(uploaded_files);
+    },
+
+    onProgress: function(evt){
+        console.log((evt.decimal * 100) + '%');
+    },
+
+    beforeUpload: function(){
+
+    },
+
+    onUploadComplete: function(uploaded_files){
+
+    },
+
+    postCreate: function(){
+
+        if(this.uploadType == 'html5'){
+
+            var initValue = this.uploadOnSelect;
+            this.connectForm();
+            this.inherited('postCreate', arguments);
+
+            this.uploadOnSelect = initValue;
+            if(this.uploadOnSelect){
+                dojo.connect(this, 'onChange', function(data){
+                    this.upload(data[0])
+                });
+            }
+
+        }
+        else{
+            this.inherited('postCreate', arguments);
+        }
+
+	},
+
+    uploadFlash: function(formData){
+        this.onBegin(this.getFileList());
+		this.flashMovie.doUpload(formData);
+    }
+
+});
+
+bfree.widget.Uploader.buildUploadFnRef = function(that, evt){
+    return ( function(){
+		that._upload(evt);
+	});
+}
+
+}
+
+if(!dojo._hasResource["dijit.ProgressBar"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dijit.ProgressBar"] = true;
+dojo.provide("dijit.ProgressBar");
+
+
+
+
+
+
+dojo.declare("dijit.ProgressBar", [dijit._Widget, dijit._Templated], {
+	// summary:
+	//		A progress indication widget, showing the amount completed
+	//		(often the percentage completed) of a task.
+	//
+	// example:
+	// |	<div dojoType="ProgressBar"
+	// |		 places="0"
+	// |		 value="..." maximum="...">
+	// |	</div>
+
+	// progress: [const] String (Percentage or Number)
+	//		Number or percentage indicating amount of task completed.
+	// 		Deprecated.   Use "value" instead.
+	progress: "0",
+
+	// value: String (Percentage or Number)
+	//		Number or percentage indicating amount of task completed.
+	// 		With "%": percentage value, 0% <= progress <= 100%, or
+	// 		without "%": absolute value, 0 <= progress <= maximum.
+	//		Infinity means that the progress bar is indeterminate.
+	value: "",
+
+	// maximum: [const] Float
+	//		Max sample number
+	maximum: 100,
+
+	// places: [const] Number
+	//		Number of places to show in values; 0 by default
+	places: 0,
+
+	// indeterminate: [const] Boolean
+	// 		If false: show progress value (number or percentage).
+	// 		If true: show that a process is underway but that the amount completed is unknown.
+	// 		Deprecated.   Use "value" instead.
+	indeterminate: false,
+
+	// label: String?
+	//		Label on progress bar.   Defaults to percentage for determinate progress bar and
+	//		blank for indeterminate progress bar.
+	label:"",
+
+	// name: String
+	//		this is the field name (for a form) if set. This needs to be set if you want to use
+	//		this widget in a dijit.form.Form widget (such as dijit.Dialog)
+	name: '',
+
+	templateString: dojo.cache("dijit", "templates/ProgressBar.html", "<div class=\"dijitProgressBar dijitProgressBarEmpty\" role=\"progressbar\"\n\t><div  dojoAttachPoint=\"internalProgress\" class=\"dijitProgressBarFull\"\n\t\t><div class=\"dijitProgressBarTile\" role=\"presentation\"></div\n\t\t><span style=\"visibility:hidden\">&nbsp;</span\n\t></div\n\t><div dojoAttachPoint=\"labelNode\" class=\"dijitProgressBarLabel\" id=\"${id}_label\"></div\n\t><img dojoAttachPoint=\"indeterminateHighContrastImage\" class=\"dijitProgressBarIndeterminateHighContrastImage\" alt=\"\"\n/></div>\n"),
+
+	// _indeterminateHighContrastImagePath: [private] dojo._URL
+	//		URL to image to use for indeterminate progress bar when display is in high contrast mode
+	_indeterminateHighContrastImagePath:
+		dojo.moduleUrl("dijit", "themes/a11y/indeterminate_progress.gif"),
+
+	postMixInProperties: function(){
+		this.inherited(arguments);
+		if(!("value" in this.params)){
+			this.value = this.indeterminate ? Infinity : this.progress;
+		}
+	},
+
+	buildRendering: function(){
+		this.inherited(arguments);
+		this.indeterminateHighContrastImage.setAttribute("src",
+			this._indeterminateHighContrastImagePath.toString());
+		this.update();
+	},
+
+	update: function(/*Object?*/attributes){
+		// summary:
+		//		Internal method to change attributes of ProgressBar, similar to set(hash).  Users should call
+		//		set("value", ...) rather than calling this method directly.
+		// attributes:
+		//		May provide progress and/or maximum properties on this parameter;
+		//		see attribute specs for details.
+		// example:
+		//	|	myProgressBar.update({'indeterminate': true});
+		//	|	myProgressBar.update({'progress': 80});
+		//	|	myProgressBar.update({'indeterminate': true, label:"Loading ..." })
+		// tags:
+		//		private
+
+		// TODO: deprecate this method and use set() instead
+
+		dojo.mixin(this, attributes || {});
+		var tip = this.internalProgress, ap = this.domNode;
+		var percent = 1;
+		if(this.indeterminate){
+			dijit.removeWaiState(ap, "valuenow");
+			dijit.removeWaiState(ap, "valuemin");
+			dijit.removeWaiState(ap, "valuemax");
+		}else{
+			if(String(this.progress).indexOf("%") != -1){
+				percent = Math.min(parseFloat(this.progress)/100, 1);
+				this.progress = percent * this.maximum;
+			}else{
+				this.progress = Math.min(this.progress, this.maximum);
+				percent = this.progress / this.maximum;
+			}
+
+			dijit.setWaiState(ap, "describedby", this.labelNode.id);
+			dijit.setWaiState(ap, "valuenow", this.progress);
+			dijit.setWaiState(ap, "valuemin", 0);
+			dijit.setWaiState(ap, "valuemax", this.maximum);
+		}
+		this.labelNode.innerHTML = this.report(percent);
+
+		dojo.toggleClass(this.domNode, "dijitProgressBarIndeterminate", this.indeterminate);
+		tip.style.width = (percent * 100) + "%";
+		this.onChange();
+	},
+
+	_setValueAttr: function(v){
+		this._set("value", v);
+		if(v == Infinity){
+			this.update({indeterminate:true});
+		}else{
+			this.update({indeterminate:false, progress:v});
+		}
+	},
+
+	_setLabelAttr: function(label){
+		this._set("label", label);
+		this.update();
+	},
+
+	_setIndeterminateAttr: function(indeterminate){
+		// Deprecated, use set("value", ...) instead
+		this.indeterminate = indeterminate;
+		this.update();
+	},
+
+	report: function(/*float*/percent){
+		// summary:
+		//		Generates message to show inside progress bar (normally indicating amount of task completed).
+		//		May be overridden.
+		// tags:
+		//		extension
+
+		return this.label ? this.label :
+				(this.indeterminate ? "&nbsp;" : dojo.number.format(percent, { type: "percent", places: this.places, locale: this.lang }));
+	},
+
+	onChange: function(){
+		// summary:
+		//		Callback fired when progress updates.
+		// tags:
+		//		extension
+	}
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.file.MultiUploader']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.file.MultiUploader'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 10/11/11
+ * Time: 9:53 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.file.MultiUploader');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.file.MultiUploader', [dijit._Widget, dijit._Templated],{
+    templateString: dojo.cache("bfree/widget/file", "template/MultiUploader.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"leading\"\n            style=\"padding:4px 0 0 8px;width:120px;position:relative;overflow:hidden;\">\n\n        <div dojoAttachPoint=\"formNode\">\n            <input dojoAttachPoint=\"tokenNode\"></input>\n            <input dojoAttachPoint=\"uploadTypeNode\"></input>\n            <div dojoAttachPoint=\"uploaderNode\" style=\"width:118px;height:24px;\"></div>\n        </div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            style=\"overflow:hidden;padding:7px 12px 10px 4px\">\n\n        <div dojoAttachPoint=\"progressNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _frmUpload: null,
+    _prgBar: null,
+    _txtToken: null,
+    _txtUploadType: null,
+    _uploader: null,
+
+    isPackage: false,
+    multiple: true,
+    scrollOnFocus: false,
+    zone: null,
+
+    _onBeforeUpload: function(items){
+
+        dojo.forEach(items, function(item, idx){
+            this.onFileSelect({
+                name: item.name,
+                size: item.size,
+                type: item.type
+            });
+        }, this);
+        this._prgBar.set('style', {opacity: 1});
+
+    },
+
+    _onAfterUpload: function(items){
+
+        dojo.forEach(items, function(item, idx){
+            if(String.isEmpty(item.error))
+                this.onFileUploaded(item);
+            else
+                this.onError(item, new bfree.api.Error(item.error));
+        }, this);
+
+        dojo.fadeOut({
+            node: this._prgBar.domNode,
+            duration: 2000,
+            onEnd: dojo.hitch(this,function() {
+                this._prgBar.set('value', (this._uploader.uploadType == 'iframe') ? (Infinity) : 0);
+            })
+        }).play();
+
+    },
+
+    _onProgress: function(evt){
+        this._prgBar.set('value', evt.decimal * 100);
+    },
+
+    _setUrlAttr: function(value){
+        this._uploader.set('url', value);
+    },
+
+    clean: function(){
+        bfree.api.Uploader.clean({zone: this.zone});
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        if(this._uploader != null){
+            this._uploader.destroyRecursive();
+            this._uploader = null;
+        }
+
+        this.inherited('destroy', arguments);
+    },
+
+    onError: function(fileItem, err){
+    },
+
+    onFileSelect: function(fileItem){
+    },
+
+    onFileUploaded: function(fileItem){
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this._frmUpload = new dijit.form.Form({
+            method: 'POST',
+            encType: 'multipart/form-data'
+        }, this.formNode);
+
+        this._txtToken = new dijit.form.TextBox({
+            name: 'authenticity_token',
+            type: 'hidden',
+            value: bfree.api.XhrHelper.authenticity_token
+        }, this.tokenNode);
+
+        //if the browser is ie and the uploader is iframe multiple
+        //has to be set to true for the uploader to function properly
+        if(dojo.isIE&&!bfree.api.Uploader.useFlash()){
+            this.multiple=true;
+        }
+
+        this._uploader = new bfree.widget.Uploader({
+            label: (this.multiple ? 'Choose File(s)...' : 'Choose File'),
+            multiple: this.multiple,
+            uploadOnSelect: false,
+            url: bfree.api.Uploader.getUploadUrl({ zone: this.zone, isPackage: this.isPackage }),
+            style: 'width:108px',
+            maxDocuments: 50,
+            onBeforeUpload: dojo.hitch(this, this._onBeforeUpload),
+            onAfterUpload: dojo.hitch(this, this._onAfterUpload),
+            onProgress: dojo.hitch(this, this._onProgress)
+        },  this.uploaderNode);
+
+        this._txtUploadType = new dijit.form.TextBox({
+            name: 'upload_type',
+            type: 'hidden',
+            value: this._uploader.uploadType
+        }, this.uploadTypeNode);
+
+        this._prgBar = new dijit.ProgressBar({
+            value: (this._uploader.uploadType == 'iframe') ? (Infinity) : 0,
+            style: 'margin-right:32px;width:100%;opacity:0'
+        }, this.progressNode);
+
+    },
+
+    redraw: function(){
+
+        if(this.uploadType == 'flash'){
+            if(this._uploader != null){
+                this._uploader.destroy();
+             this._uploader = null;
+            }
+        }
+
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this.mainNode.resize();
+        this._uploader.set('scrollOnFocus', false);
+
+        dojo.fadeOut({
+            node: this._prgBar.domNode,
+            duration: 10,
+            onEnd: dojo.hitch(this,function() {
+                this._prgBar.set('value', (this._uploader.uploadType == 'iframe') ? (Infinity) : 0);
+            })
+        }).play();
+
+    }
+
+});
+
+
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.Checkin']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.Checkin'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 09/12/11
+ * Time: 3:03 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.Checkin');
+
+
+
+
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
+    templateString: dojo.cache("bfree/widget/document", "template/Checkin.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n        </div>\n\n         <div   dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                    <div class=\"versaGridOutline\">\n                        <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                            Select a file to checkin\n                        </div>\n                        <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                            <tr>\n                                <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                            </tr>\n                        </table>\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:0px;padding:0;position:relative;display:none\">\n\n                            <span style=\"position:absolute;top:0;left:16px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div>\n\n</div>\n\n    <!-- div    dojoType=\"dijit.layout.BorderContainer\"\n            dojoAttachPoint=\"mainContainer\"\n            design=\"sidebar\"\n            gutters=\"false\"\n            style=\"height:100%;width:100%;\">\n\n        <div   dojoType=\"dijit.layout.ContentPane\"\n               dojoAttachPoint=\"previewPane\"\n               splitter=\"false\"\n               region=\"center\"\n               style=\"display:none\">\n\n            <div dojoAttachPoint=\"previewNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"right\"\n                splitter=\"false\"\n                style=\"width:480px\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    dojoAttachPoint=\"headerPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopHeader\"\n                    style=\"height:12px;position:relative;\">\n\n                <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n                </span>\n\n                <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n                </span>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:32px;padding:4px 0 4px 0\">\n\n                    <div dojoAttachPoint=\"uploaderNode\"></div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                        <div class=\"versaGridOutline\">\n                            <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                                Select a file to checkin\n                            </div>\n                            <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                                <tr>\n                                    <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                                </tr>\n                            </table>\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                dojoAttachPoint=\"midTitlePane\"\n                                region=\"top\"\n                                splitter=\"false\"\n                                class=\"versaMidHeader\"\n                                style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                            Custom Properties\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.BorderContainer\"\n                                design=\"headline\"\n                                gutters=\"false\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0\">\n\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"center\"\n                                    splitter=\"false\"\n                                    style=\"padding:0;\">\n\n                                <div dojoAttachPoint=\"editorNode\"></div>\n\n                            </div>\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"bottom\"\n                                    splitter=\"false\"\n                                    style=\"height:0px;padding:0;position:relative;display:none\">\n\n                                <span style=\"position:absolute;top:0;left:16px\">\n                                <div dojoAttachPoint=\"addMinorNode\"></div>\n                                <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                    <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                                </span>\n                                </span>\n\n                            </div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                            <span style=\"position:absolute;top:0;right:8px;\">\n                                <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                                <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                            </span>\n\n                    </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div -->\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _chkAddMinor: null,
+    _fileItem: null,
+    _isPreviewShowing: false,
+    _multiUploader: null,
+    _wdgPreview: null,
+
+    activeReference: null,
+    references: null,
+    library: null,
+    zone: null,
+
+    _chkAddMinor_onChange: function(newValue){
+        this._document.isMinorVersion = newValue;
+    },
+
+    _doCancel: function(){
+        var canClose = false;
+
+        try{
+            //nothing to do here now
+            canClose = true;
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to revert document', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+
+        return canClose;
+    },
+
+    _doSave: function(){
+
+        var canClose = false;
+
+        try{
+
+            if(!this._document.isValid({library: this.library})){
+                throw new Error('One or more properties are missing or invalid');
+            }
+
+            this.activeReference.binary_file_name = this._fileItem.name;
+            this.activeReference.binary_content_type = this._fileItem.content_type;
+            this.activeReference.binary_file_size = this._fileItem.size;
+
+            this.activeReference.checkin({zone: this.zone, library: this.library});
+
+            canClose = true;
+        }
+        catch(e){
+
+            var err = new bfree.api.Error('Failed to checkin document', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+
+            //The store loses the "dirty" flag when item save fails and revert hasn't occurred
+            this.library.getDocuments().clone({item: this.document});
+
+            if(e.status == 404){
+                canClose = this._doCancel();
+                this.library.getDocuments().store.onDelete(this.document);
+            }
+
+        }
+
+        return canClose;
+    },
+
+    _loadItem: function(){
+
+        //Retrieve referenced document
+        this._document = this.library.getDocuments().refreshAsync({
+            scope: this,
+            identity: this.activeReference.document_id,
+            onItem: this._onItemLoaded,
+            onError: this._onItemError
+        });
+
+    },
+
+    /*
+    _loadItem: function(){
+
+        try{
+
+            //Retrieve referenced document
+            this._document = this.library.getDocuments().refreshItem(this.activeReference.document_id);
+            this.library.getDocuments().clone({item: this._document});
+            this._editor.set('activeItem', this._document);
+
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+
+    },
+    */
+
+    _onFileSelect: function(fileItem){
+
+        this._fileItem = fileItem;
+        this._fileItem.content_type = fileItem.type;
+
+        this._fileItem.state = bfree.api.Document.states.PENDING;
+        this._setState();
+
+        dojo.style(this.selectNode, {display: 'none'});
+        dojo.style(this.fileTableNode, {display: 'block'});
+
+        dojo.fadeIn({
+            node: this.fileTableNode,
+            duration: 1000
+        }).play();
+
+    },
+
+    _onFileUploaded: function(fileItem){
+
+        this._fileItem = fileItem;
+        this._fileItem.state = bfree.api.Document.states.UPLOADED;
+        this._setState();
+
+        if(this._isPreviewShowing){
+            var cloneDocument = {
+                binary_file_name: this._fileItem.name,
+                binary_content_type: this._fileItem.content_type,
+                binary_file_size: this._fileItem.size
+
+            }
+            this._wdgPreview.set('activeItem', cloneDocument);
+        }
+
+        this.onValueChange();
+    },
+
+    _onHidePreview: function(e){
+
+        try{
+            this._wdgPreview.set('activeItem', null);
+
+            dojo.style(this.showPreviewNode, {display: 'block'});
+            dojox.fx.crossFade({
+                nodes : [this.hidePreviewNode, this.showPreviewNode],
+                duration:1000,
+                onEnd: dojo.hitch(this, function(){ dojo.style(this.hidePreviewNode, {display: 'none'}); })
+            }).play();
+
+            dojo.style(this.previewPane.domNode, {display: 'none'});
+            dojo.removeClass(this.headerPane.domNode, 'versaTopRightHeader');
+            dojo.removeClass(this.midTitlePane.domNode, 'versaMidRightHeader');
+
+            this.dialog.resize({w: 480});
+            this.dialog._position();
+
+        }
+        finally{
+            this._isPreviewShowing = false;
+            dojo.stopEvent(e);
+        }
+
+    },
+
+    _onItemError: function(e){
+        try{
+            var err = new bfree.api.Error('Failed to load document', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+    },
+
+    _onItemLoaded: function(item){
+        try{
+
+            this._document = item;
+            this.library.getDocuments().clone({item: this._document});
+            this._editor.set('activeItem', this._document);
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+    },
+
+    _onShowPreview: function(e){
+
+        try{
+            var v = dijit.getViewport();
+            var width = (v.w > 1216) ? 1216 : v.w;
+
+            dojo.style(this.hidePreviewNode, {display: 'block'});
+            dojox.fx.crossFade({
+                nodes : [this.showPreviewNode, this.hidePreviewNode],
+                duration:1000,
+                onEnd: dojo.hitch(this, function(){
+                    dojo.style(this.showPreviewNode, {display: 'none'});
+                })
+            }).play();
+
+            dojo.addClass(this.headerPane.domNode, 'versaTopRightHeader');
+            dojo.addClass(this.midTitlePane.domNode, 'versaMidRightHeader');
+            dojo.style(this.previewPane.domNode, {display: 'block'});
+
+            this.dialog.resize({w: width - 16});
+            this.dialog._position();
+
+            if(this._fileItem){
+                var cloneDocument = {
+                    binary_file_name: this._fileItem.name,
+                    binary_content_type: this._fileItem.content_type,
+                    binary_file_size: this._fileItem.size
+                };
+                this._wdgPreview.set('activeItem', cloneDocument);
+            }
+
+        }
+        finally{
+            this._isPreviewShowing = true;
+            dojo.stopEvent(e);
+        }
+
+    },
+
+    _onUploadError: function(fileItem, err){
+
+        var err = new bfree.api.Error(dojo.replace('Failed to upload file \'{0}\'', [fileItem.name]), err);
+        bfree.widget.ErrorManager.handleError({
+            error: err
+        });
+
+        this._fileItem = fileItem;
+        this._fileItem.state = bfree.api.Document.states.ERROR;
+        this._setState();
+
+    },
+
+    _onValidChange: function(documentItem){
+        this.onValueChange();
+    },
+
+    _onValueChange: function(property_id, value){
+        this.library.getReferences().setValue(this.activeReference, property_id, value);
+    },
+
+    _setState: function(){
+
+        var icon = bfree.api.Document.getStateIcon(this._fileItem.state);
+        var stateSrc = dojo.replace('/images/icons/states/{0}', [icon]);
+
+        var typeSrc =  bfree.api.Document.getIconUrl(this._fileItem.content_type, 16);
+
+        this.stateIconNode.src = stateSrc;
+        this.typeIconNode.src = typeSrc;
+        this.fileNameNode.innerHTML = this._fileItem.name;
+        this.fileSizeNode.innerHTML = bfree.api.Utilities.readablizeBytes({ bytes: this._fileItem.size });
+
+        var canAddMinor = false;
+        this._chkAddMinor.set('disabled', !canAddMinor);
+
+        var msg = bfree.api.Document.getStateMessage(this._fileItem.state);
+        var icon = bfree.api.Document.getStateIcon(this._fileItem.state);
+
+        this.statusMsgNode.innerHTML = msg;
+        this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon])
+
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        if(this._multiUploader != null){
+            this._multiUploader.destroy();
+            this._multiUploader = null;
+        }
+
+        if(this._editor != null){
+            this._editor.destroy();
+            this._editor = null;
+        }
+
+        this.inherited('destroy', arguments);
+    },
+
+    isValid: function(){
+        return (this._fileItem) && (!this._document.getState(bfree.api.Document.states.INVALID));
+    },
+
+    onDialogClosing: function(dlgResult){
+        var canClose = false;
+
+        try{
+
+            this.returnValue = this.references;
+            canClose = (dlgResult == bfree.widget.Dialog.dialogResult.ok) ?
+                            this._doSave() :
+                            this._doCancel();
+
+        }
+        catch(e){
+           var err = new bfree.api.Error('Failed to close \'Checkin Document\' dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+            if(this._multiUploader) this._multiUploader.clean();
+            this.library.getDocuments().revert();
+            //this.library.getReferences().refreshItem(this.activeReference.getId());
+        }
+
+        return canClose;
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this.activeReference = this.references[0];
+
+        this._multiUploader = new bfree.widget.file.MultiUploader({
+            id: 'uploader1',
+            multiple: false,
+            zone: this.zone,
+            onFileSelect: dojo.hitch(this, this._onFileSelect),
+            onFileUploaded: dojo.hitch(this, this._onFileUploaded),
+            onError: dojo.hitch(this, this._onUploadError)
+        }, this.uploaderNode);
+
+        this._editor = new bfree.widget.document.Editor({
+            id: 'editor1',
+            library: this.library,
+            disableDocumentType: true,
+            onValidChange: dojo.hitch(this, this._onValidChange),
+            onValueChange: dojo.hitch(this, this._onValueChange)
+            //onSubmit: dojo.hitch(this, this._onSubmit)
+        }, this.editorNode);
+
+        //Removed (for now)
+        this._chkAddMinor = new dijit.form.CheckBox({
+            id: 'chkAddMinor',
+            checked: false,
+            scrollOnFocus: false,
+            disabled: true,
+            onChange: dojo.hitch(this, this._chkAddMinor_onChange)
+        }, this.addMinorNode);
+
+
+        this._wdgPreview = new bfree.widget.file.Preview({
+            zone: this.zone
+        }, this.previewNode);
+
+    },
+
+    resize: function(){
+        this.inherited('resize', arguments);
+        this.mainContainer.resize();
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this._multiUploader.startup();
+        this._wdgPreview.startup();
+
+        setTimeout(bfree.widget.document.Checkin._loadFnRef(this), 10);
+    }
+
+});
+
+bfree.widget.document.Checkin._loadFnRef = function(that){
+    return ( function() {
+       that._loadItem();
+    });
+}
+
+bfree.widget.document.Checkin.show = function(args){
+
+    if((!args.items) || (args.items.length < 1))
+        throw new Error('No documents selected');
+
+    var reference = args.items[0];;
+
+    var dlg = new bfree.widget.Dialog({
+        id: 'dlgCkiDocument',
+        title: 'Checkin Document: ' + reference.name.display_limit(32),
+        widgetConstructor: bfree.widget.document.Checkin,
+        widgetParams: {
+            user: args.user,
+            references: args.items,
+            library: args.library,
+            zone: args.zone
+        },
+        noResize: true,
+        height: 480,
+        width: 480,
+        zIndex: 1024,
+        buttons: bfree.widget.Dialog.buttons.ok | bfree.widget.Dialog.buttons.cancel,
+        onClose: args.onClose
+    });
+    dlg.startup();
+    dlg.show();
+
+}
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.FileGrid']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.FileGrid'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 14/11/11
+ * Time: 9:20 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.FileGrid');
+
+
+
+
+
+dojo.declare('bfree.widget.document.FileGrid', [bfree.widget._Grid], {
+
+    selectionMode: 'single',
+
+    _canEdit: function(cell, rowIndex){
+        return false;
+    },
+
+	_canSort: function(columnIndex){
+        return true;
+    },
+
+    addFileItem: function(fileItem){
+
+        var item = this._store.newItem(fileItem);
+
+        if(this.selection.getSelectedCount() < 1)
+            this.selectItem(item);
+
+    },
+
+	constructor: function(/* Object */args){
+
+		this.updateDelay = 0;
+		this.rowsPerPage = 25;
+        this.formatterScope = this;
+
+		this.query = {};
+		this.queryOptions = {cache: true};
+        this.selectionMode = 'single';
+
+		this.clientSort = false;
+        this.canEdit = this._canEdit;
+		this.canSort = this._canSort;
+		this.noDataMessage = 'Select one or more files';
+
+        this._store = new bfree.api.ItemFileWriteStore({
+            data: {
+                identifier: 'id',
+                label: 'name',
+                items: []
+            }
+        });
+
+	},
+
+    destroy: function(){
+        this.inherited('destroy', arguments);
+    },
+
+    focus: function(){
+        this._
+    },
+
+	postCreate: function(){
+		this.inherited('postCreate', arguments);
+        this.set('structure', bfree.widget.document.FileGrid.view1);
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this.setStore(this._store, {}, {cache: true});
+    },
+
+    updateFileItem: function(id, state){
+
+        this._store.fetchItemByIdentity({
+            identity: id,
+            onItem: function(item) { this._store.setValue(item, 'state', state); },
+            scope: this
+        });
+
+    }
+
+});
+
+bfree.widget.document.FileGrid.formatContentType = function(data, rowIndex){
+
+    if(String.isEmpty(data))
+        return ''
+
+    var imgSrc =  bfree.api.Document.getIconUrl(data, 16);
+    var img = dojo.replace('<img src="{0}" width="16" height="16"/>', [imgSrc]);
+
+    return img;
+
+}
+
+bfree.widget.document.FileGrid.formatState = function(data, rowIndex){
+    var icon = bfree.api.Document.getStateIcon(data);
+    return dojo.replace('<div style="padding-top:2px"><img src="/images/icons/states/{0}" width="16" height="16"/></div>', [icon]);
+}
+
+bfree.widget.document.FileGrid.getContentType = function(idx, item){
+    var content_type = '';
+
+    if(!item)
+        return content_type;
+
+    var documentItem = this.grid.store.getValue(item, 'document');
+    if(documentItem){
+        content_type = documentItem.binary_content_type;
+    }
+
+    return content_type;
+}
+
+bfree.widget.document.FileGrid.getSize = function(idx, item){
+    var sizeBytes = 0;
+
+    if(item){
+        var documentItem = this.grid.store.getValue(item, 'document');
+        if(documentItem)
+            sizeBytes = documentItem.binary_file_size;
+    }
+
+    return bfree.api.Utilities.readablizeBytes({ bytes: sizeBytes });
+}
+
+bfree.widget.document.FileGrid.getState = function(idx, item){
+    var state = 0;
+
+    if(!item)
+        return state;
+
+    var documentItem = this.grid.store.getValue(item, 'document');
+    if(documentItem){
+
+        if(documentItem.getState(bfree.api.Document.states.INVALID)){
+            state = bfree.api.Document.states.INVALID;
+        }
+        else if(documentItem.getState(bfree.api.Document.states.PENDING)){
+            state = bfree.api.Document.states.PENDING;
+        }
+        else if(documentItem.getState(bfree.api.Document.states.UPLOADED)){
+            state = bfree.api.Document.states.UPLOADED;
+        }
+        else if(documentItem.getState(bfree.api.Document.states.CHECKED_IN)){
+            state = bfree.api.Document.states.CHECKED_IN;
+        }
+        else if(documentItem.getState(bfree.api.Document.states.ERROR)){
+            state = bfree.api.Document.states.ERROR;
+        }
+
+    }
+
+     return state;
+}
+
+bfree.widget.document.FileGrid.view1 = [{
+    cells: [
+        {
+            field: 'state',
+            name: '&nbsp;',
+            width: '18px',
+            get: bfree.widget.document.FileGrid.getState,
+            formatter: bfree.widget.document.FileGrid.formatState
+        },
+        {
+            field: 'content_type',
+            name: '&nbsp;',
+            width: '18px',
+            get: bfree.widget.document.FileGrid.getContentType,
+            formatter: bfree.widget.document.FileGrid.formatContentType
+        },
+        {
+            field: 'name',
+            name: '&nbsp;',
+            width: 'auto'
+        },
+        {
+            field: 'size',
+            name: '&nbsp;',
+            width: '56px',
+            get: bfree.widget.document.FileGrid.getSize,
+            cellStyles: 'text-align:right;white-space:nowrap'
+        }
+    ],
+    width: 'auto'
+}];
+
+
+}
+
+if(!dojo._hasResource['bfree.widget.file.Preview']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.file.Preview'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 12/01/12
+ * Time: 4:12 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.file.Preview');
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.file.Preview', [dijit._Widget, dijit._Templated],{
+	templateString: dojo.cache("bfree/widget/file", "template/Preview.html", "<div style=\"height:100%;width:100%;\">\n\n<div \tdojoType=\"dijit.layout.BorderContainer\"\n\t\tdojoAttachPoint=\"pneMain\"\n\t\tdesign=\"headline\"\n\t\tgutters=\"false\"\n        class=\"versaInfoPane\"\n\t\tstyle=\"height:100%;padding:8px;width:100%\">\n\n\t<div \tdojoType=\"dijit.layout.ContentPane\"\n\t\t\tdojoAttachPoint=\"pneContentNode\"\n\t\t\tregion=\"center\"\n\t\t\tsplitter=\"false\"\n\t\t\tstyle=\"padding: 0\">\n\n\t\t<div dojoAttachPoint=\"pnePreviewNode\" style=\"position:relative;width:100%;height:100%\">\n\n\t\t\t<iframe src=\"\"\n\t\t\t\t\tdojoAttachPoint=\"previewNode\"\n\t\t\t\t\tallowtransparency=\"true\"\n\t\t\t\t\tframeborder=\"0\"\n\t\t\t\t\theight=\"100%\"\n\t\t\t\t\twidth=\"100%\"\n\t\t\t\t\tmarginheight=\"0\"\n\t\t\t\t\tmarginwidth=\"0\"\n\t\t\t\t\tscrolling=\"no\"\n\t\t\t\t style=\"position:absolute;top:0;left:0;height:100%;width:100%\"></iframe>\n\n\n\t\t</div>\n\t\t<div dojoAttachPoint=\"stbPreviewNode\"></div>\n\n\t</div>\n\n</div>\n\n\n</div>\n"),
+	widgetsInTemplate: true,
+
+    _hndlOnLoad: null,
+    _stbPreview: null,
+
+    activeItem: null,
+    zone: null,
+
+    _onPreviewLoad: function(){
+        this._stbPreview.hide();
+        dojo.style(this.previewNode, 'visibility', 'visible');
+    },
+
+    _setActiveItemAttr: function(value){
+        this.activeItem = value;
+
+        dojo.style(this.previewNode, 'visibility', 'hidden');
+        this._stbPreview.show();
+		this.previewNode.src = bfree.api.Uploader.getPreviewUrl({zone: this.zone, item: this.activeItem });
+
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        if(this._hndlOnLoad){
+            dojo.unsubscribe(this._hndlOnLoad);
+            this._hndlOnLoad = null;
+        }
+
+        this.inherited('destroy', arguments);
+
+    },
+
+	postCreate: function(){
+		this.inherited('postCreate', arguments);
+
+        this._stbPreview = new dojox.widget.Standby({
+			target: this.pneContentNode.id,
+            image: '/images/loading/loading64.gif',
+			color: 'white',
+			zIndex: 1024
+		}, this.stbPreviewNode);
+
+        this._hndlOnLoad = dojo.subscribe('rko/bfree/preview/onLoad', this, this._onPreviewLoad);
+	},
+
+    resize: function(){
+        this.pneMain.resize();
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this._stbPreview.startup();
+    }
+
+});
+
+}
+
+if(!dojo._hasResource["dojox.fx._base"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dojox.fx._base"] = true;
+dojo.provide("dojox.fx._base");
+// summary: Experimental and extended Animations beyond Dojo Core / Base functionality.
+//	Provides advanced Lines, Animations, and convenience aliases.
+
+
+dojo.mixin(dojox.fx, {
+
+	// anim: Function
+	//	Alias of `dojo.anim` - the shorthand `dojo.animateProperty` with auto-play
+	anim: dojo.anim,
+
+	// animateProperty: Function
+	//	Alias of `dojo.animateProperty` - animate any CSS property
+	animateProperty: dojo.animateProperty,
+
+	// fadeTo: Function
+	//		Fade an element from an opacity to an opacity.
+	//		Omit `start:` property to detect. `end:` property is required.
+	//		Ultimately an alias to `dojo._fade`
+	fadeTo: dojo._fade,
+
+	// fadeIn: Function
+	//	Alias of `dojo.fadeIn` - Fade a node in.
+	fadeIn: dojo.fadeIn,
+	
+	// fadeOut: Function
+	//	Alias of `dojo.fadeOut` - Fades a node out.
+	fadeOut: dojo.fadeOut,
+
+	// combine: Function
+	//	Alias of `dojo.fx.combine` - Run an array of animations in parallel
+	combine: dojo.fx.combine,
+
+	// chain: Function
+	//	Alias of `dojo.fx.chain` - Run an array of animations in sequence
+	chain: dojo.fx.chain,
+
+	// slideTo: Function
+	//	Alias of `dojo.fx.slideTo` - Slide a node to a defined top/left coordinate
+	slideTo: dojo.fx.slideTo,
+
+	// wipeIn: Function
+	//	Alias of `dojo.fx.wipeIn` - Wipe a node to visible
+	wipeIn: dojo.fx.wipeIn,
+
+	// wipeOut: Function
+	//	Alias of `dojo.fx.wipeOut` - Wipe a node to non-visible
+	wipeOut: dojo.fx.wipeOut
+
+});
+
+dojox.fx.sizeTo = function(/* Object */args){
+	// summary:
+	//		Creates an animation that will size a node
+	//
+	// description:
+	//		Returns an animation that will size the target node
+	//		defined in args Object about it's center to
+	//		a width and height defined by (args.width, args.height),
+	//		supporting an optional method: chain||combine mixin
+	//		(defaults to chain).
+	//
+	//	- works best on absolutely or relatively positioned elements
+	//
+	// example:
+	//	|	// size #myNode to 400px x 200px over 1 second
+	//	|	dojo.fx.sizeTo({
+	//	|		node:'myNode',
+	//	|		duration: 1000,
+	//	|		width: 400,
+	//	|		height: 200,
+	//	|		method: "combine"
+	//	|	}).play();
+	//
+
+	var node = args.node = dojo.byId(args.node),
+		abs = "absolute";
+
+	var method = args.method || "chain";
+	if(!args.duration){ args.duration = 500; } // default duration needed
+	if(method == "chain"){ args.duration = Math.floor(args.duration / 2); }
+	
+	var top, newTop, left, newLeft, width, height = null;
+
+	var init = (function(n){
+		return function(){
+			var cs = dojo.getComputedStyle(n),
+				pos = cs.position,
+				w = cs.width,
+				h = cs.height
+			;
+			
+			top = (pos == abs ? n.offsetTop : parseInt(cs.top) || 0);
+			left = (pos == abs ? n.offsetLeft : parseInt(cs.left) || 0);
+			width = (w == "auto" ? 0 : parseInt(w));
+			height = (h == "auto" ? 0 : parseInt(h));
+			
+			newLeft = left - Math.floor((args.width - width) / 2);
+			newTop = top - Math.floor((args.height - height) / 2);
+
+			if(pos != abs && pos != 'relative'){
+				var ret = dojo.coords(n, true);
+				top = ret.y;
+				left = ret.x;
+				n.style.position = abs;
+				n.style.top = top + "px";
+				n.style.left = left + "px";
+			}
+		}
+	})(node);
+
+	var anim1 = dojo.animateProperty(dojo.mixin({
+		properties: {
+			height: function(){
+				init();
+				return { end: args.height || 0, start: height };
+			},
+			top: function(){
+				return { start: top, end: newTop };
+			}
+		}
+	}, args));
+	var anim2 = dojo.animateProperty(dojo.mixin({
+		properties: {
+			width: function(){
+				return { start: width, end: args.width || 0 }
+			},
+			left: function(){
+				return { start: left, end: newLeft }
+			}
+		}
+	}, args));
+
+	var anim = dojo.fx[(args.method == "combine" ? "combine" : "chain")]([anim1, anim2]);
+	return anim; // dojo.Animation
+
+};
+
+dojox.fx.slideBy = function(/* Object */args){
+	// summary:
+	//		Returns an animation to slide a node by a defined offset.
+	//
+	// description:
+	//		Returns an animation that will slide a node (args.node) from it's
+	//		current position to it's current posision plus the numbers defined
+	//		in args.top and args.left. standard dojo.fx mixin's apply.
+	//
+	// example:
+	//	|	// slide domNode 50px down, and 22px left
+	//	|	dojox.fx.slideBy({
+	//	|		node: domNode, duration:400,
+	//	|		top: 50, left: -22
+	//	|	}).play();
+
+	var node = args.node = dojo.byId(args.node),
+		top, left;
+
+	var init = (function(n){
+		return function(){
+			var cs = dojo.getComputedStyle(n);
+			var pos = cs.position;
+			top = (pos == 'absolute' ? n.offsetTop : parseInt(cs.top) || 0);
+			left = (pos == 'absolute' ? n.offsetLeft : parseInt(cs.left) || 0);
+			if(pos != 'absolute' && pos != 'relative'){
+				var ret = dojo.coords(n, true);
+				top = ret.y;
+				left = ret.x;
+				n.style.position = "absolute";
+				n.style.top = top + "px";
+				n.style.left = left + "px";
+			}
+		}
+	})(node);
+	init();
+	
+	var _anim = dojo.animateProperty(dojo.mixin({
+		properties: {
+			// FIXME: is there a way to update the _Line after creation?
+			// null start values allow chaining to work, animateProperty will
+			// determine them for us (except in ie6? -- ugh)
+			top: top + (args.top || 0),
+			left: left + (args.left || 0)
+		}
+	}, args));
+	dojo.connect(_anim, "beforeBegin", _anim, init);
+	return _anim; // dojo.Animation
+};
+
+dojox.fx.crossFade = function(/* Object */args){
+	// summary:
+	//		Returns an animation cross fading two element simultaneously
+	//
+	// args:
+	//	args.nodes: Array - two element array of domNodes, or id's
+	//
+	//	all other standard animation args mixins apply. args.node ignored.
+	//
+
+	// simple check for which node is visible, maybe too simple?
+	var node1 = args.nodes[0] = dojo.byId(args.nodes[0]),
+		op1 = dojo.style(node1,"opacity"),
+		node2 = args.nodes[1] = dojo.byId(args.nodes[1]),
+		op2 = dojo.style(node2, "opacity")
+	;
+	
+	var _anim = dojo.fx.combine([
+		dojo[(op1 == 0 ? "fadeIn" : "fadeOut")](dojo.mixin({
+			node: node1
+		},args)),
+		dojo[(op1 == 0 ? "fadeOut" : "fadeIn")](dojo.mixin({
+			node: node2
+		},args))
+	]);
+	return _anim; // dojo.Animation
+};
+
+dojox.fx.highlight = function(/*Object*/ args){
+	// summary:
+	//		Highlight a node
+	//
+	// description:
+	//		Returns an animation that sets the node background to args.color
+	//		then gradually fades back the original node background color
+	//
+	// example:
+	//	|	dojox.fx.highlight({ node:"foo" }).play();
+
+	var node = args.node = dojo.byId(args.node);
+
+	args.duration = args.duration || 400;
+	
+	// Assign default color light yellow
+	var startColor = args.color || '#ffff99',
+		endColor = dojo.style(node, "backgroundColor")
+	;
+
+	// safari "fix"
+	// safari reports rgba(0, 0, 0, 0) (black) as transparent color, while
+	// other browsers return "transparent", rendered as white by default by
+	// dojo.Color; now dojo.Color maps "transparent" to
+	// djConfig.transparentColor ([r, g, b]), if present; so we can use
+	// the color behind the effect node
+	if(endColor == "rgba(0, 0, 0, 0)"){
+		endColor = "transparent";
+	}
+
+	var anim = dojo.animateProperty(dojo.mixin({
+		properties: {
+			backgroundColor: { start: startColor, end: endColor }
+		}
+	}, args));
+
+	if(endColor == "transparent"){
+		dojo.connect(anim, "onEnd", anim, function(){
+			node.style.backgroundColor = endColor;
+		});
+	}
+
+	return anim; // dojo.Animation
+};
+
+ 
+dojox.fx.wipeTo = function(/*Object*/ args){
+	// summary:
+	//		Animate a node wiping to a specific width or height
+	//
+	// description:
+	//		Returns an animation that will expand the
+	//		node defined in 'args' object from it's current to
+	//		the height or width value given by the args object.
+	//
+	//		default to height:, so leave height null and specify width:
+	//		to wipeTo a width. note: this may be deprecated by a
+	//
+	//		Note that the final value should not include
+	//		units and should be an integer.  Thus a valid args object
+	//		would look something like this:
+	//
+	//		|	dojox.fx.wipeTo({ node: "nodeId", height: 200 }).play();
+	//
+	//		Node must have no margin/border/padding, so put another
+	//		node inside your target node for additional styling.
+
+	args.node = dojo.byId(args.node);
+	var node = args.node, s = node.style;
+
+	var dir = (args.width ? "width" : "height"),
+		endVal = args[dir],
+		props = {}
+	;
+
+	props[dir] = {
+		// wrapped in functions so we wait till the last second to query (in case value has changed)
+		start: function(){
+			// start at current [computed] height, but use 1px rather than 0
+			// because 0 causes IE to display the whole panel
+			s.overflow = "hidden";
+			if(s.visibility == "hidden" || s.display == "none"){
+				s[dir] = "1px";
+				s.display = "";
+				s.visibility = "";
+				return 1;
+			}else{
+				var now = dojo.style(node,dir);
+				return Math.max(now, 1);
+			}
+		},
+		end: endVal
+	};
+
+	var anim = dojo.animateProperty(dojo.mixin({ properties: props }, args));
+	return anim; // dojo.Animation
+};
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.Creator']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.Creator'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 09/11/11
+ * Time: 9:01 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.document.Creator');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
+    templateString: dojo.cache("bfree/widget/document", "template/Creator.html", "<div style=\"height:100%;width:100%;position:relative\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n            <span style=\"position:absolute;right:16px;\">\n                File in Folder: <span dojoAttachPoint=\"folderNameNode\" class=\"dijitBoldLabel\"></span>\n            </span>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding:0 8px 8px 8px\">\n\n                        <div dojoAttachPoint=\"fileGridNode\"></div>\n\n                    </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:0;padding:0;position:relative;display:none\">\n\n                            <span style=\"position:absolute;top:0;left:8px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:32px;padding:0 8px 8px 8px;position:relative\">\n\n                        <div dojoAttachPoint=\"addButtonNode\"></div>\n\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n\n            </div>\n\n        </div>\n\n\n    </div>\n\n</div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _activeItem: null,
+
+    _btnAdd: null,
+    _chkAddMinor: null,
+    _documents: null,
+    _editor: null,
+    _fileGrid: null,
+    _isPreviewShowing: false,
+    _multiUploader: null,
+    _uploading: false,
+
+    folder: null,
+    library: null,
+    zone: null,
+    filesLoaded: false,
+
+    __setNextItem: function(startIdx, doWrap){
+
+         //select next available item
+        for(var i = startIdx; i < this._fileGrid.rowCount;i++){
+
+            if((i + 1) >= this._fileGrid.rowCount){
+                if(doWrap){
+                    i = -1;
+                    doWrap = false;
+                }
+                else{
+                    break;
+                }
+
+            }
+
+            var nextItem = this._fileGrid.getItem(i + 1);
+            var documentItem = this._fileGrid.store.getValue(nextItem, 'document');
+            if(documentItem.getState(bfree.api.Document.states.UPLOADED) && !(documentItem.getState(bfree.api.Document.states.PENDING))){
+                this._fileGrid.setSelectedIndex(i + 1);
+                this._fileGrid.scrollToRow(i + 1);
+                break;
+            }
+
+        }
+    },
+
+    _btnAdd_onClick: function(evt){
+        this._onSubmit();
+        this.filesLoaded=false;
+    },
+
+    _chkAddMinor_onChange: function(newValue){
+
+        var fileItem = this._fileGrid.selection.getFirstSelected();
+        if(!fileItem) return;
+
+        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
+        documentItem.isMinorVersion = newValue;
+
+    },
+
+    _loadItem: function(){
+
+        try{
+
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+
+    },
+
+    _onFileSelect: function(fileItem){
+        //File is selected...
+
+        //Check if file exists (by Name)
+        var existingItem = null;
+        this._fileGrid.store.fetchItemByIdentity({
+            identity: fileItem.name,
+            onItem: function(item){ existingItem = item; }
+        });
+
+        if(existingItem){
+            console.log('File is already selected: ' + existingItem.name);
+            return;
+        }
+
+        //Create Document
+        //default to first 'System' document type...should be 'Document'
+        var systemTypes = this._documentTypes.getSystem();
+        var documentType = systemTypes[0];
+
+        var documentItem = new bfree.api.Document({
+            name: fileItem.name,
+            document_type_id: documentType.id,
+            folder_id: ((this.folder) ? this.folder.id : null),
+            state: bfree.api.Document.states.PENDING,
+            isMinorVersion: false,
+            binary_file_name: fileItem.name,
+            binary_content_type: fileItem.type,
+            binary_file_size: fileItem.size
+        });
+
+        dojo.forEach(documentType.property_mappings, dojo.hitch(this, function(mapping, idx){
+            var def=this.library.getPropertyDefinitions().fetchById({id: mapping.property_definition_id});
+            var data=bfree.api.Application.getDataTypes().fetchById({id: def.data_type_id});
+            if(data.isFloat()||data.isInteger()){
+                this._documents.setValue(documentItem, def.column_name, 0);
+            }
+            if(mapping.default_value){
+                this._documents.setValue(documentItem, def.column_name, mapping.default_value);
+            }
+        }));
+
+        //add file item to the list and mark as "Pending"
+        this._fileGrid.addFileItem({
+            id: fileItem.name,
+            name: fileItem.name,
+            document: documentItem,
+            state: bfree.api.Document.states.PENDING
+        });
+
+        this.filesLoaded=true;
+
+    },
+
+    _onFileUploaded: function(tmpFileItem){
+
+        var fileItem = this._fileGrid.store.fetchItemById(tmpFileItem.name);
+
+        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
+        documentItem.state =  bfree.api.Document.states.UPLOADED;
+
+        //update info from server
+        documentItem.binary_file_name = tmpFileItem.name;
+        documentItem.binary_content_type = tmpFileItem.content_type;
+        documentItem.binary_file_size = tmpFileItem.size;
+
+        this._onValidChange(documentItem);
+
+        if((this._isPreviewShowing) && (this._editor.activeItem == documentItem)){
+            this._wdgPreview.set('activeItem', documentItem);
+        }
+
+        this._setState(this._activeItem);
+
+    },
+
+    _onHidePreview: function(e){
+
+        try{
+            this._wdgPreview.set('activeItem', null);
+
+            dojo.style(this.showPreviewNode, {display: 'block'});
+            dojox.fx.crossFade({
+                nodes : [this.hidePreviewNode, this.showPreviewNode],
+                duration:1000,
+                onEnd: dojo.hitch(this, function(){ dojo.style(this.hidePreviewNode, {display: 'none'}); })
+            }).play();
+
+            dojo.style(this.previewPane.domNode, {display: 'none'});
+            dojo.removeClass(this.headerPane.domNode, 'versaTopRightHeader');
+            dojo.removeClass(this.midTitlePane.domNode, 'versaMidRightHeader');
+
+            this.dialog.resize({w: 480});
+            this.dialog._position();
+
+        }
+        finally{
+            this._isPreviewShowing = false;
+            dojo.stopEvent(e);
+        }
+
+    },
+
+    _onSelectedFiles: function(items){
+
+        this._activeItem = items[0];
+        if(!this._activeItem)
+            return;
+
+        var documentItem = this._fileGrid.store.getValue(this._activeItem, 'document');
+        this._editor.set('activeItem', documentItem);
+        this._chkAddMinor.set('checked', documentItem.isMinorVersion);
+
+        this._setState(this._activeItem);
+
+        if((documentItem.getState(bfree.api.Document.states.UPLOADED) || (documentItem.getState(bfree.api.Document.states.CHECKED_IN))) && this._isPreviewShowing)
+            this._wdgPreview.set('activeItem', documentItem);
+
+    },
+
+    _onShowPreview: function(e){
+
+        try{
+            var v = dijit.getViewport();
+            var width = (v.w > 1216) ? 1216 : v.w;
+
+            dojo.style(this.hidePreviewNode, {display: 'block'});
+            dojox.fx.crossFade({
+                nodes : [this.showPreviewNode, this.hidePreviewNode],
+                duration:1000,
+                onEnd: dojo.hitch(this, function(){
+                    dojo.style(this.showPreviewNode, {display: 'none'});
+                })
+            }).play();
+
+            dojo.addClass(this.headerPane.domNode, 'versaTopRightHeader');
+            dojo.addClass(this.midTitlePane.domNode, 'versaMidRightHeader');
+            dojo.style(this.previewPane.domNode, {display: 'block'});
+
+            this.dialog.resize({w: width - 16});
+            this.dialog._position()
+
+            var fileItem = this._fileGrid.selection.getFirstSelected();
+            if(!fileItem) return;
+
+            var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
+            if(documentItem.getState(bfree.api.Document.states.UPLOADED) || (documentItem.getState(bfree.api.Document.states.CHECKED_IN)))
+                this._wdgPreview.set('activeItem', documentItem);
+
+
+        }
+        finally{
+            this._isPreviewShowing = true;
+            dojo.stopEvent(e);
+        }
+
+    },
+
+    _onSubmit: function(){
+
+        var items = [];
+
+        var idx = this._fileGrid.getItemIndex(this._activeItem);
+        this._btnAdd.set('disabled', true);
+        this._uploading = true;
+
+        try{
+
+            var documentItem = this._fileGrid.store.getValue(this._activeItem, 'document');
+
+            //Check for upload complete.
+            if(!documentItem.getState(bfree.api.Document.states.UPLOADED)){
+                alert('The file has not completed uploading');
+                return;
+            }
+
+            //Check for invalid properties.
+            if(!documentItem.isValid({library: this.library})){
+                throw new Error('One or more properties are missing or invalid');
+            }
+
+            //create document item in store and update state of grid item
+            this._btnAdd.set('disabled', true);
+
+            documentItem.state |= bfree.api.Document.states.PENDING;
+            this._fileGrid.updateRow(idx);
+            var newItem = this._documents.create(documentItem);
+            this._editor.set('activeItem', documentItem);
+            this._setState(this._activeItem);
+
+            function __onComplete(args){
+                //Set state after success
+                this._fileGrid.store.setValue(this._activeItem, 'document', newItem);
+                this._fileGrid.updateRow(idx);
+                this._editor.set('activeItem', newItem);
+                this._setState(this._activeItem);
+
+                this.__setNextItem(idx, true);
+            }
+
+            //save valid documents to server
+            this._documents.save({
+                onComplete: __onComplete,
+                scope: this
+            });
+
+        }
+        catch(e){
+
+            //Set state after error
+            documentItem.state = bfree.api.Document.states.ERROR;
+            this._fileGrid.updateRow(idx);
+            this._documents.create(documentItem);
+            this._editor.set('activeItem', documentItem);
+            this._setState(this._activeItem);
+
+            var err = new bfree.api.Error('Failed to add document to the library', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+            this._documents.revert();
+        }
+        finally{
+            this._uploading = false;
+        }
+
+    },
+
+    _onUploadError: function(tmpFileItem, err){
+
+        var err = new bfree.api.Error(dojo.replace('Failed to upload file \'{0}\'', [tmpFileItem.name]), err);
+        bfree.widget.ErrorManager.handleError({
+            error: err
+        });
+
+        var fileItem = this._fileGrid.store.fetchItemById(tmpFileItem.name);
+
+        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
+        documentItem.state = bfree.api.Document.states.ERROR;
+
+        this._onValidChange(documentItem);
+
+        this._editor.set('activeItem', documentItem);
+        this._setState(this._activeItem);
+    },
+
+    _onValidChange: function(documentItem){
+
+        documentItem.validate({library: this.library});
+        var fileItem = this._fileGrid.store.fetchItemById(documentItem.binary_file_name);
+        if(fileItem){
+            var idx = this._fileGrid.getItemIndex(fileItem);
+            this._fileGrid.update(idx);
+        }
+        this._setState(this._activeItem);
+
+    },
+
+    _setState: function(fileItem){
+
+        var canAdd = !this._uploading;
+
+        var idx = this._fileGrid.getItemIndex(fileItem);
+        this._fileGrid.updateRow(idx);
+
+        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
+        canAdd |= (documentItem.state == bfree.api.Document.states.UPLOADED);
+
+        if(documentItem.getState(bfree.api.Document.states.CHECKED_IN))
+            canAdd = false;
+
+        this._btnAdd.set('disabled', !canAdd);
+
+        var msg = '';
+        var canAddMinor = false;
+        var documentItem = (fileItem) ? this._fileGrid.store.getValue(fileItem, 'document') : null;
+
+        var msg = bfree.api.Document.getStateMessage(documentItem.state);
+        var icon = bfree.api.Document.getStateIcon(documentItem.state);
+
+        this.statusMsgNode.innerHTML = msg;
+        this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon]);
+
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+
+        this.destroyDescendants();
+
+        if(this._wdgPreview){
+            this._wdgPreview.destroy();
+            this._wdgPreview = null;
+        }
+
+        if(this._multiUploader != null){
+            this._multiUploader.destroy();
+            this._multiUploader = null;
+        }
+
+        if(this._fileGrid != null){
+            this._fileGrid.destroy();
+            this._fileGrid = null;
+        }
+
+        if(this._btnAdd){
+            this._btnAdd.destroy();
+            this._btnAdd = null;
+        }
+
+        if(this._editor != null){
+            this._editor.destroy();
+            this._editor = null;
+        }
+
+        this.inherited('destroy', arguments);
+    },
+
+    focus: function(){
+        this._btnAdd.focus();
+    },
+
+    isValid: function(){
+        return true;
+    },
+
+    onDialogClosing: function(dlgResult){
+        var canClose = false;
+
+        try{
+
+            if(this.filesLoaded){
+                if(!confirm("Files have not been added to VersaFile, closing this dialog will cause them to be lost.")){
+                    return false;
+                }
+            }
+
+            if(this._uploading){
+                alert("You must wait until all files are uploaded before closing this dialog.");
+                return false;
+            }
+
+            if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
+
+            }
+            else{
+
+            }
+
+            if(this._multiUploader)
+                this._multiUploader.clean();
+
+            canClose = true;
+        }
+        catch(e){
+           var err = new bfree.api.Error('Failed to close \'Create Documents\' dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+
+        return canClose;
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this.folderNameNode.innerHTML = this.folder.name.display_limit(32);
+
+        this._documentTypes = this.library.getDocumentTypes();
+        this._documents = this.library.getDocuments();
+
+        this._multiUploader = new bfree.widget.file.MultiUploader({
+            id: 'uploader1',
+            zone: this.zone,
+            onFileSelect: dojo.hitch(this, this._onFileSelect),
+            onFileUploaded: dojo.hitch(this, this._onFileUploaded),
+            onError: dojo.hitch(this, this._onUploadError),
+            style: 'width:100%'
+        }, this.uploaderNode);
+
+        this._fileGrid = new bfree.widget.document.FileGrid({
+            id: 'fileGrid1',
+            'class': 'versaGridOutline versaNoHeader',
+            onSelectedItems: dojo.hitch(this, this._onSelectedFiles)
+        }, this.fileGridNode);
+
+        this._editor = new bfree.widget.document.Editor({
+            id: 'editor1',
+            library: this.library,
+            onValidChange: dojo.hitch(this, this._onValidChange),
+            onSubmit: dojo.hitch(this, this._onSubmit)
+        }, this.editorNode);
+
+        this._chkAddMinor = new dijit.form.CheckBox({
+            id: 'chkAddMinor',
+            checked: false,
+            scrollOnFocus: false,
+            disabled: true,
+            onChange: dojo.hitch(this, this._chkAddMinor_onChange)
+        }, this.addMinorNode);
+
+        this._btnAdd = new bfree.widget.Button({
+            id: 'btnAdd',
+            'class': 'versaButtonLarge',
+            iconClass: 'buttonIcon bfreeIconAdd',
+            disabledIconClass: 'buttonIcon bfreeIconAddD',
+            label: 'Add Document...',
+            disabled: true,
+            scrollOnFocus: false,
+            onClick: dojo.hitch(this, this._btnAdd_onClick)
+        }, this.addButtonNode);
+
+        this._wdgPreview = new bfree.widget.file.Preview({
+            zone: this.zone
+        }, this.previewNode);
+
+    },
+
+    resize: function(){
+        this.inherited('resize', arguments);
+        this.mainContainer.resize();
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this._multiUploader.startup();
+        this._fileGrid.startup();
+        this._wdgPreview.startup();
+
+        setTimeout(bfree.widget.document.Creator._loadFnRef(this), 10);
+    }
+
+
+});
+
+bfree.widget.document.Creator._loadFnRef = function(that){
+    return ( function() {
+       that._loadItem();
+    });
+}
+
+bfree.widget.document.Creator.show = function(args){
+
+    var v = dijit.getViewport();
+    var h = ((v.h > 800) ? 800 : v.h) - 32;
+
+    var dlg = new bfree.widget.Dialog({
+        id: 'dlgNewDocuments',
+        title: 'Add New Documents...',
+        widgetConstructor: bfree.widget.document.Creator,
+        widgetParams: {
+            folder: args.folder,
+            library: args.library,
+            zone: args.zone
+        },
+        noResize: true,
+        height: h,
+        width: 480,
+        zIndex: 1024,
+        buttons: bfree.widget.Dialog.buttons.close,
+        onClose: args.onClose
+    });
+    dlg.startup();
+    dlg.show();
+
+}
 
 }
 
@@ -54454,326 +59606,6 @@ dojo.declare('bfree.widget.HeaderMenu', dijit.Menu, {
 
 }
 
-if(!dojo._hasResource['bfree.widget.document.ContextMenu']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.ContextMenu'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 11/10/11
- * Time: 9:53 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.document.ContextMenu');
-
-
-
-
-
-dojo.declare('bfree.widget.document.ContextMenu', bfree.widget.HeaderMenu,{
-
-    _btnDocACL: null,
-    _btnDocCancelCKO: null,
-    _btnDocCKI: null,
-    _btnDocCKO: null,
-    _btnDocCopy: null,
-    _btnDocDelete: null,
-    _btnDocEdit: null,
-    _btnDocMove: null,
-    _btnDocView: null,
-    _btnDocDestroy: null,
-    _btnDocRestore: null,
-    _btnVersions: null,
-    _arrDivides: [],
-
-    menuLabel: 'Document',
-    activeItems: [],
-    activeLibrary: null,
-    activeUser: null,
-    activeFolder: null,
-    documents: null,
-
-    refresh: function(){
-    },
-
-    _onCommand: function(cmdId, option, e){
-        this.onCommand(cmdId, option, {documents: this.activeItems});
-    },
-
-    _openMyself: function(evt){
-
-        try{
-
-            if((!this.rowHit) || (this.activeItems.length < 1)){
-                //if no row was clicked OR no items selected.
-                evt.cancelBubble = true;
-                evt.returnValue = false;
-            }
-            else{
-                this._setState();
-                this.inherited('_openMyself', arguments);
-            }
-
-        }
-        finally{
-            this.rowHit = false;
-        }
-
-        /*
-        this._setState();
-
-        try{
-
-            if((!this.rowHit) || (this.activeItem == null)){
-                evt.cancelBubble = true;
-                evt.returnValue = false;
-            }else{
-                //var item2 = this.documents.query({query:(this.activeItem.length?this.activeItem[0]:this.activeItem).id});
-
-                if(item2.length==0||(item2.isDeleted()&&!this.activeFolder.is_trash)){
-                    alert(dojo.replace("Document {name} has been deleted.", this.activeItem[0]));
-                    this.refresh();
-                    evt.cancelBubble=true;
-                    evt.returnValue=false;
-                }else{
-                    this.inherited('_openMyself', arguments);
-                }
-            }
-        }finally{
-            this.rowHit = false;
-        }
-        */
-
-    },
-
-    _setActiveItemsAttr: function(items){
-        this.activeItems = (items == null) ? [] : items;
-    },
-
-    _setState: function(){
-
-        var isDeleted = false;
-        var hiddenItems = new Object();
-        var isSingleItem = (this.activeItems.length == 1);
-
-        dojo.some(this.activeItems, function(item, idx){
-            isDeleted |= (item.isDeleted() || this.activeFolder.isTrash());
-            return isDeleted;
-        }, this);
-
-        var hideDivs = isDeleted;
-        hiddenItems.VIEW = false;
-        hiddenItems.COPY = false;
-        hiddenItems.EDIT = (isDeleted);
-        hiddenItems.VERSIONS = (isDeleted);
-        hiddenItems.MOVE = (isDeleted);
-        hiddenItems.CKO = (isDeleted);
-        hiddenItems.CKI = (isDeleted);
-        hiddenItems.CANCEL_CKO = (isDeleted);
-        hiddenItems.DELETE = (isDeleted);
-        hiddenItems.SECURE = (isDeleted);
-        hiddenItems.RESTORE = (!isDeleted);
-        hiddenItems.DESTROY = (!isDeleted);
-
-        dojo.forEach(this._arrDivides, function(divider, idx){
-            dojo.toggleClass(divider.domNode, 'versaHide', hideDivs);
-        }, this);
-
-        dojo.toggleClass(this._btnDocView.domNode, 'versaHide', hiddenItems.VIEW);
-        dojo.toggleClass(this._btnDocCopy.domNode, 'versaHide', hiddenItems.COPY);
-        dojo.toggleClass(this._btnDocEdit.domNode, 'versaHide', hiddenItems.EDIT);
-        dojo.toggleClass(this._btnVersions.domNode, 'versaHide', hiddenItems.VERSIONS);
-        dojo.toggleClass(this._btnDocMove.domNode, 'versaHide', hiddenItems.MOVE);
-        dojo.toggleClass(this._btnDocCKO.domNode, 'versaHide', hiddenItems.CKO);
-        dojo.toggleClass(this._btnDocCKI.domNode, 'versaHide', hiddenItems.CKI);
-        dojo.toggleClass(this._btnDocCancelCKO.domNode, 'versaHide', hiddenItems.CANCEL_CKO);
-        dojo.toggleClass(this._btnDocDelete.domNode, 'versaHide', hiddenItems.DELETE);
-        dojo.toggleClass(this._btnDocACL.domNode, 'versaHide', hiddenItems.SECURE);
-        dojo.toggleClass(this._btnDocRestore.domNode, 'versaHide', hiddenItems.RESTORE);
-        dojo.toggleClass(this._btnDocDestroy.domNode, 'versaHide', hiddenItems.DESTROY);
-
-        //calculate total permissions...will take the "least" amount of permissions
-        var doAnd = (this.activeItems.length > 0) ? true : false;
-        var activePrmSet = new versa.api.PermissionSet(doAnd);
-
-        dojo.forEach(this.activeItems, function(item, idx){
-            //perform AND to get "least" permissions
-            var prmSet = item.getPermissionSet(this.activeFolder, this.activeLibrary, this.activeUser);
-            activePrmSet = activePrmSet.andSet(prmSet);
-        }, this);
-
-        this._btnDocView.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.VIEW) && isSingleItem));
-        this._btnDocCopy.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.COPY) && isSingleItem));
-        this._btnDocEdit.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.EDIT) && isSingleItem));
-        this._btnVersions.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.EDIT) && isSingleItem));
-
-        this._btnDocMove.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.MOVE)));
-        this._btnDocCKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKO) && isSingleItem));
-        this._btnDocCKI.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKI) && isSingleItem));
-        this._btnDocCancelCKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO) && isSingleItem));
-        this._btnDocDelete.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));
-        this._btnDocACL.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.SECURE) && isSingleItem));
-
-        this._btnDocRestore.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.RESTORE)));
-        this._btnDocDestroy.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DESTROY)));
-
-    },
-
-    constructor: function(args){
-
-    },
-
-    onHide: function(){
-        this.activeItem = null;
-        this.inherited('onHide', arguments);
-    },
-
-    onCommand: function(cmdId, option, params){
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this._btnDocView = new dijit.MenuItem({
-            label: 'View',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconViewDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.VIEW,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocView);
-
-        this._btnDocCopy = new dijit.MenuItem({
-            label: 'Copy Local...',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconCopyDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.COPY,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-		this.addChild(this._btnDocCopy);
-
-        this._btnDocEdit = new dijit.MenuItem({
-			label: 'Edit Properties',
-            disabled: true,
-			iconClass: 'menuIcon bfreeIconEditDocument',
-			onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.EDIT,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-		})
-		this.addChild(this._btnDocEdit);
-
-        this._btnVersions = new dijit.MenuItem({
-			label: 'Versions',
-            disabled: true,
-			iconClass: 'menuIcon bfreeIconNewDocument',
-			onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.EDIT,
-                bfree.widget.Bfree.ObjectTypes.VERSION)
-		})
-		this.addChild(this._btnVersions);
-
-        this._arrDivides[0] = new dijit.MenuSeparator();
-		this.addChild(this._arrDivides[0]);
-
-        this._btnDocMove = new dijit.MenuItem({
-			label: 'Move To Folder...',
-            disabled: true,
-			iconClass: 'menuIcon bfreeIconMoveDocument',
-			onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.MOVE,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-		});
-		this.addChild(this._btnDocMove);
-
-		this._arrDivides[1] = new dijit.MenuSeparator();
-		this.addChild(this._arrDivides[1]);
-
-		this._btnDocCKO = new dijit.MenuItem({
-            label: 'Checkout',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconCkoDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.CHECKOUT,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocCKO);
-
-		this._btnDocCKI = new dijit.MenuItem({
-            label: 'Checkin',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconCkiDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.CHECKIN,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocCKI);
-
-		this._btnDocCancelCKO = new dijit.MenuItem({
-            label: 'Cancel Checkout',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconCancelCkoDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.CANCEL_CKO,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocCancelCKO);
-
-		this._arrDivides[2] = new dijit.MenuSeparator();
-		this.addChild(this._arrDivides[2]);
-
-        this._btnDocDelete = new dijit.MenuItem({
-            label: 'Delete',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconDeleteDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.DELETE,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-		this.addChild(this._btnDocDelete);
-
-        this._arrDivides[3] = new dijit.MenuSeparator();
-		this.addChild(this._arrDivides[3]);
-
-        this._btnDocACL = new dijit.MenuItem({
-            label: 'Permissions...',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconSecureDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.SECURE,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocACL);
-
-        this._btnDocRestore = new dijit.MenuItem({
-            label: 'Restore',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconCkoDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.RESTORE,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocRestore);
-
-        this._btnDocDestroy = new dijit.MenuItem({
-            label: 'Delete Permanently',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconDeleteDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.DESTROY,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._btnDocDestroy);
-
-
-    }
-
-});
-
-
-
-}
-
 if(!dojo._hasResource['bfree.widget.folder.ContextMenu']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.widget.folder.ContextMenu'] = true;
 /**
@@ -54791,59 +59623,31 @@ dojo.provide('bfree.widget.folder.ContextMenu');
 
 dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
 
-    _btnFldCreate: null,
-    _btnFldEdit: null,
-    _btnFldDelete: null,
-    _btnFldACL: null,
-    _btnDocCreate: null,
+    _arrDivides: [],
+    _buttons: {},
 
     menuLabel: 'Folder',
     activeLibrary: null,
     activeNode: null,
     activeUser: null,
+    activeGroup: null,
     tree: null,
 
     _onCommand: function(cmdId, option){
-        this.onCommand(cmdId, option, {folder: this.activeNode.item});
+        //Don't send folder if creating a new share
+        ((cmdId == bfree.widget.Bfree.Commands.NEW) && (option ==  bfree.widget.Bfree.ObjectTypes.SHARE)) ?
+            this.onCommand(cmdId, option, {folder: null}) :
+            this.onCommand(cmdId, option, {folder: this.activeNode.item});
     },
 
     _openMyself: function(evt){
 
-        if(this.activeNode.declaredClass=="bfree.widget.folder.Tree"){
-            //user clicked where there isn't a node
+        if(this.activeNode.item.isSearch())
             return;
-        }
-
-        if(!this.activeNode){
-            //node does not exist
-            return;
-        }
-
-        if(this.activeNode.item.is_search){
-            //node is search, no menu
-            return;
-        }
 
         this._setState();
+
         this.inherited('_openMyself', arguments);
-
-        /*
-        if(this.activeNode.item.root){
-            this._setState();
-
-           this.inherited('_openMyself', arguments)
-        }else{
-            this.activeLibrary.getFolders().loadItem({
-                item: this.activeNode.item,
-                scope: this,
-                callback: dojo.hitch(this, function(arguments, item){
-                    this.activeNode.item = item;
-                    this._setState();
-                    this.inherited('_openMyself', arguments)
-                }, arguments)
-            });
-        }
-        */
     },
 
     _setActiveNodeAttr: function(node){
@@ -54851,27 +59655,47 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
     },
 
     _setState: function(){
-        var trash=!this.activeNode.item.root&&this.activeNode.item.is_trash;
+        var hiddenItems = new Object()
+        var hideDivs = this.activeNode.item.isSpecial();
+        var folder = this.activeNode.item;
 
-        dojo.toggleClass(this._btnFldEdit.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._btnFldDelete.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._btnFldACL.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._btnFldCreate.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._btnDocCreate.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._popupMenu.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._seperator1.domNode, 'versaHide', trash);
-        dojo.toggleClass(this._seperator2.domNode, 'versaHide', trash);
+        hiddenItems.RENAME = folder.isSpecial();
+        hiddenItems.EDIT = !folder.isShare();
+        hiddenItems.DELETE = folder.isSpecial();
+        hiddenItems.NEW = folder.isSpecial();
+        hiddenItems.ACL = folder.isSpecial() && !folder.isShare();
+        hiddenItems.EMPTY = !folder.isTrash();
+        hiddenItems.SHARE = !folder.isShareRoot();
+        hiddenItems.UNSHARE = !folder.isShare();
+        hiddenItems.COPY  = !folder.isShare();
 
-        dojo.toggleClass(this._btnEmptyTrash.domNode, 'versaHide', !trash);
+        dojo.forEach(this._arrDivides, function(divider, idx){
+            dojo.toggleClass(divider.domNode, 'versaHide', hideDivs);
+        }, this);
 
+        dojo.toggleClass(this._buttons.RENAME.domNode, 'versaHide', hiddenItems.RENAME);
+        dojo.toggleClass(this._buttons.EDIT.domNode, 'versaHide', hiddenItems.EDIT);
+        dojo.toggleClass(this._buttons.DELETE.domNode, 'versaHide', hiddenItems.DELETE);
+        dojo.toggleClass(this._buttons.NEW.domNode, 'versaHide', hiddenItems.NEW);
+        dojo.toggleClass(this._buttons.ACL.domNode, 'versaHide', hiddenItems.ACL);
+        dojo.toggleClass(this._buttons.EMPTY.domNode, 'versaHide', hiddenItems.EMPTY);
+        dojo.toggleClass(this._buttons.SHARE.domNode, 'versaHide', hiddenItems.SHARE);
+        dojo.toggleClass(this._buttons.UNSHARE.domNode, 'versaHide', hiddenItems.UNSHARE);
+        dojo.toggleClass(this._buttons.COPY.domNode, 'versaHide', hiddenItems.COPY);
 
-        var permissionSet = bfree.api.Folder.getPermissionSet(this.activeNode.item, this.activeLibrary, this.activeUser);
-        this._btnFldEdit.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.EDIT]);
-        this._btnFldDelete.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.DELETE]);
-        this._btnFldACL.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.SECURE]);
-        this._btnFldCreate.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.CREATE]);
-        this._btnDocCreate.set('disabled', !permissionSet[bfree.api.Folder.permissionIndices.FILE])
+        var activePrmSet = folder.getPermissionSet(this.activeLibrary, this.activeUser);
 
+        this._buttons.RENAME.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.EDIT)));
+        this._buttons.EDIT.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.EDIT)));
+        this._buttons.DELETE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));
+        this._buttons.FLD_CREATE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CREATE)));
+        this._buttons.DOC_CREATE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.FILE)));
+        this._buttons.NEW.set('disabled', (this._buttons.FLD_CREATE.disabled && this._buttons.DOC_CREATE.disabled));
+        this._buttons.ACL.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.SECURE)));
+        this._buttons.EMPTY.set('disabled', ((!folder.isTrash()) || (!(this.activeUser.is_admin || this.activeGroup.is_admin))));
+        this._buttons.SHARE.set('disabled', (!folder.isShareRoot()));
+        this._buttons.UNSHARE.set('disabled', (!folder.isShare()));
+        this._buttons.COPY.set('disabled', (!folder.isShare()));
     },
 
     constructor: function(args){
@@ -54887,24 +59711,30 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
 
     },
 
-    _onOpen: function(evt){
-        //this.inherited('onOpen', arguments);
-    },
-
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
-        this._btnFldEdit = new dijit.MenuItem({
-            label: 'Edit Folder',
+        this._buttons.RENAME = new dijit.MenuItem({
+            label: 'Rename',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconEditFolder',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.RENAME,
+                bfree.widget.Bfree.ObjectTypes.FOLDER)
+        });
+        this.addChild(this._buttons.RENAME);
+
+         this._buttons.EDIT = new dijit.MenuItem({
+            label: 'Edit Properties...',
             disabled: true,
             iconClass: 'menuIcon bfreeIconEditFolder',
             onClick: dojo.hitch(this, this._onCommand,
                 bfree.widget.Bfree.Commands.EDIT,
-                bfree.widget.Bfree.ObjectTypes.FOLDER)
+                bfree.widget.Bfree.ObjectTypes.SHARE)
         });
-        this.addChild(this._btnFldEdit);
+        this.addChild(this._buttons.EDIT);
 
-        this._btnFldDelete = new dijit.MenuItem({
+        this._buttons.DELETE = new dijit.MenuItem({
             label: 'Delete Folder',
             disabled: true,
             iconClass: 'menuIcon bfreeIconDeleteFolder',
@@ -54913,46 +59743,47 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
                 bfree.widget.Bfree.ObjectTypes.FOLDER
             )
         });
-        this.addChild(this._btnFldDelete);
+        this.addChild(this._buttons.DELETE);
 
-        this._seperator1=new dijit.MenuSeparator();
-        this.addChild(this._seperator1);
+        this._arrDivides[0] = new dijit.MenuSeparator();
+		this.addChild(this._arrDivides[0]);
 
-        this._newSubMenu = new dijit.Menu({
+        var mnuCreate = new dijit.Menu({
         });
 
-        this._btnDocCreate = new dijit.MenuItem({
-            label: 'Document',
-            iconClass: 'menuIcon bfreeIconNewDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.NEW,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-		this._newSubMenu.addChild(this._btnDocCreate);
-
-        this._btnFldCreate = new dijit.MenuItem({
+        this._buttons.FLD_CREATE = new dijit.MenuItem({
             label: 'Folder',
+            disabled: true,
             iconClass: 'menuIcon bfreeIconNewFolder',
             onClick: dojo.hitch(this, this._onCommand,
                 bfree.widget.Bfree.Commands.NEW,
                 bfree.widget.Bfree.ObjectTypes.FOLDER
             )
         });
-		this._newSubMenu.addChild(this._btnFldCreate);
+		mnuCreate.addChild(this._buttons.FLD_CREATE);
 
-        this._popupMenu=new dijit.PopupMenuItem({
+        this._buttons.DOC_CREATE = new dijit.MenuItem({
+            label: 'Document',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconNewDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.NEW,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+		mnuCreate.addChild(this._buttons.DOC_CREATE);
+
+        this._buttons.NEW = new dijit.PopupMenuItem({
             label: 'New',
-            popup: this._newSubMenu,
+            disabled: true,
+            popup: mnuCreate,
             iconClass: 'menuIcon bfreeIconNewSubFolder'
         });
+		this.addChild(this._buttons.NEW);
 
-		this.addChild(this._popupMenu);
+        this._arrDivides[1] = new dijit.MenuSeparator();
+		this.addChild(this._arrDivides[1]);
 
-        this._seperator2=new dijit.MenuSeparator();
-        this.addChild(this._seperator2);
-
-
-        this._btnFldACL = new dijit.MenuItem({
+        this._buttons.ACL = new dijit.MenuItem({
             label: 'Permissions...',
             disabled: true,
             iconClass: 'menuIcon bfreeIconSecureFolder',
@@ -54960,18 +59791,46 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
                 bfree.widget.Bfree.Commands.SECURE,
                 bfree.widget.Bfree.ObjectTypes.FOLDER)
         });
-        this.addChild(this._btnFldACL);
+        this.addChild(this._buttons.ACL);
 
-        this._btnEmptyTrash = new dijit.MenuItem({
+        this._buttons.EMPTY = new dijit.MenuItem({
             label: 'Empty Recycle Bin',
             disabled: false,
             iconClass: 'menuIcon bfreeTrashFolder',
             onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.EMPTY)
         });
-        this.addChild(this._btnEmptyTrash);
+        this.addChild(this._buttons.EMPTY);
 
+        this._buttons.SHARE = new dijit.MenuItem({
+            label: 'Create Share',
+            disabled: false,
+            iconClass: 'menuIcon bfreeShareFolderClosed',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.NEW,
+                bfree.widget.Bfree.ObjectTypes.SHARE)
+        });
+        this.addChild( this._buttons.SHARE);
 
-        dojo.connect(this, 'onOpen', this, this._onOpen);
+        this._buttons.UNSHARE = new dijit.MenuItem({
+            label: 'Delete',
+            disabled: false,
+            iconClass: 'menuIcon bfreeIconDeleteFolder',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.DESTROY,
+                bfree.widget.Bfree.ObjectTypes.SHARE)
+        });
+        this.addChild( this._buttons.UNSHARE);
+
+        this._buttons.COPY = new dijit.MenuItem({
+            label: 'Copy Link',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconDeleteDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.COPY,
+                bfree.widget.Bfree.ObjectTypes.SHARE)
+        });
+        this.addChild(this._buttons.COPY);
+
     },
 
     startup: function(){
@@ -57646,7 +62505,6 @@ dojo.declare(
 			// Traverse path; the next path component should be among "nodes".
 			var nextPath = path.shift();
 			var nextNode = dojo.filter(nodes, function(node){
-                console.log(node.getIdentity() + " == " + nextPath);
 				return node.getIdentity() == nextPath;
 			})[0];
 			if(!!nextNode){
@@ -58401,6 +63259,7 @@ dojo.provide('bfree.widget.folder.Tree')
 
 
 
+//
 
 
 dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
@@ -58409,6 +63268,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
     _isEditing: false,
 
     library: null,
+    group: null,
     user: null,
 
     _createEditor: function(){
@@ -58600,8 +63460,10 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     _nodeStyles: ['dijitTreeExpandoLoading', 'dijitTreeExpandoOpened', 'dijitTreeExpandoClosed', 'dijitTreeExpandoLeaf'],
 
     folders: null,
-    isSearchHidden: false,
+    isSearchHidden: true,
+    isShareRootHidden: false,
     isTrashHidden: false,
+
     library: null,
 
     _afterSelected: function(node){
@@ -58655,7 +63517,7 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
     _mayHaveChildren: function(item){
 
-        if((item.is_trash) || (item.is_search))
+        if((item.isTrash()) || (item.isSearch()))
             return false;
 
         return dojo.isArray(item.children) ?
@@ -58684,16 +63546,13 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     constructor: function(args){
         this['class'] = 'versafile';
 
-        this.model = new dijit.tree.ForestStoreModel({
+        this.model = new dijit.tree.TreeStoreModel({
             store: args.folders.store,
-            query: {parent_id: 0},
-            rootId: 0,
-            rootLabel: args.library.name,
             deferItemLoadingUntilExpand: true,
-            childrenAttrs: ['children'],
-            mayHaveChildren: this._mayHaveChildren,
-            onChildrenChange: this._onChildrenChange
-        });
+            query: 'root',
+            mayHaveChildren: this._mayHaveChildren
+        })
+
         this.persist = false;
         this.openOnClick = false;
     },
@@ -58727,28 +63586,34 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     deleteFolder: function(item){
+        var msg = ''
+        if(item.isShare()){
+            msg = dojo.replace('Are you sure you want to delete the shared folder \'{name}\'?', item);
+        }
+        else{
+            msg = dojo.replace(
+                'Are you sure you want to delete the folder \'{name}\'?\n\n' +
+                'NOTE: this will delete all existing sub-folders and contained documents.',
+                item
+            );
+        }
 
-        var msg = dojo.replace(
-            'Are you sure you want to delete the folder \'{name}\'?\n\n' +
-            'NOTE: this will delete all existing sub-folders and contained documents.',
-            item
-        );
-
-		if(!confirm(msg))
-			return;
-
+		if(!confirm(msg)){
+            this.setBusy(item, false);
+            return;
+        }
 
 
         var path = item.path;
 
-        var nodes=this.getNodesByItem(item);
+        var nodes = this.getNodesByItem(item);
         dojo.forEach(nodes, function(node, idx){
-            var parent=node.getParent();
-            var children=parent.getChildren();
+            var parent = node.getParent();
+            var children = parent.getChildren();
             children.removeByValue(node);
             for(var i in children){
                 if(children[i].item){
-                    children[i]=children[i].item;
+                    children[i] = children[i].item;
                 }
             }
             parent.setChildItems(children);
@@ -58788,16 +63653,24 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     getIconClass: function(item, opened){
+        var iconClass = 'dijitFolderOpened';
 
-        if(item.is_trash)
-            return 'folderIcon bfreeTrashFolder';
-        if(item.is_search)
-            return 'folderIcon bfreeSearchFolder';
+        if(item.isRoot())
+            iconClass = 'folderIcon bfreeRootFolder'
+        else if(item.isTrash())
+            iconClass = 'folderIcon bfreeTrashFolder';
+        else if(item.isSearch())
+            iconClass = 'folderIcon bfreeSearchFolder';
+        else if(item.isShareRoot())
+            iconClass = 'folderIcon bfreeShareRootFolder';
+        else if(item.isShare())
+            iconClass = (!item || this.model.mayHaveChildren(item)) ?
+                (opened ? 'folderIcon bfreeShareFolderOpened' : 'folderIcon bfreeShareFolderClosed') : 'folderIcon bfreeShareFolderClosed';
+        else
+            iconClass = (!item || this.model.mayHaveChildren(item)) ?
+                (opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : 'dijitFolderClosed';
 
-        return (!item || this.model.mayHaveChildren(item)) ?
-                    (opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : 'dijitFolderClosed';
-//                    ((this.selectedItem === item) ? 'dijitFolderOpened' : 'dijitFolderClosed');
-
+        return iconClass;
     },
 
     hideSearch: function(){
@@ -58805,15 +63678,39 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         this._hideNodesByItem(search);
     },
 
-    showSearch: function(){
-        var search = this.library.getFolders().getSearchFolder();
-        this._showNodesByItem(search);
+    hideShareRoot: function(){
+        var share = this.library.getFolders().getShareRootFolder();
+        this._hideNodesByItem(share);
     },
 
     hideTrash: function(){
         var trash = this.library.getFolders().getTrashFolder();
         this._hideNodesByItem(trash);
     },
+
+    showSearch: function(){
+        var search = this.library.getFolders().getSearchFolder();
+        this._showNodesByItem(search);
+    },
+
+    getNodesByItem: function(/*dojo.data.Item or id*/ item){
+		// summary:
+		//		Returns all tree nodes that refer to an item
+		// returns:
+		//		Array of tree nodes that refer to passed item
+        //this replaces the tree getNodesByItem method,
+        //it adds the ability to find an item by _clientId if the
+        //item cannot be found by the id value
+		if(!item){ return []; }
+		var identity = dojo.isString(item) ? item : this.model.getIdentity(item);
+		// return a copy so widget don't get messed up by changes to returned array
+        if(this._itemNodesMap[identity]){
+            return [].concat(this._itemNodesMap[identity]);
+        }else{
+            return [].concat(this._itemNodesMap[item.__clientId.substring(item.__clientId.lastIndexOf('/')+1)]);
+        }
+
+	},
 
     onNewNode: function(node){
         //changed to 'setSelectedItem' => 'setSelectedNode' didn't highlight row in all cases
@@ -58836,17 +63733,21 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             targetNodeIds: [this.id]
         });
 
-        this.connect(this, 'onClick', this._node_onClick);
+        dojo.connect(this, 'onClick', this._node_onClick);
         dojo.connect(this, 'onMouseDown', this, this._onMouseDown);
+
+        this.dndController.onCommand = dojo.hitch(this, this.onCommand);
     },
 
     _onMouseDown: function(evt){
         var node = dijit.getEnclosingWidget(evt.target);
 
-        if(this.tree._isEditing&&node._editor){
+        if(this.tree._isEditing && node._editor){
 
         }else{
-            this.dndController.startNode=node;
+            //TODO: create a "new" node here...the tree node here is formatted with
+            //the tree's indentation, looks strange when dragging nested folders
+            this.dndController.startNode = node;
             if(evt.button == 2){
                 this._mnuFolder.set('activeNode', node);
             }
@@ -58854,11 +63755,20 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
     },
 
-    initialize: function(){
+    onSelected: function(item, node){
+    },
+
+    selectRoot: function(){
         this.setSelectedNode(this.rootNode);
     },
 
-    onSelected: function(item, node){
+    setBusy: function(item, isBusy){
+        var nodes = this.getNodesByItem(item);
+        dojo.forEach(nodes, function(node, idx){
+            (isBusy) ?
+                node.markProcessing() :
+                node.unmarkProcessing();
+        }, this);
     },
 
     setEditing: function(isEditing){
@@ -58885,9 +63795,9 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
     startup: function(){
         this.inherited('startup', arguments);
-
         this._mnuFolder.startup();
 
+        /*
         //Can we mixin with "bfree.api.Folder"???;
         var folderItem = new bfree.api.Folder({
             id: 0,
@@ -58903,41 +63813,26 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         this.rootNode.item = folderItem;
         this.model.root = folderItem;
 
+        this.rootNode.item.children.sort(bfree.api.Folder.sort);
+        this.rootNode.setChildItems(this.rootNode.item.children);
+        */
+
         if(this.isSearchHidden)
             this.hideSearch();
         if(this.isTrashHidden)
             this.hideTrash();
+        if(this.isShareRootHidden)
+            this.hideShareRoot();
 
-        this.rootNode.item.children.sort(bfree.api.Folder.sort);
-        this.rootNode.setChildItems(this.rootNode.item.children);
-
-        this.hideSearch();
     },
 
-    getNodesByItem: function(/*dojo.data.Item or id*/ item){
-		// summary:
-		//		Returns all tree nodes that refer to an item
-		// returns:
-		//		Array of tree nodes that refer to passed item
-        //this replaces the tree getNodesByItem method,
-        //it adds the ability to find an item by _clientId if the
-        //item cannot be found by the id value
-		if(!item){ return []; }
-		var identity = dojo.isString(item) ? item : this.model.getIdentity(item);
-		// return a copy so widget don't get messed up by changes to returned array
-        if(this._itemNodesMap[identity]){
-            return [].concat(this._itemNodesMap[identity]);
-        }else{
-            return [].concat(this._itemNodesMap[item.__clientId.substring(item.__clientId.lastIndexOf('/')+1)]);
-        }
 
-	},
 
     _onClick: function(/*TreeNode*/ nodeWidget, /*Event*/ e){
 		// summary:
 		//		Translates click events into commands for the controller to process
 
-        if(!(this.tree._isEditing&&nodeWidget._editor)){
+        if(!(this.tree._isEditing && nodeWidget._editor)){
             var domElement = e.target,
                 isExpandoClick = this.isExpandoNode(domElement, nodeWidget);
 
@@ -58982,10 +63877,12 @@ dojo.declare('bfree.widget.document.Header', [dijit._Widget, dijit._Templated],{
     activeItem: null,
 
     _initialize: function(){
-        this.typeIconNode.src = bfree.api.Document.getIconUrl(this.activeItem.binary_content_type, 32);
-        this.nameNode.innerHTML = this.activeItem.name;
-        this.typeNode.innerHTML =  this.activeItem.document_type_name;
-        this.sizeNode.innerHTML = bfree.api.Utilities.readablizeBytes({bytes: this.activeItem.binary_file_size});
+        if(this.activeItem){
+            this.typeIconNode.src = bfree.api.Document.getIconUrl(this.activeItem.binary_content_type, 32);
+            this.nameNode.innerHTML = this.activeItem.name;
+            this.typeNode.innerHTML =  this.activeItem.document_type_name;
+            this.sizeNode.innerHTML = bfree.api.Utilities.readablizeBytes({bytes: this.activeItem.binary_file_size});
+        }
     },
 
     _setActiveItemAttr: function(document){
@@ -59032,12 +63929,10 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
 	templateString: dojo.cache("bfree/widget/document", "template/Move.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:8px;height:100%;width:100%;\">\n\n     <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"top\"\n            splitter=\"false\"\n            style=\"padding:0;overflow:hidden;height:20px\">\n        <!-- Does not handle multi-select yet -->\n        <!-- div dojoAttachPoint=\"headerNode\"></div -->\n        <span dojoAttachPoint=\"folderNameNode\" class=\"dijitDarkLabel dijitMediumLabel\">Select Folder:</span>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"true\"\n                style=\"padding:0\"\n                class=\"highlightPane\">\n\n       <div dojoAttachPoint=\"treeNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
 	widgetsInTemplate: true,
 
-    _documents: null,
-    _documentType: null,
     _tvwFolders: null,
 
     activeFolder: null,
-    documents: null,
+    references: null,
     folder: null,
 	library: null,
     zone: null,
@@ -59047,8 +63942,7 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
         var canClose = false;
 
         try{
-
-            this._documents.revert();
+            //nothing to do here.
             canClose = true;
         }
         catch(e){
@@ -59067,11 +63961,16 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
         try{
 
             //TODO: What happens if document or folder has been deleted?
-            dojo.forEach(this.documents, dojo.hitch(this, function(document, idx){
-                this._documents.setValue(document, 'folder_id', this.activeFolder.id);
-            }));
-            this._documents.save();
+            dojo.forEach(this.references, function(reference, idx){
+                reference.file({
+                    zone: this.zone,
+                    library: this.library,
+                    folder: this.activeFolder
 
+                });
+            }, this);
+
+            //this.library.getReferences().save();
             canClose = true;
         }
         catch(e){
@@ -59080,8 +63979,6 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
             bfree.widget.ErrorManager.handleError({
                 error: err
             });
-
-            this._documents.revert();
         }
 
         return canClose;
@@ -59128,7 +64025,7 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
 
         try{
 
-            this.returnValue = this.documents;
+            this.returnValue = this.references;
             canClose = (dlgResult == bfree.widget.Dialog.dialogResult.ok) ?
                             this._doSave() :
                             this._doCancel();
@@ -59148,15 +64045,7 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
 	postCreate: function(){
 		this.inherited('postCreate', arguments);
 
-        this._documents = this.library.getDocuments();
-        this._documentType =  this.library.getDocumentTypes().fetchById({id: this.documents[0].document_type_id});
-
-        /*
-        this._header = new bfree.widget.document.Header({
-            document: this.documents[0],
-            documentType: this._documentType
-        }, this.headerNode);
-        */
+        //this.library.getFolders().refresh();
 
         this._tvwFolders = new bfree.widget.folder.Tree({
             id: 'tvwFolders',
@@ -59164,6 +64053,7 @@ dojo.declare('bfree.widget.document.Move', [dijit._Widget, dijit._Templated, bfr
             folders: this.library.getFolders(),
             isSearchHidden: true,
             isTrashHidden: true,
+            isShareRootHidden: true,
             onSelected: dojo.hitch(this, this._tvwFolders_onSelected),
             style: 'height: 100%'
         }, this.treeNode);
@@ -59197,7 +64087,7 @@ bfree.widget.document.Move.show = function(args){
         title: title,
         widgetConstructor: bfree.widget.document.Move,
         widgetParams: {
-            documents: args.items,
+            references: args.items,
             folder: args.folder,
             library: args.library,
             zone: args.zone
@@ -59207,4621 +64097,6 @@ bfree.widget.document.Move.show = function(args){
         width: 480,
         zIndex: 1024,
         buttons: bfree.widget.Dialog.buttons.ok | bfree.widget.Dialog.buttons.cancel,
-        onClose: args.onClose
-    });
-    dlg.startup();
-    dlg.show();
-
-}
-
-}
-
-if(!dojo._hasResource['bfree.widget.document.ViewMenu']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.ViewMenu'] = true;
-/**
- * @author Scott
- */
-dojo.provide('bfree.widget.document.ViewMenu');
-
-
-dojo.declare('bfree.widget.document.ViewMenu', bfree.widget.HeaderMenu,
-{
-    menuLabel: 'Views',
-    library: null,
-    activeView: null,
-	rowHit: false,
-	viewDefinitions: null,
-
-	_buildViewMenus: function(){
-
-        //Retreive all the current view definitions and sort
-		var viewDefs = this.viewDefinitions.fetch();
-        viewDefs = viewDefs.sort(bfree.api.ViewDefinition.compare);
-
-        //for each view, create a menu item.
-		dojo.forEach(viewDefs, function(viewDef){
-
-            if(!viewDef.name)
-                return;
-
-			var icon = 'menuIcon menuViewIcon';
-			
-			var mniView = new dijit.MenuItem({
-				iconClass: icon,
-				label: viewDef.name
-			});
-			dojo.connect(mniView, 'onClick', dojo.hitch(this, this._onChange, mniView, viewDef));
-
-            mniView.set('viewDefinition', viewDef);
-			this.addChild(mniView);
-
-		}, this);
-
-	},
-
-	_onChange: function(mni, viewDef, evt){
-        var view = viewDef.getView(this.library);
-        this.set('activeView', view);
-	},
-
-    _openMyself: function(e){
-
-		if(!this.rowHit){
-			e.cancelBubble = true;
-			e.returnValue = false;
-			return;
-		}
-
-		this.rowHit = false;
-		this.inherited('_openMyself', arguments);
-	},
-
-    _setActiveViewAttr: function(activeView){
-
-        var systemItem = null;
-        var currentViewId = (this.activeView) ? this.activeView.id : -1;
-
-        this.activeView = null;
-
-        //find menuitem
-        var mnuItems = this.getChildren();
-        dojo.forEach(mnuItems, function(mnuItem, idx){
-
-            if(mnuItem.viewDefinition.is_system)
-                systemItem = mnuItem;
-
-            if(mnuItem.viewDefinition.id == activeView.id){
-                mnuItem.set('iconClass', 'menuIcon bfreeIconOk');
-                this.activeView = mnuItem.viewDefinition.getView(this.library);
-            }
-            else{
-                mnuItem.set('iconClass', 'menuIcon menuViewIcon');
-            }
-
-        }, this);
-
-        if(!this.activeView){
-            systemItem.set('iconClass', 'menuIcon bfreeIconOk');
-            this.activeView = systemItem.viewDefinition.getView(this.library);
-        }
-
-        if(this.activeView.id != currentViewId)
-            this.onChange(this.activeView);
-    },
-
-	onChange: function(view, evt){		
-	},
-		
-	//postCreate:
-	postCreate: function(){
-		this.inherited('postCreate', arguments);
-        this._buildViewMenus();
-	},
-
-	refresh: function(){
-
-		var mnuItems = this.getChildren();
-		while(mnuItems.length > 0){
-			var mnuItem = mnuItems.pop();
-			this.removeChild(mnuItem);			
-		}
-		
-		this._buildViewMenus();
-
-        this.set('activeView', this.activeView);
-
-	},
-	
-	getSelectedId: function(){
-		var mnuItems = this.getChildren();
-		var id;
-		for(var i = 0; i<mnuItems.length; i++){
-			if(mnuItems[i].set('iconClass') == 'menuIcon bfreeIconOk')
-				id = mnuItems[i].viewDefId;
-		}
-		return id || -1;
-	}
-	
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.document.Grid']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.Grid'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 22/09/11
- * Time: 12:59 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.document.Grid');
-
-
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.document.Grid', bfree.widget._Grid, {
-
-    _documents: null,
-
-    library: null,
-    activeView: null,
-    activeFolder: null,
-    zone: null,
-    dndType: "Document",
-    activeQuery: null,
-
-    minWidth: 256,
-
-    _canSort: function(columnIndex){
-		if(columnIndex == 1 || this._isLoading){
-    		return false;
-  		}
-		else{
-    		return true;
-		}
-	},
-
-    _setStructureAttr: function(newValue){
-        this.inherited("_setStructureAttr", arguments);
-        if(this._isLoaded){
-            this.auto();
-        }
-    },
-
-    _onCommand: function(cmdId, option, params){
-        this.onCommand(cmdId, option, params);
-    },
-
-    // Override this function to handle bad logic in 'revert' code when creating a clone used for reverting, the
-    // data store only copies the properties of an object not the instance so when reverting it is not an
-    // object of, say, bfree.api.Document but a generic json object which causes many errors with the grid.
-    _onNew: function(item, parentInfo){
-
-        if(!item['declaredClass'])
-           item = this._documents.refreshItem((item.$ref ? item.$ref : item.id));
-
-        this.inherited('_onNew', [item, parentInfo]);
-    },
-
-    _onRowContextMenu: function(evt){
-
-        if((this._mnuDocument == null) || (evt.rowIndex < 0)){
-            //Right-click was not on a row so cancel menu.
-            this._mnuDocument.rowHit = false;
-            evt.cancelBubble = true;
-        }
-        else{
-
-            var items = this.selection.getSelected();
-
-            //If row is already selected, re-fire 'onSelectedItem' event
-            //*mimics normal left-click behaviour
-            if(this.selection.isSelected(evt.rowIndex)){
-                this.onSelectedItems(items);
-            }
-            else{
-                //if row was selected, select it.
-                this.setSelectedIndex(evt.rowIndex);
-                items = this.selection.getSelected();
-            }
-
-            this._mnuDocument.rowHit = true;
-            this._mnuDocument.set('activeItems', items);
-        }
-
-    },
-
-    _onViewChange: function(viewItem, evt){
-
-        //NOTE: Re-ordered to support results with view-specific columns
-		this.focus.findAndFocusGridCell();
-
-        this.activeView = viewItem;
-
-        if(this.query){
-            this.query.view = this.activeView.id;
-        }
-
-        this.set('sortInfo', this.activeView.sort_column);
-        this.set('structure', this.activeView);
-
-        this.onViewChange(this.activeView);
-
-	},
-
-    auto: function(){
-
-        var cell=this.getCell(2);
-        var node=cell.getHeaderNode();
-        if(node.offsetWidth<this.minWidth){
-            if(this.structure.cells[2].width=='auto'){
-                this.structure.cells[2].width=this.minWidth+'px';
-                this.set('sortInfo', this.activeView.sort_column);
-                this.set('structure', this.activeView);
-    //            cell.unitWidth='512px';
-    //            this.render();
-    //            cell.setValue('unitWidth', '512px');
-            }
-        }
-
-    },
-
-	_onViewNew: function(evt){
-		this.onViewNew(evt);
-	},
-
-    _setActiveFolderAttr: function(folder){
-        this.activeFolder = folder;
-        this._mnuDocument.set('activeFolder', folder);
-    },
-
-    _setActiveQueryAttr: function(query){
-        query['view'] = this.activeView.id;
-        this.setQuery(query, {cache: false});
-        this.setSelectedIndex(0, true);
-    },
-
-    sort: function(){
-        this.setQuery(this.query, {cache: false});
-    },
-
-    constructor: function(args){
-
-        this.updateDelay = 0;
-		this.rowsPerPage = 25;
-
-		this.queryOptions = {cache: false};
-		this.selectionMode = 'extended';
-		this.clientSort = false;
-		this.canSort = this._canSort;
-		this.noDataMessage = 'No Documents Found';
-
-    },
-
-    export_results: function(export_type){
-
-        var box = bfree.api.Utilities.getBox({scale: 0.75});
-
-        var sortProps = this.getSortProps();
-
-        this._documents.export_query({
-            zone: this.zone,
-            library: this.library,
-            windowBox: box,
-            type: export_type,
-            query: this.get('query'),
-            sort: ((sortProps) && (sortProps.length > 0)) ? sortProps[0] : null
-        });
-
-    },
-
-    initialize: function(){
-        this.setStore(this._documents.store, { type: bfree.api.Search.types.NONE });
-    },
-
-    postCreate: function(){
-		this.inherited('postCreate', arguments);
-
-        this._documents = this.library.getDocuments();
-
-        var viewDefinition = this.library.getViewDefinitions().fetch()[0];
-        this.activeView = viewDefinition.getView(this.library);
-
-        this._mnuDocument = new bfree.widget.document.ContextMenu({
-            onCommand: dojo.hitch(this, this._onCommand),
-            activeLibrary: this.library,
-            activeUser: this.user,
-            documents: this._documents,
-            refresh: dojo.hitch(this, this.refresh),
-            targetNodeIds: [this.id]
-        });
-
-        this._mnuView = new bfree.widget.document.ViewMenu({
-            library: this.library,
-			viewDefinitions: this.library.getViewDefinitions(),
-            parentMenu: this
-		});
-		this._mnuView.startup();
-
-		this.onRowContextMenu = dojo.hitch(this, this._onRowContextMenu);
-        this._mnuView.onChange = dojo.hitch(this, this._onViewChange);
-		this.onHeaderContextMenu = dojo.hitch(this, this._onHeaderContextMenu);
-
-        this._mnuView.set('activeView', this.activeView);
-        this.set('headerMenu', this._mnuView);
-
-    },
-
-    onCommand: function(cmdId, option, params){
-    },
-
-    onRowDblClick: function(evt){
-
-        if(evt.rowIndex < 0){
-            evt.cancelBubble = true;
-            return;
-        }
-
-        var item = this.getItem(evt.rowIndex);
-        this._onCommand(bfree.widget.Bfree.Commands.VIEW, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {documents: [item]});
-    },
-
-    onViewChange: function(viewItem, evt){
-	},
-
-	onViewNew: function(evt){
-	},
-
-    _onHeaderContextMenu: function(evt){
-		this._mnuView.rowHit = true;
-	},
-
-    refreshViews: function(){
-		this._mnuView.refresh();
-	},
-
-    print_results: function(){
-
-        var box = bfree.api.Utilities.getBox({scale: 0.75});
-
-        var sortProps = this.getSortProps();
-
-        this._documents.print_query({
-            zone: this.zone,
-            library: this.library,
-            windowBox: box,
-            query: this.get('query'),
-            sort: ((sortProps) && (sortProps.length > 0)) ? sortProps[0] : null
-        });
-
-    },
-
-    setBusy: function(item, isBusy){
-
-        var idx = this.getItemIndex(item);
-        if(idx < 0)
-            return;
-
-        if(isBusy){
-            var rowNode = this.getRowNode(idx);
-            var e = rowNode.getElementsByTagName('img');
-            dojo.forEach(e, function(node, idx){
-                if(node.name == 'statusIcon'){
-                    dojo.attr(node, 'src', '/images/loading/loading16.gif')
-                }
-            });
-        }
-        else{
-            this.updateRow(idx);
-        }
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-
-    }
-
-
-});
-
-
-
-
-
-}
-
-if(!dojo._hasResource['bfree.api.ItemFileWriteStore']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.api.ItemFileWriteStore'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 10/11/11
- * Time: 3:35 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.api.ItemFileWriteStore');
-
-
-dojo.declare('bfree.api.ItemFileWriteStore', [dojo.data.ItemFileWriteStore],{
-
-    fetchItemById: function(id){
-        var item = null;
-
-         this.fetchItemByIdentity({
-           identity: id,
-           onItem: function(fndItem){ item = fndItem; }
-        });
-
-        return item;
-    },
-
-    generateUniqueId: function(){
-
-        var _id = null;
-        var isDup = true;
-
-        do{
-            _id = (new Date()).getTime();
-            this.fetchItemByIdentity({
-               identity: _id,
-               onItem: function(item){ isDup = (item != null); }
-           });
-        }while(isDup);
-
-        return _id;
-    }
-
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.BooleanSelect']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.BooleanSelect'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 22/11/11
- * Time: 11:15 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.BooleanSelect');
-
-
-
-
-dojo.declare('bfree.widget.BooleanSelect', [bfree.widget.FilteringSelect],
-{
-
-	constructor: function(/*Object*/args){
-        this.store = new bfree.api.ItemFileWriteStore({
-            data: {
-                identifier: 'id',
-                label: 'name',
-                items: [
-                    { id: 0, name: 'false' },
-                    {id: 1, name: 'true' }
-                ]
-            }
-        });
-	},
-
-	postCreate: function(){
-		this.inherited('postCreate', arguments);
-		this._setDisabledAttr(this.disabled);
-	},
-
-	_setDisabledAttr: function(val){
-		this.inherited(arguments);
-
-		var newClass = ((this.disabledIconClass != null) && (val)) ? this.disabledIconClass : this._iconClass;
-		this.set('iconClass', newClass)
-	}
-
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.DateTextBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.DateTextBox'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 18/11/11
- * Time: 4:24 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.DateTextBox');
-
-
-dojo.declare('bfree.widget.DateTextBox', [dijit.form.DateTextBox],
-{
-
-    postCreate: function(){
-		this.inherited('postCreate', arguments);
-	},
-
-    reset: function(){
-        this.inherited('reset', arguments);
-        this._hasBeenBlurred = true;
-    },
-
-    startup: function(){
-        this._hasBeenBlurred = true;
-        this.inherited('startup', arguments);
-        this.validate();
-    }
-
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.NumberSpinner']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.NumberSpinner'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 18/11/11
- * Time: 4:31 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.NumberSpinner');
-
-
-dojo.declare('bfree.widget.NumberSpinner', [dijit.form.NumberSpinner],
-{
-
-
-    adjust: function(val, delta){
-        var tc = this.constraints,
-			v = isNaN(val),
-			gotMax = !isNaN(tc.max),
-			gotMin = !isNaN(tc.min)
-		;
-		if(v && delta != 0){ // blank or invalid value and they want to spin, so create defaults
-			val = 0;
-		}
-		var newval = val + delta;
-		if(v || isNaN(newval)){ return val; }
-		if(gotMax && (newval > tc.max)){
-			newval = tc.max;
-		}
-		if(gotMin && (newval < tc.min)){
-			newval = tc.min;
-		}
-		return newval;
-    },
-
-
-    constructor: function(args){
-
-    },
-
-	postCreate: function(){
-		this.inherited('postCreate', arguments);
-	},
-
-    reset: function(){
-        this.inherited('reset', arguments);
-        this._hasBeenBlurred = true;
-    },
-
-    startup: function(){
-        this._hasBeenBlurred = true;
-        this.inherited('startup', arguments);
-        this.validate();
-    }
-
-});
-
-}
-
-if(!dojo._hasResource["dijit.form.SimpleTextarea"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dijit.form.SimpleTextarea"] = true;
-dojo.provide("dijit.form.SimpleTextarea");
-
-
-
-dojo.declare("dijit.form.SimpleTextarea",
-	dijit.form.TextBox,
-	{
-	// summary:
-	//		A simple textarea that degrades, and responds to
-	// 		minimal LayoutContainer usage, and works with dijit.form.Form.
-	//		Doesn't automatically size according to input, like Textarea.
-	//
-	// example:
-	//	|	<textarea dojoType="dijit.form.SimpleTextarea" name="foo" value="bar" rows=30 cols=40></textarea>
-	//
-	// example:
-	//	|	new dijit.form.SimpleTextarea({ rows:20, cols:30 }, "foo");
-
-	baseClass: "dijitTextBox dijitTextArea",
-
-	attributeMap: dojo.delegate(dijit.form._FormValueWidget.prototype.attributeMap, {
-		rows:"textbox", cols: "textbox"
-	}),
-
-	// rows: Number
-	//		The number of rows of text.
-	rows: "3",
-
-	// rows: Number
-	//		The number of characters per line.
-	cols: "20",
-
-	templateString: "<textarea ${!nameAttrSetting} dojoAttachPoint='focusNode,containerNode,textbox' autocomplete='off'></textarea>",
-
-	postMixInProperties: function(){
-		// Copy value from srcNodeRef, unless user specified a value explicitly (or there is no srcNodeRef)
-		// TODO: parser will handle this in 2.0
-		if(!this.value && this.srcNodeRef){
-			this.value = this.srcNodeRef.value;
-		}
-		this.inherited(arguments);
-	},
-
-	buildRendering: function(){
-		this.inherited(arguments);
-		if(dojo.isIE && this.cols){ // attribute selectors is not supported in IE6
-			dojo.addClass(this.textbox, "dijitTextAreaCols");
-		}
-	},
-
-	filter: function(/*String*/ value){
-		// Override TextBox.filter to deal with newlines... specifically (IIRC) this is for IE which writes newlines
-		// as \r\n instead of just \n
-		if(value){
-			value = value.replace(/\r/g,"");
-		}
-		return this.inherited(arguments);
-	},
-
-	_previousValue: "",
-	_onInput: function(/*Event?*/ e){
-		// Override TextBox._onInput() to enforce maxLength restriction
-		if(this.maxLength){
-			var maxLength = parseInt(this.maxLength);
-			var value = this.textbox.value.replace(/\r/g,'');
-			var overflow = value.length - maxLength;
-			if(overflow > 0){
-				if(e){ dojo.stopEvent(e); }
-				var textarea = this.textbox;
-				if(textarea.selectionStart){
-					var pos = textarea.selectionStart;
-					var cr = 0;
-					if(dojo.isOpera){
-						cr = (this.textbox.value.substring(0,pos).match(/\r/g) || []).length;
-					}
-					this.textbox.value = value.substring(0,pos-overflow-cr)+value.substring(pos-cr);
-					textarea.setSelectionRange(pos-overflow, pos-overflow);
-				}else if(dojo.doc.selection){ //IE
-					textarea.focus();
-					var range = dojo.doc.selection.createRange();
-					// delete overflow characters
-					range.moveStart("character", -overflow);
-					range.text = '';
-					// show cursor
-					range.select();
-				}
-			}
-			this._previousValue = this.textbox.value;
-		}
-		this.inherited(arguments);
-	}
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.propdef.Widget']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.propdef.Widget'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 14/11/11
- * Time: 4:54 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.propdef.Widget');
-
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.propdef.Widget', null,{
-});
-
-bfree.widget.propdef.Widget.generateWdgName = function(name){
-    return dojo.replace('wdg_{0}', [name]);
-};
-bfree.widget.propdef.Widget.resolveWdgName = function(wdgName){
-    return wdgName.replace('wdg_', '');
-};
-
-bfree.widget.propdef.Widget.formats = {'SHORT': 0x00, 'LONG': 0x01}
-bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format, defaultValue, maxLength){
-    var wdg = null;
-
-    if(dataType.isString() || ((dataType.isText()) && (format == bfree.widget.propdef.Widget.formats.SHORT))){
-        wdg = new bfree.widget.ValidationTextBox({
-            id: wdgId,
-            intermediateChanges: true,
-            label: label,
-            scrollOnFocus: false,
-            selectOnClick: true,
-            style: 'width:100%',
-            value: defaultValue,
-            maxLength: maxLength
-        });
-    }
-    else if(dataType.isDateTime()){
-        wdg = new bfree.widget.DateTextBox({
-            id: wdgId,
-            label: label,
-            scrollOnFocus: false,
-            selectOnClick: true,
-            style: 'width:100%',
-            value: defaultValue
-        });
-    }
-    else if(dataType.isText()){
-        wdg = new dijit.form.SimpleTextarea({
-            id: wdgId,
-            intermediateChanges: true,
-            label: label,
-            'class': 'bfree',
-            scrollOnFocus: false,
-            selectOnClick: true,
-            style: 'resize:none;width:100%',
-            value: defaultValue,
-            maxLength: maxLength
-        });
-
-    }
-    else if((dataType.isBoolean()) && ((!format) || (format == bfree.widget.propdef.Widget.formats.SHORT))){
-
-        wdg = new dijit.form.CheckBox({
-            id: wdgId,
-            label: label,
-            scrollOnFocus: false,
-            checked: defaultValue
-        });
-    }
-    else if((dataType.isBoolean()) && (format == bfree.widget.propdef.Widget.formats.LONG)){
-        wdg = new bfree.widget.BooleanSelect({
-            id: wdgId,
-            label: label,
-            scrollOnFocus: false,
-            style: 'width:100%',
-            value: defaultValue
-        });
-    }
-    else if(dataType.isInteger()){
-        wdg = new bfree.widget.NumberSpinner({
-            id: wdgId,
-            label: label,
-            smallDelta: 1,
-            largeDelta:10,
-            constraints: { fractional: false, min: -2147483648, max: 2147483647 },
-            scrollOnFocus: false,
-            selectOnClick: true,
-            style: 'width:100%',
-            value: defaultValue?defaultValue:0
-        });
-    }
-    else if(dataType.isFloat()){
-        wdg = new bfree.widget.NumberSpinner({
-            id: wdgId,
-            label: label,
-            smallDelta: 1,
-            largeDelta:10,
-            constraints: { places: '0,4' },
-            scrollOnFocus: false,
-            selectOnClick: true,
-            style: 'width:100%',
-            value: defaultValue?defaultValue:0
-        });
-    }
-
-    return wdg;
-}
-
-bfree.widget.propdef.Widget.getChoiceListWidget = function(wdgId, label, choiceList, showNone){
-    var wdg = null;
-    var valueStore = bfree.widget.propdef.Widget.generateStore(choiceList, showNone);
-
-    wdg = new bfree.widget.FilteringSelect({
-        id: wdgId,
-        label: label,
-        query: {},
-        store: valueStore,
-        scrollOnFocus: false,
-        searchAttr: 'display'
-    });
-
-    return wdg;
-}
-
-bfree.widget.propdef.Widget.generate = function(propertyMapping, propertyDefinition, choiceList){
-
-    var wdg = null;
-    var dataTypes = bfree.api.Application.getDataTypes();
-    var dataType = dataTypes.fetchById({id: propertyDefinition.data_type_id});
-    var id = bfree.widget.propdef.Widget.generateWdgName(propertyDefinition.getDbName());
-
-    if(choiceList){
-        wdg = bfree.widget.propdef.Widget.getChoiceListWidget(id, propertyDefinition.name, choiceList);
-    }
-    else{
-        wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name, bfree.widget.propdef.Widget.formats.LONG, propertyMapping.default_value, propertyDefinition.max_length);
-    }
-
-    wdg.set('required', propertyMapping.is_required);
-//    if(dataType.isFloat()||dataType.isInteger()){
-//        wdg.set('value', propertyMapping.default_value?propertyMapping.default_value:0);
-//    }
-
-
-    return wdg;
-}
-
-bfree.widget.propdef.Widget.generateStore = function(choiceList, showNone){
-    var items = [];
-
-    if(showNone){
-        items.push({
-            id: null,
-            display: 'None'
-        });
-    }
-
-    dojo.forEach(choiceList.choice_values, function(item, idx){
-        items.push({
-            id: item.value,
-            display: item.name
-        });
-    }, this);
-
-    return new bfree.api.ItemFileWriteStore({
-        data: {
-            identifier: 'id',
-            label: 'display',
-            items: items
-        }
-    });
-}
-
-}
-
-if(!dojo._hasResource['bfree.widget.doctype.properties.Editor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.doctype.properties.Editor'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 14/11/11
- * Time: 2:00 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.doctype.properties.Editor');
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.doctype.properties.Editor', [dijit._Widget, dijit._Templated],{
-    templateString: dojo.cache("bfree/widget/doctype/properties", "template/Editor.html", "<div style=\"padding:0 8px 0 0;height:100%;width:100%\">\n\n    <div dojoAttachPoint=\"tableNode\"></div>\n\n</div>\n"),
-    widgetsInTemplate: true,
-
-    _tblProperties: null,
-
-    activeItem: null,
-    choiceLists: null,
-    propertyDefinitions: null,
-
-    _onChange: function(id, newValue){
-        this.onValueChange(bfree.widget.propdef.Widget.resolveWdgName(id), newValue);
-    },
-
-    _setActiveItemAttr: function(item){
-
-        this.activeItem = item;
-
-        dojo.forEach(this.activeItem.property_mappings, function(item, idx){
-
-            var propertyDefinition = this.propertyDefinitions.fetchById({id: item.property_definition_id});
-            var wdg = null;
-            var choiceList = null;
-            if(item.choice_list_id){
-                choiceList = this.choiceLists.fetchById({id: item.choice_list_id });
-            }
-            wdg = bfree.widget.propdef.Widget.generate(item, propertyDefinition, choiceList);
-
-            if(wdg){
-                this._tblProperties.addChild(wdg);
-                wdg.onChange = dojo.hitch(this, this._onChange, wdg.id);
-            }
-
-        }, this);
-
-       this._tblProperties.refresh();
-       this.onLoaded();
-    },
-
-    _setDisabledAttr: function(is_disabled){
-        this._tblProperties.set('disabled', is_disabled);
-
-        var widgets = this._tblProperties.getChildren();
-        dojo.forEach(widgets, function(widget,idx){
-            widget.set('disabled', is_disabled)
-        }, this);
-
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        if(this._tblProperties){
-            this._tblProperties.destroyDescendants();
-            this._tblProperties.destroy();
-            this._tblProperties = null;
-        }
-
-        this.inherited('destroy', arguments);
-    },
-
-    focus: function(){
-
-    },
-
-    onLoaded: function(){
-    },
-
-    onValueChange: function(id, value){
-
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this._tblProperties = new bfree.widget.PropertyTable({
-            id: 'tblProps1',
-            customClass: 'versa',
-            showLabels: true,
-            cols: 1,
-            labelWidth: 88,
-            style: 'width:100%'
-        }, this.tableNode);
-
-    },
-
-
-    setValue: function(property, value){
-
-        var wdgName = bfree.widget.propdef.Widget.generateWdgName(property);
-        var wdg = dijit.byId(wdgName);
-        if(wdg){
-            if(wdg.declaredClass=="bfree.widget.NumberSpinner"){
-                wdg.set('value', value?value:0);
-            }else{
-                wdg.set('value', value);
-            }
-        }
-
-    },
-
-    setValues: function(item){
-        for(var propName in item){
-            var uniqueName = dojo.replace('documents.{0}', [propName]);
-            this.setValue(uniqueName, item[propName]);
-        }
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-        this._tblProperties.startup();
-    }
-
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.doctype.InstanceEditor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.doctype.InstanceEditor'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 14/11/11
- * Time: 11:08 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.doctype.InstanceEditor');
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templated],{
-    templateString: dojo.cache("bfree/widget/doctype", "template/InstanceEditor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        liveSplitters=\"true\"\n        style=\"height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"top\"\n            style=\"padding:8px 0 8px 0;height:24px;\">\n\n        <div dojoAttachPoint=\"tableNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            class=\"highlightPane\">\n\n        <div dojoAttachPoint=\"editorNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
-    widgetsInTemplate: true,
-
-    _cmbDocTypes:  null,
-    _propertyEditor: null,
-
-    activeItem: null,
-    choiceLists: null,
-    disabled: false,
-    documentTypes: null,
-    propertyDefinitions: null,
-    disableDocumentType: false,
-
-    _onChange: function(newValue){
-
-        if(String.isBlank(newValue)){
-            this.activeItem = null;
-        }
-        else{
-            this.activeItem = this.documentTypes.fetchById({id: newValue});
-        }
-
-        if(this._propertyEditor){
-           this._propertyEditor.destroy();
-           this._propertyEditor = null;
-        }
-        this._propertyEditor = new bfree.widget.doctype.properties.Editor({
-            id: 'propertyEditor1',
-            choiceLists: this.choiceLists,
-            propertyDefinitions: this.propertyDefinitions,
-            onLoaded: dojo.hitch(this, this._onLoaded),
-            onValueChange: dojo.hitch(this, this._onValueChange)
-        });
-
-        this._propertyEditor.placeAt(this.editorNode);
-        if(this.activeItem)
-            this._propertyEditor.set('activeItem', this.activeItem);
-        this._propertyEditor.set('disabled', this.disabled);
-
-        this.onChange(this.activeItem);
-    },
-
-    _onLoaded: function(){
-        this.onChange(this.activeItem);
-    },
-
-    _onValueChange: function(id, value){
-        this.onValueChange(id, value);
-    },
-
-    _setActiveItemAttr: function(item){
-        this._cmbDocTypes.reset();
-        this.activeItem = item;
-        this._cmbDocTypes.set('value', item.id);
-        this._cmbDocTypes.set('disabled', (this.activeItem == null)||this.disableDocumentType);
-    },
-
-    _setDisabledAttr: function(value){
-        this.disabled = value;
-
-        this._cmbDocTypes.set('disabled', this.disabled||this.disableDocumentType);
-
-        if(this._propertyEditor)
-            this._propertyEditor.set('disabled', this.disabled);
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        if(this._tblProperties){
-            this._tblProperties.destroyDescendants();
-            this._tblProperties.destroy();
-            this._tblProperties = null;
-        }
-
-        if(this._propertyEditor){
-            this._propertyEditor.destroy();
-            this._propertyEditor = null;
-        }
-
-        this.inherited('destroy', arguments);
-    },
-
-    focus: function(){
-
-    },
-
-    onChange: function(){
-
-    },
-
-    onValueChange: function(){
-
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this._tblProperties = new bfree.widget.PropertyTable({
-            id: 'tblDocTypes1',
-            customClass: 'versa',
-            showLabels: true,
-            cols: 1,
-            labelWidth: 88,
-            style: 'width:100%'
-        }, this.tableNode);
-
-        this._cmbDocTypes = new dijit.form.FilteringSelect({
-            id: 'cmbDocTypes',
-            label: 'Document Type',
-            store: this.documentTypes.store,
-            searchAttr: 'name',
-            disabled: true,
-            onChange: dojo.hitch(this, this._onChange)
-        });
-        this._tblProperties.addChild(this._cmbDocTypes);
-
-    },
-
-    resize: function(){
-        this.inherited('resize', arguments);
-        this.mainNode.resize();
-    },
-
-    setValues: function(item){
-        this._propertyEditor.setValues(item);
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-    }
-
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.document.Editor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.Editor'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 14/11/11
- * Time: 11:02 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.document.Editor');
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
-    templateString: dojo.cache("bfree/widget/document", "template/Editor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:0;height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            style=\"padding:0 8px 8px 8px\">\n\n        <div dojoAttachPoint=\"docTypeEditorNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
-    widgetsInTemplate: true,
-    disableDocumentType: false,
-
-    _choiceLists: null,
-    _documentTypes: null,
-    _docTypeEditor: null,
-    _propertyDefinitions: null,
-
-    activeItem: null,
-    library: null,
-
-    _btnAdd_onClick: function(evt){
-        this.onSubmit();
-    },
-
-    _docTypeEditor_onChange: function(documentType){
-        var state = this.activeItem.state;
-
-        if(documentType){
-            if(documentType.id != this.activeItem.document_type_id){
-                this.activeItem.document_type_id = documentType.id;
-                this.activeItem.validate({library: this.library});
-            }
-
-            dojo.forEach(documentType.property_mappings, function(item, idx){
-                var propertyDefinition = this._propertyDefinitions.fetchById({id: item.property_definition_id});
-                if(!propertyDefinition.is_system&&item.default_value){
-                    this.library.getDocuments().setValue(this.activeItem, propertyDefinition.column_name, item.default_value);
-                }
-            }, this);
-
-
-            this._docTypeEditor.setValues(this.activeItem);
-        }
-        else{
-            this.activeItem.document_type_id = null;
-            this.activeItem.validate({library: this.library});
-        }
-
-        if(state != this.activeItem.state)
-            this.onValidChange(this.activeItem);
-    },
-
-    _docTypeEditor_onValueChange: function(id, value){
-
-        var property_id = id.replace('documents.', '');
-        if(this.activeItem[property_id] != value){
-            var state = this.activeItem.state;
-            this.activeItem[property_id] = value;
-
-            this.activeItem.validate({library: this.library});
-            if(state != this.activeItem.state)
-                this.onValidChange(this.activeItem);
-        }
-
-    },
-
-    _setActiveItemAttr: function(item){
-        this.activeItem = item;
-
-        if(this.activeItem){
-
-            var document_type = this._documentTypes.fetchById({id:item.document_type_id});
-
-            var isDisabled = this.activeItem.getState(bfree.api.Document.states.CHECKED_IN) ||
-                                this.activeItem.getState(bfree.api.Document.states.ERROR);
-
-            this._docTypeEditor.set('activeItem', document_type);
-            this._docTypeEditor.set('disabled', isDisabled);
-        }
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        if(this._docTypeEditor){
-            this._docTypeEditor.destroy();
-            this._docTypeEditor = null;
-        }
-
-        this.inherited('destroy', arguments);
-    },
-
-    focus: function(){
-
-    },
-
-    onSubmit: function(){
-
-    },
-
-    onValidChange: function(item){
-
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this._documentTypes = this.library.getDocumentTypes();
-        this._documentTypes.refresh();
-
-        this._propertyDefinitions = this.library.getPropertyDefinitions();
-        this._propertyDefinitions.refresh();
-
-        this._choiceLists = this.library.getChoiceLists();
-        this._choiceLists.refresh();
-
-        this._docTypeEditor = new bfree.widget.doctype.InstanceEditor({
-            id: 'doctypeeditor1',
-            choiceLists: this._choiceLists,
-            documentTypes: this._documentTypes,
-            propertyDefinitions: this._propertyDefinitions,
-            disableDocumentType: this.disableDocumentType,
-            onChange: dojo.hitch(this, this._docTypeEditor_onChange),
-            onValueChange: dojo.hitch(this, this._docTypeEditor_onValueChange)
-        }, this.docTypeEditorNode);
-
-    },
-
-    resize: function(){
-        this.inherited('resize', arguments);
-        this.mainNode.resize();
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-    }
-
-});
-
-}
-
-if(!dojo._hasResource["dojox.embed.Flash"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dojox.embed.Flash"] = true;
-dojo.provide("dojox.embed.Flash");
-
-(function(){
-	/*******************************************************
-		dojox.embed.Flash
-
-		Base functionality to insert a flash movie into
-		a document on the fly.
-
-		Usage:
-		var movie=new dojox.embed.Flash({ args }, containerNode);
-	 ******************************************************/
-	var fMarkup, fVersion;
-	var minimumVersion = 9; // anything below this will throw an error (may overwrite)
-	var keyBase = "dojox-embed-flash-", keyCount=0;
-	var _baseKwArgs = {
-		expressInstall: false,
-		width: 320,
-		height: 240,
-		swLiveConnect: "true",
-		allowScriptAccess: "sameDomain",
-		allowNetworking:"all",
-		style: null,
-		redirect: null
-	};
-
-	function prep(kwArgs){
-		// console.warn("KWARGS:", kwArgs)
-		kwArgs = dojo.delegate(_baseKwArgs, kwArgs);
-
-		if(!("path" in kwArgs)){
-			console.error("dojox.embed.Flash(ctor):: no path reference to a Flash movie was provided.");
-			return null;
-		}
-
-		if(!("id" in kwArgs)){
-			kwArgs.id = (keyBase + keyCount++);
-		}
-		return kwArgs;
-	}
-
-	if(dojo.isIE){
-		fMarkup = function(kwArgs){
-			kwArgs = prep(kwArgs);
-			if(!kwArgs){ return null; }
-
-			var p;
-			var path = kwArgs.path;
-			if(kwArgs.vars){
-				var a = [];
-				for(p in kwArgs.vars){
-					a.push(p + '=' + kwArgs.vars[p]);
-				}
-				kwArgs.params.FlashVars = a.join("&");
-				delete kwArgs.vars;
-			}
-			// FIXME: really? +'s?
-			var s = '<object id="' + kwArgs.id + '" '
-				+ 'classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" '
-				+ 'width="' + kwArgs.width + '" '
-				+ 'height="' + kwArgs.height + '"'
-				+ ((kwArgs.style)?' style="' + kwArgs.style + '"':'')
-				+ '>'
-				+ '<param name="movie" value="' + path + '" />';
-			if(kwArgs.params){
-				for(p in kwArgs.params){
-					s += '<param name="' + p + '" value="' + kwArgs.params[p] + '" />';
-				}
-			}
-			s += '</object>';
-			return { id: kwArgs.id, markup: s };
-		};
-
-		fVersion = (function(){
-			var testVersion = 10, testObj = null;
-			while(!testObj && testVersion > 7){
-				try {
-					testObj = new ActiveXObject("ShockwaveFlash.ShockwaveFlash." + testVersion--);
-				}catch(e){ }
-			}
-			if(testObj){
-				var v = testObj.GetVariable("$version").split(" ")[1].split(",");
-				return {
-					major: (v[0]!=null) ? parseInt(v[0]) : 0,
-					minor: (v[1]!=null) ? parseInt(v[1]) : 0,
-					rev: (v[2]!=null) ? parseInt(v[2]) : 0
-				};
-			}
-			return { major: 0, minor: 0, rev: 0 };
-		})();
-
-		//	attach some cleanup for IE, thanks to deconcept :)
-		dojo.addOnUnload(function(){
-			var dummy = function(){};
-			var objs = dojo.query("object").
-				reverse().
-				style("display", "none").
-				forEach(function(i){
-					for(var p in i){
-						if((p != "FlashVars") && dojo.isFunction(i[p])){
-							try{
-								i[p] = dummy;
-							}catch(e){}
-						}
-					}
-				});
-		});
-
-		//	TODO: ...and double check this fix; is IE really firing onbeforeunload with any kind of href="#" link?
-		/*
-		var beforeUnloadHandle = dojo.connect(dojo.global, "onbeforeunload", function(){
-			try{
-				if(__flash_unloadHandler){ __flash_unloadHandler=function(){ }; }
-				if(__flash_savedUnloadHandler){ __flash_savedUnloadHandler=function(){ }; }
-			} catch(e){ }
-			dojo.disconnect(beforeUnloadHandle);
-		});
-		*/
-	} else {
-		//	*** Sane browsers branch ******************************************************************
-		fMarkup = function(kwArgs){
-			kwArgs = prep(kwArgs);
-			if(!kwArgs){ return null; }
-
-			var p;
-			var path = kwArgs.path;
-			if(kwArgs.vars){
-				var a = [];
-				for(p in kwArgs.vars){
-					a.push(p + '=' + kwArgs.vars[p]);
-				}
-				kwArgs.params.flashVars = a.join("&");
-				delete kwArgs.vars;
-			}
-			var s = '<embed type="application/x-shockwave-flash" '
-				+ 'src="' + path + '" '
-				+ 'id="' + kwArgs.id + '" '
-				+ 'width="' + kwArgs.width + '" '
-				+ 'height="' + kwArgs.height + '"'
-				+ ((kwArgs.style)?' style="' + kwArgs.style + '" ':'')
-
-				+ 'pluginspage="' + window.location.protocol + '//www.adobe.com/go/getflashplayer" ';
-			if(kwArgs.params){
-				for(p in kwArgs.params){
-					s += ' ' + p + '="' + kwArgs.params[p] + '"';
-				}
-			}
-			s += ' />';
-			return { id: kwArgs.id, markup: s };
-		};
-
-		fVersion=(function(){
-			var plugin = navigator.plugins["Shockwave Flash"];
-			if(plugin && plugin.description){
-				var v = plugin.description.replace(/([a-zA-Z]|\s)+/, "").replace(/(\s+r|\s+b[0-9]+)/, ".").split(".");
-				return {
-					major: (v[0]!=null) ? parseInt(v[0]) : 0,
-					minor: (v[1]!=null) ? parseInt(v[1]) : 0,
-					rev: (v[2]!=null) ? parseInt(v[2]) : 0
-				};
-			}
-			return { major: 0, minor: 0, rev: 0 };
-		})();
-	}
-
-
-/*=====
-dojox.embed.__flashArgs = function(path, id, width, height, style, params, vars, expressInstall, redirect){
-	//	path: String
-	//		The URL of the movie to embed.
-	//	id: String?
-	//		A unique key that will be used as the id of the created markup.  If you don't
-	//		provide this, a unique key will be generated.
-	//	width: Number?
-	//		The width of the embedded movie; the default value is 320px.
-	//	height: Number?
-	//		The height of the embedded movie; the default value is 240px
-	//	minimumVersion: Number ?
-	//		The minimum targeted version of the Flash Player (defaults to 9)
-	//	style: String?
-	//		Any CSS style information (i.e. style="background-color:transparent") you want
-	//		to define on the markup.
-	//	params: Object?
-	//		A set of key/value pairs that you want to define in the resultant markup.
-	//	vars: Object?
-	//		A set of key/value pairs that the Flash movie will interpret as FlashVars.
-	//	expressInstall: Boolean?
-	//		Whether or not to include any kind of expressInstall info. Default is false.
-	//	redirect: String?
-	//		A url to redirect the browser to if the current Flash version is not supported.
-	this.id=id;
-	this.path=path;
-	this.width=width;
-	this.minimumVersion=minimumVersion;
-	this.height=height;
-	this.style=style;
-	this.params=params;
-	this.vars=vars;
-	this.expressInstall=expressInstall;
-	this.redirect=redirect;
-}
-=====*/
-
-	//	the main entry point
-	dojox.embed.Flash = function(/*dojox.embed.__flashArgs*/ kwArgs, /*DOMNode*/ node){
-		//	summary:
-		//		Create a wrapper object around a Flash movie; this is the DojoX equivilent
-		//		to SWFObject.
-		//
-		//	description:
-		//		Creates a wrapper object around a Flash movie.  Wrapper object will
-		//		insert the movie reference in node; when the browser first starts
-		//		grabbing the movie, onReady will be fired; when the movie has finished
-		//		loading, it will fire onLoad.
-		//
-		//		If your movie uses ExternalInterface, you should use the onLoad event
-		//		to do any kind of proxy setup (see dojox.embed.Flash.proxy); this seems
-		//		to be the only consistent time calling EI methods are stable (since the
-		//		Flash movie will shoot several methods into the window object before
-		//		EI callbacks can be used properly).
-		//
-		//		*Important note*:  this code includes a workaround for the Eolas "fix" from
-		//		Microsoft; in order to work around the "click to activate this control" message
-		//		on any embedded Flash movie, this code will load a separate, non-dojo.require
-		//		javascript file in order to write the Flash movie into the document.  As such
-		//		it cannot be used with Dojo's scope map techniques for working with multiple
-		//		versions of Dojo on the same page.
-		//
-		//	kwArgs: dojox.embed.__flashArgs
-		//		The various arguments that will be used to help define the Flash movie.
-		//	node: DomNode
-		//		The node where the embed object will be placed
-		//
-		//	example:
-		//		Embed a flash movie in a document using the new operator, and get a reference to it.
-		//	|	var movie = new dojox.embed.Flash({
-		//	|		path: "path/to/my/movie.swf",
-		//	|		width: 400,
-		//	|		height: 300
-		//	|	}, myWrapperNode, "testLoaded");
-		//
-		//	example:
-		//		Embed a flash movie in a document without using the new operator.
-		//	|	var movie = dojox.embed.Flash({
-		//	|		path: "path/to/my/movie.swf",
-		//	|		width: 400,
-		//	|		height: 300,
-		//	|		style: "position:absolute;top:0;left:0"
-		//	|	}, myWrapperNode, "testLoaded");
-		//
-		// File can only be run from a server, due to SWF dependency.
-		if(location.href.toLowerCase().indexOf("file://")>-1){
-			throw new Error("dojox.embed.Flash can't be run directly from a file. To instatiate the required SWF correctly it must be run from a server, like localHost.");
-		}
-
-		//	available: Number
-		//		If there is a flash player available, and if so what version.
-		this.available = dojox.embed.Flash.available;
-
-		//	minimumVersion: Number
-		//		The minimum version of Flash required to run this movie.
-		this.minimumVersion = kwArgs.minimumVersion || minimumVersion;
-		//console.log("AVAILABLE:", this);
-
-		//	id: String
-		//		The id of the DOMNode to be used for this movie.  Can be used with dojo.byId to get a reference.
-		this.id = null;
-
-		//	movie: FlashObject
-		//		A reference to the movie itself.
-		this.movie = null;
-
-		//	domNode: DOMNode
-		//		A reference to the DOMNode that contains this movie.
-		this.domNode = null;
-		if(node){
-			node = dojo.byId(node);
-		}
-		// setTimeout Fixes #8743 - creating double SWFs
-		// also allows time for code to attach to onError
-		setTimeout(dojo.hitch(this, function(){
-			if(kwArgs.expressInstall || this.available && this.available >= this.minimumVersion){
-				if(kwArgs && node){
-					this.init(kwArgs, node);
-				}else{
-					this.onError("embed.Flash was not provided with the proper arguments.");
-				}
-			}else{
-				if(!this.available){
-					this.onError("Flash is not installed.");
-				}else{
-					this.onError("Flash version detected: "+this.available+" is out of date. Minimum required: "+this.minimumVersion);
-				}
-			}
-		}), 100);
-	};
-
-	dojo.extend(dojox.embed.Flash, {
-		onReady: function(/*HTMLObject*/ movie){
-			console.warn("embed.Flash.movie.onReady:", movie)
-			//	summary:
-			//		Stub function for you to attach to when the movie reference is first
-			//		pushed into the document.
-		},
-		onLoad: function(/*HTMLObject*/ movie){
-			console.warn("embed.Flash.movie.onLoad:", movie)
-			//	summary:
-			//		Stub function for you to attach to when the movie has finished downloading
-			//		and is ready to be manipulated.
-		},
-		onError: function(msg){
-
-		},
-		_onload: function(){
-			// summary:
-			//	Internal. Cleans up before calling onLoad.
-			clearInterval(this._poller);
-			delete this._poller;
-			delete this._pollCount;
-			delete this._pollMax;
-			this.onLoad(this.movie);
-		},
-		init: function(/*dojox.embed.__flashArgs*/ kwArgs, /*DOMNode?*/ node){
-			console.log("embed.Flash.movie.init")
-			//	summary
-			//		Initialize (i.e. place and load) the movie based on kwArgs.
-			this.destroy();		//	ensure we are clean first.
-			node = dojo.byId(node || this.domNode);
-			if(!node){ throw new Error("dojox.embed.Flash: no domNode reference has been passed."); }
-
-			// vars to help determine load status
-			var p = 0, testLoaded=false;
-			this._poller = null; this._pollCount = 0; this._pollMax = 15; this.pollTime = 100;
-
-			if(dojox.embed.Flash.initialized){
-
-				this.id = dojox.embed.Flash.place(kwArgs, node);
-				this.domNode = node;
-
-				setTimeout(dojo.hitch(this, function(){
-					this.movie = this.byId(this.id, kwArgs.doc);
-					this.onReady(this.movie);
-
-					this._poller = setInterval(dojo.hitch(this, function(){
-
-						// catch errors if not quite ready.
-						try{
-							p = this.movie.PercentLoaded();
-						}catch(e){
-							/* squelch */
-							console.warn("this.movie.PercentLoaded() failed");
-						}
-
-						if(p == 100){
-							// if percent = 100, movie is fully loaded and we're communicating
-							this._onload();
-
-						}else if(p==0 && this._pollCount++ > this._pollMax){
-							// after several attempts, we're not past zero.
-							// FIXME: What if we get stuck on 33% or something?
-							clearInterval(this._poller);
-							throw new Error("Building SWF failed.");
-						}
-					}), this.pollTime);
-				}), 1);
-			}
-		},
-		_destroy: function(){
-			//	summary
-			//		Kill the movie and reset all the properties of this object.
-			try{
-				this.domNode.removeChild(this.movie);
-			}catch(e){}
-			this.id = this.movie = this.domNode = null;
-		},
-		destroy: function(){
-			//	summary
-			//		Public interface for destroying all the properties in this object.
-			//		Will also clean all proxied methods.
-			if(!this.movie){ return; }
-
-			//	remove any proxy functions
-			var test = dojo.delegate({
-				id: true,
-				movie: true,
-				domNode: true,
-				onReady: true,
-				onLoad: true
-			});
-			for(var p in this){
-				if(!test[p]){
-					delete this[p];
-				}
-			}
-
-			//	poll the movie
-			if(this._poller){
-				//	wait until onLoad to destroy
-				dojo.connect(this, "onLoad", this, "_destroy");
-			} else {
-				this._destroy();
-			}
-		},
-		byId: function (movieName, doc){
-			// 	summary:
-			//		Gets Flash movie by id.
-			//	description:
-			//		Probably includes methods for outdated
-			//		browsers, but this should catch all cases.
-			// arguments:
-			//		movieName: String
-			//			The name of the SWF
-			//		doc: Object
-			//			The document, if not current window
-			//			(not fully supported)
-			//	example:
-			//	| var movie = dojox.embed.Flash.byId("myId");
-			//
-			doc = doc || document;
-			if(doc.embeds[movieName]){
-				return doc.embeds[movieName];
-			}
-			if(doc[movieName]){
-				return doc[movieName];
-			}
-			if(window[movieName]){
-				return window[movieName];
-			}
-			if(document[movieName]){
-				return document[movieName];
-			}
-			return null;
-		}
-	});
-
-	//	expose information through the constructor function itself.
-	dojo.mixin(dojox.embed.Flash, {
-		//	summary:
-		//		A singleton object used internally to get information
-		//		about the Flash player available in a browser, and
-		//		as the factory for generating and placing markup in a
-		//		document.
-		//
-		//	minSupported: Number
-		//		The minimum supported version of the Flash Player, defaults to 8.
-		//	available: Number
-		//		Used as both a detection (i.e. if(dojox.embed.Flash.available){ })
-		//		and as a variable holding the major version of the player installed.
-		//	supported: Boolean
-		//		Whether or not the Flash Player installed is supported by dojox.embed.
-		//	version: Object
-		//		The version of the installed Flash Player; takes the form of
-		//		{ major, minor, rev }.  To get the major version, you'd do this:
-		//		var v=dojox.embed.Flash.version.major;
-		//	initialized: Boolean
-		//		Whether or not the Flash engine is available for use.
-		//	onInitialize: Function
-		//		A stub you can connect to if you are looking to fire code when the
-		//		engine becomes available.  A note: DO NOT use this event to
-		//		place a movie in a document; it will usually fire before DOMContentLoaded
-		//		is fired, and you will get an error.  Use dojo.addOnLoad instead.
-		minSupported : 8,
-		available: fVersion.major,
-		supported: (fVersion.major >= fVersion.required),
-		minimumRequired: fVersion.required,
-		version: fVersion,
-		initialized: false,
-		onInitialize: function(){
-			dojox.embed.Flash.initialized = true;
-		},
-		__ie_markup__: function(kwArgs){
-			return fMarkup(kwArgs);
-		},
-		proxy: function(/*dojox.embed.Flash*/ obj, /*Array|String*/ methods){
-			//	summary:
-			//		Create the set of passed methods on the dojox.embed.Flash object
-			//		so that you can call that object directly, as opposed to having to
-			//		delve into the internal movie to do this.  Intended to make working
-			//		with Flash movies that use ExternalInterface much easier to use.
-			//
-			//	example:
-			//		Create "setMessage" and "getMessage" methods on foo.
-			//	|	var foo = new dojox.embed.Flash(args, someNode);
-			//	|	dojo.connect(foo, "onLoad", dojo.hitch(foo, function(){
-			//	|		dojox.embed.Flash.proxy(this, [ "setMessage", "getMessage" ]);
-			//	|		this.setMessage("dojox.embed.Flash.proxy is pretty cool...");
-			//	|		console.log(this.getMessage());
-			//	|	}));
-			dojo.forEach((dojo.isArray(methods) ? methods : [ methods ]), function(item){
-				this[item] = dojo.hitch(this, function(){
-					return (function(){
-						return eval(this.movie.CallFunction(
-							'<invoke name="' + item + '" returntype="javascript">'
-							+ '<arguments>'
-							+ dojo.map(arguments, function(item){
-								// FIXME:
-								//		investigate if __flash__toXML will
-								//		accept direct application via map()
-								//		(e.g., does it ignore args past the
-								//		first? or does it blow up?)
-								return __flash__toXML(item);
-							}).join("")
-							+ '</arguments>'
-							+ '</invoke>'
-						));
-					}).apply(this, arguments||[]);
-				});
-			}, obj);
-		}
-	});
-
-	/*if(dojo.isIE){
-		//	Ugh!
-		if(dojo._initFired){
-			var e = document.createElement("script");
-			e.type = "text/javascript";
-			e.src = dojo.moduleUrl("dojox", "embed/IE/flash.js");
-			document.getElementsByTagName("head")[0].appendChild(e);
-		}else{
-			//	we can use document.write.  What a kludge.
-			document.write('<scr'+'ipt type="text/javascript" src="' + dojo.moduleUrl("dojox", "embed/IE/flash.js") + '">'
-				+ '</scr'+'ipt>');
-		}
-	}else{*/
-		dojox.embed.Flash.place = function(kwArgs, node){
-			var o = fMarkup(kwArgs);
-			node = dojo.byId(node);
-			if(!node){
-				node = dojo.doc.createElement("div");
-				node.id = o.id+"-container";
-				dojo.body().appendChild(node);
-			}
-			if(o){
-				node.innerHTML = o.markup;
-				return o.id;
-			}
-			return null;
-		}
-		dojox.embed.Flash.onInitialize();
-	//}
-})();
-
-}
-
-if(!dojo._hasResource['bfree.api.Uploader']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.api.Uploader'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 14/12/11
- * Time: 11:20 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.api.Uploader');
-
-
-
-dojo.declare('bfree.api.Uploader', null, {
-
-});
-
-bfree.api.Uploader.useFlash = function(){
-
-    //Both HTML5/Flash uploaders fail with Opera so force IFrame
-    if(dojo.isOpera)
-        return false;
-
-    return dojox.embed.Flash.available;
-}
-
-bfree.api.Uploader.CLEAN_TRGT  = '/zones/{0}/uploader/clean.json';
-bfree.api.Uploader.PRV_TRGT = '/zones/{0}/uploader/preview?file={1}&authenticity_token={2}'
-bfree.api.Uploader.DL_TRGT = '/zones/{0}/uploader/download?file={1}';
-bfree.api.Uploader.UL_TRGT = '/zones/{0}/uploader/upload?pkg={1}';
-
-bfree.api.Uploader.getDownloadUrl = function(args){
-    return dojo.replace(bfree.api.Uploader.DL_TRGT, [args.zone.subdomain, encodeURIComponent(args.item.file)])
-}
-
-bfree.api.Uploader.getPreviewUrl = function(args){
-    var file_name = (args.item) ? args.item.binary_file_name : '';
-    return dojo.replace(bfree.api.Uploader.PRV_TRGT, [args.zone.subdomain, encodeURIComponent(file_name), bfree.api.XhrHelper.authenticity_token])
-}
-
-bfree.api.Uploader.getUploadUrl = function(args){
-    return dojo.replace(bfree.api.Uploader.UL_TRGT, [args.zone.subdomain, args.isPackage])
-}
-
-bfree.api.Uploader.clean = function(args){
-
-    var url = dojo.replace(bfree.api.Uploader.CLEAN_TRGT, [args.zone.subdomain]);
-
-    var postData = {
-    };
-
-    var results = bfree.api.XhrHelper.doPostAction({
-        target: url,
-        postData: postData
-    });
-
-}
-
-}
-
-if(!dojo._hasResource["dojox.form.uploader.Base"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dojox.form.uploader.Base"] = true;
-dojo.provide("dojox.form.uploader.Base");
-
-
-
-
-dojo.declare("dojox.form.uploader.Base", [dijit._Widget, dijit._Templated], {
-	//
-	// Version: 1.6
-	//
-	// summary:
-	// 		The Base class used for dojox.form.Uploader and dojox.form.uploader.FileList.
-	//
-	// 	description:
-	// 		Should not be used as a standalone. To be mixed in with other classes.
-	//
-
-	getForm: function(){
-		// summary:
-		// 		Finds the parent form of the Uploader, if it exists.
-		//
-		if(!this.form){
-			var n = this.domNode;
-			while(n && n.tagName && n !== document.body){
-				if(n.tagName.toLowerCase() == "form"){
-					this.form = n;
-					break;
-				}
-				n = n.parentNode;
-			}
-		}
-		return this.form // Node;
-	},
-
-	getUrl: function(){
-		// summary:
-		// 		Finds the URL to upload to, whether it be the action in the parent form, this.url or
-		// 		this.uploadUrl
-		//
-		if(this.uploadUrl) this.url = this.uploadUrl;
-		if(this.url) return this.url;
-		if(this.getForm()) this.url = this.form.action;
-		return this.url; // String
-	},
-
-
-	connectForm: function(){
-		//console.log("connectForm...", this.url, !!this.uploadUrl, !!this.getForm())
-
-		this.url = this.getUrl();
-
-		if(!this._fcon && !!this.getForm()){
-			this._fcon = true;
-			this.connect(this.form, "onsubmit", function(evt){
-				dojo.stopEvent(evt);
-				this.submit(dojo.formToObject(this.form));
-			});
-			//console.log("----------------form connected:", this.url)
-		}
-		//console.log("form:", this.form, this.url);
-	},
-
-	supports: function(what){
-		//	summary:
-		// 		Does feature testing for uploader capabilities. (No browser sniffing - yay)
-		//
-		if(!this._hascache){
-			this._hascache = {
-				testDiv: dojo.create("div"),
-				testInput: dojo.create("input", {type:"file"}),
-				xhr:!!window.XMLHttpRequest ? new XMLHttpRequest() : {}
-			};
-			dojo.style(this._hascache.testDiv, "opacity", .7);
-		}
-		switch(what){
-			case "FormData":
-				return !!window.FormData;
-			case "sendAsBinary":
-				return !!this._hascache.xhr.sendAsBinary;
-			case "opacity":
-				return dojo.style(this._hascache.testDiv, "opacity") == .7;
-			case "multiple":
-				if(this.force == "flash" || this.force == "iframe") return false;
-				var res = dojo.attr(this._hascache.testInput, "multiple");
-				return res===true || res===false; // IE will be undefined
-		}
-		return false; // Boolean
-	},
-	getMimeType: function(){
-		//	summary:
-		//		Returns the mime type that should be used in an HTML5 upload form. Return result
-		//		may change as the current use is very generic.
-		//
-		return "application/octet-stream"; //image/gif
-	},
-	getFileType: function(/* String */name){
-		// summary:
-		// 		Gets the extension of a file
-		return name.substring(name.lastIndexOf(".")+1).toUpperCase(); // String
-	},
-	convertBytes: function(bytes){
-		// summary:
-		// 		Converts bytes. Returns an object with all conversions. The "value" property is
-		// 		considered the most likely desired result.
-		//
-		var kb = Math.round(bytes/1024*100000)/100000;
-		var mb = Math.round(bytes/1048576*100000)/100000;
-		var gb = Math.round(bytes/1073741824*100000)/100000;
-		var value = bytes;
-		if(kb>1) value = kb.toFixed(1)+" kb";
-		if(mb>1) value = mb.toFixed(1)+" mb";
-		if(gb>1) value = gb.toFixed(1)+" gb";
-		return {
-			kb:kb,
-			mb:mb,
-			gb:gb,
-			bytes:bytes,
-			value: value
-		}; // Object
-	}
-});
-
-}
-
-if(!dojo._hasResource["dojox.form.Uploader"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dojox.form.Uploader"] = true;
-dojo.provide("dojox.form.Uploader");
-dojo.experimental("dojox.form.Uploader");
-
-
-
-	//
-	// TODO:
-	//		i18n
-	//		label via innerHTML
-	//		Doc and or test what can be extended.
-	//		Doc custom file events
-	//		Use new FileReader() for thumbnails
-	//		flashFieldName should default to Flash
-	//		get('value'); and set warning
-	//
-
-dojo.declare("dojox.form.Uploader", [dojox.form.uploader.Base], {
-	//
-	// Version: 1.6
-	//
-	// summary:
-	//		A widget that creates a stylable file-input button, with optional multi-file selection,
-	//		using only HTML elements. Non-HTML5 browsers have fallback options of Flash or an iframe.
-	//
-	//	description:
-	//		A bare-bones, stylable file-input button, with optional multi-file selection. The list
-	//		of files is not displayed, that is for you to handle by connecting to the onChange
-	//		event, or use the dojox.form.uploader.FileList.
-	//
-	//		Uploader without plugins does not have any ability to upload - it is for use in forms
-	//		where you handle the upload either by a standard POST or with Ajax using an iFrame. This
-	//		class is for convenience of multiple files only. No progress events are available.
-	//
-	//		If the browser supports a file-input with the "multiple" attribute, that will be used.
-	//		If the browser does not support "multiple" (ergo, IE) multiple inputs are used,
-	//		one for each selection.
-	//
-	//
-	//	uploadOnSelect: Boolean
-	//		If true, uploads imediately after a file has been selected. If false,
-	//		waits for upload() to be called.
-	uploadOnSelect:false,
-	//	tabIndex: Number|String
-	//		The tab order in the DOM.
-	tabIndex:0,
-	//	multiple: Boolean
-	//		If true and flash mode, multiple files may be selected from the dialog.
-	multiple:false,
-	//
-	//	label: String
-	//		The text used in the button that when clicked, opens a system Browse Dialog.
-	label:"Upload...",
-	//
-	// url: String
-	//		The url targeted for upload. An absolute URL is preferred. Relative URLs are
-	//		changed to absolute.
-	url:"",
-	//
-	//	name: String
-	//		The name attribute needs to end with square brackets: [] as this is the standard way
-	//		of handling an attribute "array". This requires a slightly different technique on the
-	//		server.
-	name:"uploadedfile",
-	//
-	//	flashFieldName: String
-	//		If set, this will be the name of the field of the flash uploaded files that the server
-	//		is expecting. If not set, "Flash" is appended to the "name" property.
-	flashFieldName:"",
-	//
-	//	uploadType: String [readonly]
-	//		The type of uploader being used. As an alternative to determining the upload type on the
-	//		server based on the fieldName, this property could be sent to the server to help
-	//		determine what type of parsing should be used.
-	uploadType:"form",
-	//
-	_nameIndex:0,
-	widgetsInTemplate:true,
-	templateString:'<div class="dojoxFileInput"><div dojoType="dijit.form.Button" dojoAttachPoint="button">${label}</div></div>',
-
-	postMixInProperties: function(){
-		this._inputs = [];
-		this._getButtonStyle(this.srcNodeRef);
-		this.inherited(arguments);
-	},
-	postCreate: function(){
-		var restore = false;
-		var parent = this.domNode.parentNode;
-		var position = this._getNodePosition(this.domNode);
-		if(!this.btnSize.w || !this.btnSize.h) {
-			dojo.body().appendChild(this.domNode);
-			this._getButtonStyle(this.domNode);
-			restore = true;
-		}
-		this._setButtonStyle();
-		if(restore){
-			dojo.place(this.domNode, position.node, position.pos)
-		}
-		this.inherited(arguments);
-	},
-
-	/*************************
-	 *	   Public Events	 *
-	 *************************/
-
-	onChange: function(/* Array */fileArray){
-		//	summary:
-		// 		stub to connect
-		// 		Fires when files are selected
-		// 		Event is an array of last files selected
-	},
-
-	onBegin: function(/* Array */dataArray){
-		// summary:
-		// 		Fires when upload begins
-	},
-
-	onProgress: function(/* Object */customEvent){
-		// summary:
-		// 		Stub to connect
-		// 		Fires on upload progress. Event is a normalized object of common properties
-		// 		from HTML5 uploaders and the Flash uploader. Will not fire for IFrame.
-		// customEvent:
-		// 		bytesLoaded: Number
-		// 			Amount of bytes uploaded so far of entire payload (all files)
-		//		bytesTotal: Number
-		//			Amount of bytes of entire payload (all files)
-		//		type: String
-		//			Type of event (progress or load)
-		//		timeStamp: Number
-		//			Timestamp of when event occurred
-	},
-
-	onComplete: function(/* Object */customEvent){
-		// summary:
-		// 		stub to connect
-		// 		Fires when all files have uploaded
-		// 		Event is an array of all files
-		this.reset();
-	},
-
-	onCancel: function(){
-		// summary:
-		// 		Stub to connect
-		// 		Fires when dialog box has been closed
-		//		without a file selection
-	},
-
-	onAbort: function(){
-		// summary:
-		// 		Stub to connect
-		// 		Fires when upload in progress was canceled
-	},
-
-	onError: function(/* Object or String */evtObject){
-		// summary:
-		//		Fires on errors
-		//
-		//FIXME: Unsure of a standard form of error events
-	},
-
-	/*************************
-	 *	   Public Methods	 *
-	 *************************/
-
-	upload: function(/*Object ? */formData){
-		// summary:
-		// 		When called, begins file upload. Only supported with plugins.
-	},
-
-	submit: function(/* form Node ? */form){
-		// summary:
-		//		If Uploader is in a form, and other data should be sent along with the files, use
-		//		this instead of form submit. Only supported with plugins.
-	},
-
-	reset: function(){
-		// summary
-		// 		Resets entire input, clearing all files.
-		// 		NOTE:
-		// 		Removing individual files is not yet supported, because the HTML5 uploaders can't
-		// 		be edited.
-		// 		TODO:
-		// 		Add this ability by effectively, not uploading them
-		//
-		this._disconnectButton();
-		dojo.forEach(this._inputs, dojo.destroy, dojo);
-		this._inputs = [];
-		this._nameIndex = 0;
-		this._createInput();
-	},
-
-	getFileList: function(){
-		// summary:
-		// 		Returns a list of selected files.
-		//
-		var fileArray = [];
-		if(this.supports("multiple")){
-			dojo.forEach(this.inputNode.files, function(f, i){
-				fileArray.push({
-					index:i,
-					name:f.name,
-					size:f.size,
-					type:f.type
-				});
-			}, this);
-		}else{
-			dojo.forEach(this._inputs, function(n, i){
-				fileArray.push({
-					index:i,
-					name:n.value.substring(n.value.lastIndexOf("\\")+1),
-					size:0,
-					type:n.value.substring(n.value.lastIndexOf(".")+1)
-				});
-			}, this)
-
-		}
-		return fileArray; // Array
-	},
-
-	/*********************************************
-	 *	   Private Property. Get off my lawn.	 *
-	 *********************************************/
-
-	_getValueAttr: function(){
-		// summary:
-		//		Internal. To get disabled use: uploader.get("disabled");
-		return this.getFileList();
-	},
-
-	_setValueAttr: function(disabled){
-		console.error("Uploader value is read only");
-	},
-
-	_getDisabledAttr: function(){
-		// summary:
-		//		Internal. To get disabled use: uploader.get("disabled");
-		return this._disabled;
-	},
-
-	_setDisabledAttr: function(disabled){
-		// summary:
-		//		Internal. To set disabled use: uploader.set("disabled", true);
-		if(this._disabled == disabled){ return; }
-		this.button.set('disabled', disabled);
-		dojo.style(this.inputNode, "display", disabled ? "none" : "block");
-	},
-
-	_getNodePosition: function(node){
-		if(node.previousSibling){
-			return {
-				node:node.previousSibling,
-				pos:"after"
-			}
-		}
-		return {
-			node:node.nextSibling,
-			pos:"before"
-		}
-	},
-
-	_getButtonStyle: function(node){
-		if(!node){
-			// we don't want this to happen. But if it does, try and display *something*.
-			this.btnSize = {
-				w:200,
-				h:25
-			};
-		}else{
-			this.btnSize = dojo.marginBox(node);
-		}
-	},
-
-	_setButtonStyle: function(){
-		var hasParent = true;
-		if(!this.domNode.parentNode || !this.domNode.parentNode.tagName){
-			document.body.appendChild(this.domNode);
-			hasParent = false;
-		}
-
-		dojo.style(this.domNode, {
-			width:this.btnSize.w+"px",
-			height:(this.btnSize.h+4)+"px",
-			overflow:"hidden",
-			position:"relative"
-		});
-
-		this.inputNodeFontSize = Math.max(2, Math.max(Math.ceil(this.btnSize.w / 60), Math.ceil(this.btnSize.h / 15)));
-		this._createInput();
-
-		dojo.style(this.button.domNode, {
-			margin:"0px",
-			display:"block",
-			verticalAlign:"top" // IE fix
-
-		});
-
-		dojo.style(this.button.domNode.firstChild, {
-			margin:"0px",
-			display:"block"
-			//height:this.btnSize.h+"px"
-		});
-
-		if(!hasParent){
-			document.body.removeChild(this.domNode);
-		}
-	},
-
-	_createInput: function(){
-
-		if(this._inputs.length){
-			dojo.style(this.inputNode, {
-				top:"500px"
-			});
-			this._disconnectButton();
-			this._nameIndex++;
-		}
-
-		var name;
-		if(this.supports("multiple")){
-			// FF3.5+, WebKit
-			name = this.name+"s[]";
-		}else{
-			// <=IE8
-			name = this.name + (this.multiple ? this._nameIndex : "");
-		}
-		this.inputNode = dojo.create("input", {type:"file", name:name, className:"dojoxInputNode"}, this.domNode, "first");
-		if(this.supports("multiple") && this.multiple){
-			dojo.attr(this.inputNode, "multiple", true);
-		}
-		this._inputs.push(this.inputNode);
-
-
-		dojo.style(this.inputNode, {
-			fontSize:this.inputNodeFontSize+"em"
-		});
-		var size = dojo.marginBox(this.inputNode);
-
-		dojo.style(this.inputNode, {
-			position:"absolute",
-			top:"-2px",
-			left:"-"+(size.w-this.btnSize.w-2)+"px",
-			opacity:0
-		});
-		this._connectButton();
-	},
-
-	_connectButton: function(){
-		this._cons = [];
-		var cs = dojo.hitch(this, function(nm){
-			this._cons.push(dojo.connect(this.inputNode, nm, this, function(evt){
-				this.button._cssMouseEvent({type:nm})
-			}));
-		});
-		cs("mouseover");
-		cs("mouseout");
-		cs("mousedown");
-		this._cons.push(dojo.connect(this.inputNode, "change", this, function(evt){
-			this.onChange(this.getFileList(evt));
-			if(!this.supports("multiple") && this.multiple) this._createInput();
-		}));
-
-		this.button.set('tabIndex', -1);
-		if(this.tabIndex > -1){
-			this.inputNode.tabIndex = this.tabIndex;
-			var restoreBorderStyle = dojo.style(this.button.domNode.firstChild, "border");
-			this._cons.push(dojo.connect(this.inputNode, "focus", this, function(){
-				dojo.style(this.button.domNode.firstChild, "border", "1px dashed #ccc");
-			}));
-			this._cons.push(dojo.connect(this.inputNode, "blur", this, function(){
-				dojo.style(this.button.domNode.firstChild, "border", restoreBorderStyle);
-			}));
-		}
-	},
-
-	_disconnectButton: function(){
-		dojo.forEach(this._cons, dojo.disconnect, dojo);
-	}
-});
-
-(function(){
-	dojox.form.UploaderOrg = dojox.form.Uploader;
-	var extensions = [dojox.form.UploaderOrg];
-	dojox.form.addUploaderPlugin = function(plug){
-		// summary:
-		// 		Handle Uploader plugins. When the dojox.form.addUploaderPlugin() function is called,
-		// 		the dojox.form.Uploader is recreated using the new plugin (mixin).
-		//
-		extensions.push(plug);
-		dojo.declare("dojox.form.Uploader", extensions, {});
-	}
-})();
-
-}
-
-if(!dojo._hasResource['bfree.widget.Uploader']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.Uploader'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 09/11/11
- * Time: 2:23 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.Uploader');
-
-
-
-
-
-if(bfree.api.Uploader.useFlash()){
-    dojo['require']('dojox.form.uploader.plugins.Flash');
-}
-else{
-    dojo['require']('dojox.form.uploader.plugins.IFrame');
-}
-
-dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
-{
-    documents:0,
-    maxDocuments:50,
-
-    _createFlashUploader: function(){
-		// summary:
-		//		Internal. Creates Flash Uploader
-		//
-		var url = this.getUrl();
-		if(url){
-			if(url.toLowerCase().indexOf("http")<0 && url.indexOf("/")!=0){
-				// Appears to be a relative path. Attempt to
-				//	convert it to absolute, so it will better
-				//target the SWF.
-				//
-				var loc = window.location.href.split("/");
-				loc.pop();
-				loc = loc.join("/")+"/";
-				url = loc+url;
-			}
-		}else{
-			console.warn("Warning: no uploadUrl provided.");
-		}
-
-		this.inputNode = dojo.create("div", {className:"dojoxFlashNode"}, this.domNode, "first");
-		dojo.style(this.inputNode, {
-			position:"absolute",
-			top:"-2px",
-			width:this.btnSize.w+"px",
-			height:this.btnSize.h+"px",
-			opacity:0
-		});
-
-		var w = this.btnSize.w + 8;
-		var h = this.btnSize.h + 8;
-
-		var args = {
-			expressInstall:true,
-			path: (this.swfPath.uri || this.swfPath) + "?cb_" + (new Date().getTime()),
-			width: w,
-			height: h,
-			allowScriptAccess:"always",
-			allowNetworking:"all",
-			vars: {
-				uploadDataFieldName: this.flashFieldName || this.name+"Flash",
-				uploadUrl: url,
-				uploadOnSelect: this.uploadOnSelect,
-				deferredUploading:this.deferredUploading || 0,
-				selectMultipleFiles: this.multiple,
-				id: this.id,
-				isDebug: this.isDebug,
-				noReturnCheck: this.skipServerCheck,
-				serverTimeout:this.serverTimeout
-			},
-			params: {
-				scale:"noscale",
-				wmode:"transparent",
-				wmode:"opaque",
-				allowScriptAccess:"always",
-				allowNetworking:"all"
-			}
-
-		};
-
-		this.flashObject = new dojox.embed.Flash(args, this.inputNode);
-		this.flashObject.onError = dojo.hitch(function(msg){
-			console.error("Flash Error: " + msg);
-		});
-		this.flashObject.onReady = dojo.hitch(this, function(){
-			this.onReady(this);
-		});
-		this.flashObject.onLoad = dojo.hitch(this, function(mov){
-			this.flashMovie = mov;
-			this.flashReady = true;
-
-			this.onLoad(this);
-		});
-		this._connectFlash();
-	},
-
-
-    _upload: function(evt){
-
-        if((this.documents+evt.length)>this.maxDocuments){
-            alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
-            return;
-        }
-
-        this.documents+=evt.length
-
-        this.onBeforeUpload(evt);
-        if(this.uploadType == 'iframe'){
-            this.upload({
-                preventDefault: function(){ },
-                stopPropagation: function(){ }
-            });
-        }
-        else{
-            this.upload({
-                authenticity_token: bfree.api.XhrHelper.authenticity_token,
-                upload_type: this.uploadType
-            });
-        }
-
-    },
-
-    onAfterUpload: function(items){
-
-    },
-
-    onBeforeUpload: function(items){
-
-    },
-
-    constructor: function(args){
-        this.documents=0;
-        this.uploadOnSelect = false;
-        if(dojo.isOpera){
-            this.force = 'iframe';
-        }
-    },
-
-    onChange: function(evt){
-        var fnRef = bfree.widget.Uploader.buildUploadFnRef(this, evt);
-		setTimeout(fnRef, 1000);
-    },
-
-    onComplete: function(evt){
-        var uploaded_files = [];
-
-        try{
-            this.reset();
-
-            if(evt.hasOwnProperty('uploadedfiles')){
-                uploaded_files = evt.uploadedfiles;
-            }
-            else if(bfree.api.Utilities.isArray(evt)){
-                for(var i = 0; i < evt.length; i++){
-                    uploaded_files.push({
-                        name: decodeURI(evt[i].name),
-                        content_type:  evt[i].type,
-                        size: evt[i].size,
-                        error: evt[i].error
-                    });
-                }
-            }
-            else{
-                uploaded_files.push({
-                    name: decodeURI(evt.name),
-                    content_type: evt.type,
-                    size: evt.size,
-                    error: evt.error
-                });
-            }
-        }
-        catch(e){
-            console.log(e.message);
-        }
-
-        this.onAfterUpload(uploaded_files);
-    },
-
-    onProgress: function(evt){
-        console.log((evt.decimal * 100) + '%');
-    },
-
-    beforeUpload: function(){
-
-    },
-
-    onUploadComplete: function(uploaded_files){
-
-    },
-
-    postCreate: function(){
-
-        if(this.uploadType == 'html5'){
-
-            var initValue = this.uploadOnSelect;
-            this.connectForm();
-            this.inherited('postCreate', arguments);
-
-            this.uploadOnSelect = initValue;
-            if(this.uploadOnSelect){
-                dojo.connect(this, 'onChange', function(data){
-                    this.upload(data[0])
-                });
-            }
-
-        }
-        else{
-            this.inherited('postCreate', arguments);
-        }
-
-	},
-
-    uploadFlash: function(formData){
-        this.onBegin(this.getFileList());
-		this.flashMovie.doUpload(formData);
-    }
-
-});
-
-bfree.widget.Uploader.buildUploadFnRef = function(that, evt){
-    return ( function(){
-		that._upload(evt);
-	});
-}
-
-}
-
-if(!dojo._hasResource["dijit.ProgressBar"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dijit.ProgressBar"] = true;
-dojo.provide("dijit.ProgressBar");
-
-
-
-
-
-
-dojo.declare("dijit.ProgressBar", [dijit._Widget, dijit._Templated], {
-	// summary:
-	//		A progress indication widget, showing the amount completed
-	//		(often the percentage completed) of a task.
-	//
-	// example:
-	// |	<div dojoType="ProgressBar"
-	// |		 places="0"
-	// |		 value="..." maximum="...">
-	// |	</div>
-
-	// progress: [const] String (Percentage or Number)
-	//		Number or percentage indicating amount of task completed.
-	// 		Deprecated.   Use "value" instead.
-	progress: "0",
-
-	// value: String (Percentage or Number)
-	//		Number or percentage indicating amount of task completed.
-	// 		With "%": percentage value, 0% <= progress <= 100%, or
-	// 		without "%": absolute value, 0 <= progress <= maximum.
-	//		Infinity means that the progress bar is indeterminate.
-	value: "",
-
-	// maximum: [const] Float
-	//		Max sample number
-	maximum: 100,
-
-	// places: [const] Number
-	//		Number of places to show in values; 0 by default
-	places: 0,
-
-	// indeterminate: [const] Boolean
-	// 		If false: show progress value (number or percentage).
-	// 		If true: show that a process is underway but that the amount completed is unknown.
-	// 		Deprecated.   Use "value" instead.
-	indeterminate: false,
-
-	// label: String?
-	//		Label on progress bar.   Defaults to percentage for determinate progress bar and
-	//		blank for indeterminate progress bar.
-	label:"",
-
-	// name: String
-	//		this is the field name (for a form) if set. This needs to be set if you want to use
-	//		this widget in a dijit.form.Form widget (such as dijit.Dialog)
-	name: '',
-
-	templateString: dojo.cache("dijit", "templates/ProgressBar.html", "<div class=\"dijitProgressBar dijitProgressBarEmpty\" role=\"progressbar\"\n\t><div  dojoAttachPoint=\"internalProgress\" class=\"dijitProgressBarFull\"\n\t\t><div class=\"dijitProgressBarTile\" role=\"presentation\"></div\n\t\t><span style=\"visibility:hidden\">&nbsp;</span\n\t></div\n\t><div dojoAttachPoint=\"labelNode\" class=\"dijitProgressBarLabel\" id=\"${id}_label\"></div\n\t><img dojoAttachPoint=\"indeterminateHighContrastImage\" class=\"dijitProgressBarIndeterminateHighContrastImage\" alt=\"\"\n/></div>\n"),
-
-	// _indeterminateHighContrastImagePath: [private] dojo._URL
-	//		URL to image to use for indeterminate progress bar when display is in high contrast mode
-	_indeterminateHighContrastImagePath:
-		dojo.moduleUrl("dijit", "themes/a11y/indeterminate_progress.gif"),
-
-	postMixInProperties: function(){
-		this.inherited(arguments);
-		if(!("value" in this.params)){
-			this.value = this.indeterminate ? Infinity : this.progress;
-		}
-	},
-
-	buildRendering: function(){
-		this.inherited(arguments);
-		this.indeterminateHighContrastImage.setAttribute("src",
-			this._indeterminateHighContrastImagePath.toString());
-		this.update();
-	},
-
-	update: function(/*Object?*/attributes){
-		// summary:
-		//		Internal method to change attributes of ProgressBar, similar to set(hash).  Users should call
-		//		set("value", ...) rather than calling this method directly.
-		// attributes:
-		//		May provide progress and/or maximum properties on this parameter;
-		//		see attribute specs for details.
-		// example:
-		//	|	myProgressBar.update({'indeterminate': true});
-		//	|	myProgressBar.update({'progress': 80});
-		//	|	myProgressBar.update({'indeterminate': true, label:"Loading ..." })
-		// tags:
-		//		private
-
-		// TODO: deprecate this method and use set() instead
-
-		dojo.mixin(this, attributes || {});
-		var tip = this.internalProgress, ap = this.domNode;
-		var percent = 1;
-		if(this.indeterminate){
-			dijit.removeWaiState(ap, "valuenow");
-			dijit.removeWaiState(ap, "valuemin");
-			dijit.removeWaiState(ap, "valuemax");
-		}else{
-			if(String(this.progress).indexOf("%") != -1){
-				percent = Math.min(parseFloat(this.progress)/100, 1);
-				this.progress = percent * this.maximum;
-			}else{
-				this.progress = Math.min(this.progress, this.maximum);
-				percent = this.progress / this.maximum;
-			}
-
-			dijit.setWaiState(ap, "describedby", this.labelNode.id);
-			dijit.setWaiState(ap, "valuenow", this.progress);
-			dijit.setWaiState(ap, "valuemin", 0);
-			dijit.setWaiState(ap, "valuemax", this.maximum);
-		}
-		this.labelNode.innerHTML = this.report(percent);
-
-		dojo.toggleClass(this.domNode, "dijitProgressBarIndeterminate", this.indeterminate);
-		tip.style.width = (percent * 100) + "%";
-		this.onChange();
-	},
-
-	_setValueAttr: function(v){
-		this._set("value", v);
-		if(v == Infinity){
-			this.update({indeterminate:true});
-		}else{
-			this.update({indeterminate:false, progress:v});
-		}
-	},
-
-	_setLabelAttr: function(label){
-		this._set("label", label);
-		this.update();
-	},
-
-	_setIndeterminateAttr: function(indeterminate){
-		// Deprecated, use set("value", ...) instead
-		this.indeterminate = indeterminate;
-		this.update();
-	},
-
-	report: function(/*float*/percent){
-		// summary:
-		//		Generates message to show inside progress bar (normally indicating amount of task completed).
-		//		May be overridden.
-		// tags:
-		//		extension
-
-		return this.label ? this.label :
-				(this.indeterminate ? "&nbsp;" : dojo.number.format(percent, { type: "percent", places: this.places, locale: this.lang }));
-	},
-
-	onChange: function(){
-		// summary:
-		//		Callback fired when progress updates.
-		// tags:
-		//		extension
-	}
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.file.MultiUploader']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.file.MultiUploader'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 10/11/11
- * Time: 9:53 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.file.MultiUploader');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.file.MultiUploader', [dijit._Widget, dijit._Templated],{
-    templateString: dojo.cache("bfree/widget/file", "template/MultiUploader.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoAttachPoint=\"mainNode\"\n        dojoType=\"dijit.layout.BorderContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%\">\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"leading\"\n            style=\"padding:4px 0 0 8px;width:120px;position:relative;overflow:hidden;\">\n\n        <div dojoAttachPoint=\"formNode\">\n            <input dojoAttachPoint=\"tokenNode\"></input>\n            <input dojoAttachPoint=\"uploadTypeNode\"></input>\n            <div dojoAttachPoint=\"uploaderNode\" style=\"width:118px;height:24px;\"></div>\n        </div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            splitter=\"false\"\n            region=\"center\"\n            style=\"overflow:hidden;padding:7px 12px 10px 4px\">\n\n        <div dojoAttachPoint=\"progressNode\"></div>\n\n    </div>\n\n</div>\n\n</div>\n"),
-    widgetsInTemplate: true,
-
-    _frmUpload: null,
-    _prgBar: null,
-    _txtToken: null,
-    _txtUploadType: null,
-    _uploader: null,
-
-    isPackage: false,
-    multiple: true,
-    scrollOnFocus: false,
-    zone: null,
-
-    _onBeforeUpload: function(items){
-
-        dojo.forEach(items, function(item, idx){
-            this.onFileSelect({
-                name: item.name,
-                size: item.size,
-                type: item.type
-            });
-        }, this);
-        this._prgBar.set('style', {opacity: 1});
-
-    },
-
-    _onAfterUpload: function(items){
-
-        dojo.forEach(items, function(item, idx){
-            if(String.isEmpty(item.error))
-                this.onFileUploaded(item);
-            else
-                this.onError(item, new bfree.api.Error(item.error));
-        }, this);
-
-        dojo.fadeOut({
-            node: this._prgBar.domNode,
-            duration: 2000,
-            onEnd: dojo.hitch(this,function() {
-                this._prgBar.set('value', (this._uploader.uploadType == 'iframe') ? (Infinity) : 0);
-            })
-        }).play();
-
-    },
-
-    _onProgress: function(evt){
-        this._prgBar.set('value', evt.decimal * 100);
-    },
-
-    _setUrlAttr: function(value){
-        this._uploader.set('url', value);
-    },
-
-    clean: function(){
-        bfree.api.Uploader.clean({zone: this.zone});
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        if(this._uploader != null){
-            this._uploader.destroyRecursive();
-            this._uploader = null;
-        }
-
-        this.inherited('destroy', arguments);
-    },
-
-    onError: function(fileItem, err){
-    },
-
-    onFileSelect: function(fileItem){
-    },
-
-    onFileUploaded: function(fileItem){
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this._frmUpload = new dijit.form.Form({
-            method: 'POST',
-            encType: 'multipart/form-data'
-        }, this.formNode);
-
-        this._txtToken = new dijit.form.TextBox({
-            name: 'authenticity_token',
-            type: 'hidden',
-            value: bfree.api.XhrHelper.authenticity_token
-        }, this.tokenNode);
-
-        //if the browser is ie and the uploader is iframe multiple
-        //has to be set to true for the uploader to function properly
-        if(dojo.isIE&&!bfree.api.Uploader.useFlash()){
-            this.multiple=true;
-        }
-
-        this._uploader = new bfree.widget.Uploader({
-            label: 'Choose File(s)...',
-            multiple: this.multiple,
-            uploadOnSelect: false,
-            url: bfree.api.Uploader.getUploadUrl({ zone: this.zone, isPackage: this.isPackage }),
-            style: 'width:108px',
-            maxDocuments: 50,
-            onBeforeUpload: dojo.hitch(this, this._onBeforeUpload),
-            onAfterUpload: dojo.hitch(this, this._onAfterUpload),
-            onProgress: dojo.hitch(this, this._onProgress)
-        },  this.uploaderNode);
-
-        this._txtUploadType = new dijit.form.TextBox({
-            name: 'upload_type',
-            type: 'hidden',
-            value: this._uploader.uploadType
-        }, this.uploadTypeNode);
-
-        this._prgBar = new dijit.ProgressBar({
-            value: (this._uploader.uploadType == 'iframe') ? (Infinity) : 0,
-            style: 'margin-right:32px;width:100%;opacity:0'
-        }, this.progressNode);
-
-    },
-
-    redraw: function(){
-
-        if(this.uploadType == 'flash'){
-            if(this._uploader != null){
-                this._uploader.destroy();
-             this._uploader = null;
-            }
-        }
-
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-        this.mainNode.resize();
-        this._uploader.set('scrollOnFocus', false);
-
-        dojo.fadeOut({
-            node: this._prgBar.domNode,
-            duration: 10,
-            onEnd: dojo.hitch(this,function() {
-                this._prgBar.set('value', (this._uploader.uploadType == 'iframe') ? (Infinity) : 0);
-            })
-        }).play();
-
-    }
-
-});
-
-
-
-}
-
-if(!dojo._hasResource['bfree.widget.document.Checkin']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.Checkin'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 09/12/11
- * Time: 3:03 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.document.Checkin');
-
-
-
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
-    templateString: dojo.cache("bfree/widget/document", "template/Checkin.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n        </div>\n\n         <div   dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                    <div class=\"versaGridOutline\">\n                        <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                            Select a file to checkin\n                        </div>\n                        <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                            <tr>\n                                <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                            </tr>\n                        </table>\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:0px;padding:0;position:relative;display:none\">\n\n                            <span style=\"position:absolute;top:0;left:16px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div>\n\n</div>\n\n    <!-- div    dojoType=\"dijit.layout.BorderContainer\"\n            dojoAttachPoint=\"mainContainer\"\n            design=\"sidebar\"\n            gutters=\"false\"\n            style=\"height:100%;width:100%;\">\n\n        <div   dojoType=\"dijit.layout.ContentPane\"\n               dojoAttachPoint=\"previewPane\"\n               splitter=\"false\"\n               region=\"center\"\n               style=\"display:none\">\n\n            <div dojoAttachPoint=\"previewNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"right\"\n                splitter=\"false\"\n                style=\"width:480px\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    dojoAttachPoint=\"headerPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopHeader\"\n                    style=\"height:12px;position:relative;\">\n\n                <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n                </span>\n\n                <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n                </span>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:32px;padding:4px 0 4px 0\">\n\n                    <div dojoAttachPoint=\"uploaderNode\"></div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                        <div class=\"versaGridOutline\">\n                            <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                                Select a file to checkin\n                            </div>\n                            <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                                <tr>\n                                    <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                                </tr>\n                            </table>\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                dojoAttachPoint=\"midTitlePane\"\n                                region=\"top\"\n                                splitter=\"false\"\n                                class=\"versaMidHeader\"\n                                style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                            Custom Properties\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.BorderContainer\"\n                                design=\"headline\"\n                                gutters=\"false\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0\">\n\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"center\"\n                                    splitter=\"false\"\n                                    style=\"padding:0;\">\n\n                                <div dojoAttachPoint=\"editorNode\"></div>\n\n                            </div>\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"bottom\"\n                                    splitter=\"false\"\n                                    style=\"height:0px;padding:0;position:relative;display:none\">\n\n                                <span style=\"position:absolute;top:0;left:16px\">\n                                <div dojoAttachPoint=\"addMinorNode\"></div>\n                                <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                    <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                                </span>\n                                </span>\n\n                            </div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                            <span style=\"position:absolute;top:0;right:8px;\">\n                                <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                                <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                            </span>\n\n                    </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div -->\n\n</div>\n"),
-    widgetsInTemplate: true,
-
-    _fileItem: null,
-    _documents: null,
-    _editor: null,
-    _isPreviewShowing: false,
-    _multiUploader: null,
-    _wdgPreview: null,
-
-    document: null,
-    user: null,
-    library: null,
-    zone: null,
-
-    _chkAddMinor_onChange: function(newValue){
-        this.document.isMinorVersion = newValue;
-    },
-
-    _doCancel: function(){
-        var canClose = false;
-
-        try{
-            this.library.getDocuments().revert();
-            canClose = true;
-        }
-        catch(e){
-            var err = new bfree.api.Error('Failed to revert document', e);
-            bfree.widget.ErrorManager.handleError({
-                error: err
-            });
-        }
-
-        return canClose;
-    },
-
-    _doSave: function(){
-
-        var canClose = false;
-
-        try{
-
-            if(!this.document.isValid({library: this.library})){
-                throw new Error('One or more properties are missing or invalid');
-            }
-
-            this.document.isMinorVersion = this._chkAddMinor.checked;
-            this.document.binary_file_name = this._fileItem.name;
-            this.document.binary_content_type = this._fileItem.content_type;
-            this.document.binary_file_size = this._fileItem.size
-
-            this.document.checkin({zone: this.zone, library: this.library});
-
-            canClose = true;
-        }
-        catch(e){
-
-            var err = new bfree.api.Error('Failed to checkin document', e);
-            bfree.widget.ErrorManager.handleError({
-                error: err
-            });
-
-            //The store loses the "dirty" flag when item save fails and revert hasn't occurred
-            this.library.getDocuments().clone({item: this.document});
-
-            if(e.status == 404){
-                canClose = this._doCancel();
-                this.library.getDocuments().store.onDelete(this.document);
-            }
-
-        }
-
-        return canClose;
-
-
-    },
-
-    _loadItem: function(){
-
-        try{
-            this.document = this.library.getDocuments().refreshItem(this.document.getId());
-            this._editor.set('activeItem', this.document);
-        }
-        finally{
-            this.onWidgetLoaded();
-        }
-
-    },
-
-    _onFileSelect: function(fileItem){
-
-        this._fileItem = fileItem;
-        this._fileItem.content_type = fileItem.type;
-
-        this._fileItem.state = bfree.api.Document.states.PENDING;
-        this._setState();
-
-        dojo.style(this.selectNode, {display: 'none'});
-        dojo.style(this.fileTableNode, {display: 'block'});
-
-        dojo.fadeIn({
-            node: this.fileTableNode,
-            duration: 1000
-        }).play();
-
-    },
-
-    _onFileUploaded: function(fileItem){
-
-        this._fileItem = fileItem;
-        this._fileItem.state = bfree.api.Document.states.UPLOADED;
-        this._setState();
-
-        if(this._isPreviewShowing){
-            var cloneDocument = {
-                binary_file_name: this._fileItem.name,
-                binary_content_type: this._fileItem.content_type,
-                binary_file_size: this._fileItem.size
-
-            }
-            this._wdgPreview.set('activeItem', cloneDocument);
-        }
-
-        this.onValueChange();
-    },
-
-    _onHidePreview: function(e){
-
-        try{
-            this._wdgPreview.set('activeItem', null);
-
-            dojo.style(this.showPreviewNode, {display: 'block'});
-            dojox.fx.crossFade({
-                nodes : [this.hidePreviewNode, this.showPreviewNode],
-                duration:1000,
-                onEnd: dojo.hitch(this, function(){ dojo.style(this.hidePreviewNode, {display: 'none'}); })
-            }).play();
-
-            dojo.style(this.previewPane.domNode, {display: 'none'});
-            dojo.removeClass(this.headerPane.domNode, 'versaTopRightHeader');
-            dojo.removeClass(this.midTitlePane.domNode, 'versaMidRightHeader');
-
-            this.dialog.resize({w: 480});
-            this.dialog._position();
-
-        }
-        finally{
-            this._isPreviewShowing = false;
-            dojo.stopEvent(e);
-        }
-
-    },
-
-    _onShowPreview: function(e){
-
-        try{
-            var v = dijit.getViewport();
-            var width = (v.w > 1216) ? 1216 : v.w;
-
-            dojo.style(this.hidePreviewNode, {display: 'block'});
-            dojox.fx.crossFade({
-                nodes : [this.showPreviewNode, this.hidePreviewNode],
-                duration:1000,
-                onEnd: dojo.hitch(this, function(){
-                    dojo.style(this.showPreviewNode, {display: 'none'});
-                })
-            }).play();
-
-            dojo.addClass(this.headerPane.domNode, 'versaTopRightHeader');
-            dojo.addClass(this.midTitlePane.domNode, 'versaMidRightHeader');
-            dojo.style(this.previewPane.domNode, {display: 'block'});
-
-            this.dialog.resize({w: width - 16});
-            this.dialog._position();
-
-            if(this._fileItem){
-                var cloneDocument = {
-                    binary_file_name: this._fileItem.name,
-                    binary_content_type: this._fileItem.content_type,
-                    binary_file_size: this._fileItem.size
-                };
-                this._wdgPreview.set('activeItem', cloneDocument);
-            }
-
-        }
-        finally{
-            this._isPreviewShowing = true;
-            dojo.stopEvent(e);
-        }
-
-    },
-
-    _onUploadError: function(fileItem, err){
-
-        var err = new bfree.api.Error(dojo.replace('Failed to upload file \'{0}\'', [fileItem.name]), err);
-        bfree.widget.ErrorManager.handleError({
-            error: err
-        });
-
-        this._fileItem = fileItem;
-        this._fileItem.state = bfree.api.Document.states.ERROR;
-        this._setState();
-
-    },
-
-    _onValidChange: function(documentItem){
-        this.onValueChange();
-    },
-
-    _setState: function(){
-
-        var icon = bfree.api.Document.getStateIcon(this._fileItem.state);
-        var stateSrc = dojo.replace('/images/icons/states/{0}', [icon]);
-
-        var typeSrc =  bfree.api.Document.getIconUrl(this._fileItem.content_type, 16);
-
-        this.stateIconNode.src = stateSrc;
-        this.typeIconNode.src = typeSrc;
-        this.fileNameNode.innerHTML = this._fileItem.name;
-        this.fileSizeNode.innerHTML = bfree.api.Utilities.readablizeBytes({ bytes: this._fileItem.size });
-
-        var canAddMinor = false;
-        this._chkAddMinor.set('disabled', !canAddMinor);
-
-        var msg = bfree.api.Document.getStateMessage(this._fileItem.state);
-        var icon = bfree.api.Document.getStateIcon(this._fileItem.state);
-
-        this.statusMsgNode.innerHTML = msg;
-        this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon])
-
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        if(this._multiUploader != null){
-            this._multiUploader.destroy();
-            this._multiUploader = null;
-        }
-
-        if(this._editor != null){
-            this._editor.destroy();
-            this._editor = null;
-        }
-
-        this.inherited('destroy', arguments);
-    },
-
-    isValid: function(){
-        return (this._fileItem) && (!this.document.getState(bfree.api.Document.states.INVALID));
-    },
-
-    onDialogClosing: function(dlgResult){
-        var canClose = false;
-
-        try{
-
-            this.returnValue = this.documents;
-            canClose = (dlgResult == bfree.widget.Dialog.dialogResult.ok) ?
-                            this._doSave() :
-                            this._doCancel();
-
-            canClose = true;
-        }
-        catch(e){
-           var err = new bfree.api.Error('Failed to close \'Checkin Document\' dialog', e);
-            bfree.widget.ErrorManager.handleError({
-                error: err
-            });
-        }
-        finally{
-            this._multiUploader.clean();
-            this.library.getDocuments().refreshItem(this.document.getId());
-        }
-
-        return canClose;
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this.document = this.documents[0];
-
-        this._multiUploader = new bfree.widget.file.MultiUploader({
-            id: 'uploader1',
-            multiple: false,
-            zone: this.zone,
-            onFileSelect: dojo.hitch(this, this._onFileSelect),
-            onFileUploaded: dojo.hitch(this, this._onFileUploaded),
-            onError: dojo.hitch(this, this._onUploadError)
-        }, this.uploaderNode);
-
-        this._editor = new bfree.widget.document.Editor({
-            id: 'editor1',
-            library: this.library,
-            disableDocumentType: true,
-            onValidChange: dojo.hitch(this, this._onValidChange),
-            onSubmit: dojo.hitch(this, this._onSubmit)
-        }, this.editorNode);
-
-        this._chkAddMinor = new dijit.form.CheckBox({
-            id: 'chkAddMinor',
-            checked: false,
-            scrollOnFocus: false,
-            disabled: true,
-            onChange: dojo.hitch(this, this._chkAddMinor_onChange)
-        }, this.addMinorNode);
-
-        this._wdgPreview = new bfree.widget.file.Preview({
-            zone: this.zone
-        }, this.previewNode);
-
-    },
-
-    resize: function(){
-        this.inherited('resize', arguments);
-        this.mainContainer.resize();
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-        this._multiUploader.startup();
-        this._wdgPreview.startup();
-
-        //This "should" be in the "_loadItem" function but it seems to break the flash uploader???
-        //this.library.getDocuments().clone({item: this.document});
-
-        setTimeout(bfree.widget.document.Checkin._loadFnRef(this), 10);
-    }
-
-});
-
-bfree.widget.document.Checkin._loadFnRef = function(that){
-    return ( function() {
-       that._loadItem();
-    });
-}
-
-bfree.widget.document.Checkin.show = function(args){
-
-    if((!args.items) || (args.items.length < 1))
-        throw new Error('No documents selected');
-
-    var document = args.items[0];
-
-    var dlg = new bfree.widget.Dialog({
-        id: 'dlgCkiDocument',
-        title: 'Checkin Document: ' + document.name.display_limit(32),
-        widgetConstructor: bfree.widget.document.Checkin,
-        widgetParams: {
-            user: args.user,
-            documents: args.items,
-            library: args.library,
-            zone: args.zone
-        },
-        noResize: true,
-        height: 480,
-        width: 480,
-        zIndex: 1024,
-        buttons: bfree.widget.Dialog.buttons.ok | bfree.widget.Dialog.buttons.cancel,
-        onClose: args.onClose
-    });
-    dlg.startup();
-    dlg.show();
-
-}
-
-}
-
-if(!dojo._hasResource['bfree.widget.document.FileGrid']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.FileGrid'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 14/11/11
- * Time: 9:20 AM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.document.FileGrid');
-
-
-
-
-
-dojo.declare('bfree.widget.document.FileGrid', [bfree.widget._Grid], {
-
-    selectionMode: 'single',
-
-    _canEdit: function(cell, rowIndex){
-        return false;
-    },
-
-	_canSort: function(columnIndex){
-        return true;
-    },
-
-    addFileItem: function(fileItem){
-
-        var item = this._store.newItem(fileItem);
-
-        if(this.selection.getSelectedCount() < 1)
-            this.selectItem(item);
-
-    },
-
-	constructor: function(/* Object */args){
-
-		this.updateDelay = 0;
-		this.rowsPerPage = 25;
-        this.formatterScope = this;
-
-		this.query = {};
-		this.queryOptions = {cache: true};
-        this.selectionMode = 'single';
-
-		this.clientSort = false;
-        this.canEdit = this._canEdit;
-		this.canSort = this._canSort;
-		this.noDataMessage = 'Select one or more files';
-
-        this._store = new bfree.api.ItemFileWriteStore({
-            data: {
-                identifier: 'id',
-                label: 'name',
-                items: []
-            }
-        });
-
-	},
-
-    destroy: function(){
-        this.inherited('destroy', arguments);
-    },
-
-    focus: function(){
-        this._
-    },
-
-	postCreate: function(){
-		this.inherited('postCreate', arguments);
-        this.set('structure', bfree.widget.document.FileGrid.view1);
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-        this.setStore(this._store, {}, {cache: true});
-    },
-
-    updateFileItem: function(id, state){
-
-        this._store.fetchItemByIdentity({
-            identity: id,
-            onItem: function(item) { this._store.setValue(item, 'state', state); },
-            scope: this
-        });
-
-    }
-
-});
-
-bfree.widget.document.FileGrid.formatContentType = function(data, rowIndex){
-
-    if(String.isEmpty(data))
-        return ''
-
-    var imgSrc =  bfree.api.Document.getIconUrl(data, 16);
-    var img = dojo.replace('<img src="{0}" width="16" height="16"/>', [imgSrc]);
-
-    return img;
-
-}
-
-bfree.widget.document.FileGrid.formatState = function(data, rowIndex){
-    var icon = bfree.api.Document.getStateIcon(data);
-    return dojo.replace('<div style="padding-top:2px"><img src="/images/icons/states/{0}" width="16" height="16"/></div>', [icon]);
-}
-
-bfree.widget.document.FileGrid.getContentType = function(idx, item){
-    var content_type = '';
-
-    if(!item)
-        return content_type;
-
-    var documentItem = this.grid.store.getValue(item, 'document');
-    if(documentItem){
-        content_type = documentItem.binary_content_type;
-    }
-
-    return content_type;
-}
-
-bfree.widget.document.FileGrid.getSize = function(idx, item){
-    var sizeBytes = 0;
-
-    if(item){
-        var documentItem = this.grid.store.getValue(item, 'document');
-        if(documentItem)
-            sizeBytes = documentItem.binary_file_size;
-    }
-
-    return bfree.api.Utilities.readablizeBytes({ bytes: sizeBytes });
-}
-
-bfree.widget.document.FileGrid.getState = function(idx, item){
-    var state = 0;
-
-    if(!item)
-        return state;
-
-    var documentItem = this.grid.store.getValue(item, 'document');
-    if(documentItem){
-
-        if(documentItem.getState(bfree.api.Document.states.INVALID)){
-            state = bfree.api.Document.states.INVALID;
-        }
-        else if(documentItem.getState(bfree.api.Document.states.PENDING)){
-            state = bfree.api.Document.states.PENDING;
-        }
-        else if(documentItem.getState(bfree.api.Document.states.UPLOADED)){
-            state = bfree.api.Document.states.UPLOADED;
-        }
-        else if(documentItem.getState(bfree.api.Document.states.CHECKED_IN)){
-            state = bfree.api.Document.states.CHECKED_IN;
-        }
-        else if(documentItem.getState(bfree.api.Document.states.ERROR)){
-            state = bfree.api.Document.states.ERROR;
-        }
-
-    }
-
-     return state;
-}
-
-bfree.widget.document.FileGrid.view1 = [{
-    cells: [
-        {
-            field: 'state',
-            name: '&nbsp;',
-            width: '18px',
-            get: bfree.widget.document.FileGrid.getState,
-            formatter: bfree.widget.document.FileGrid.formatState
-        },
-        {
-            field: 'content_type',
-            name: '&nbsp;',
-            width: '18px',
-            get: bfree.widget.document.FileGrid.getContentType,
-            formatter: bfree.widget.document.FileGrid.formatContentType
-        },
-        {
-            field: 'name',
-            name: '&nbsp;',
-            width: 'auto'
-        },
-        {
-            field: 'size',
-            name: '&nbsp;',
-            width: '56px',
-            get: bfree.widget.document.FileGrid.getSize,
-            cellStyles: 'text-align:right;white-space:nowrap'
-        }
-    ],
-    width: 'auto'
-}];
-
-
-}
-
-if(!dojo._hasResource['bfree.widget.file.Preview']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.file.Preview'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 12/01/12
- * Time: 4:12 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.file.Preview');
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.file.Preview', [dijit._Widget, dijit._Templated],{
-	templateString: dojo.cache("bfree/widget/file", "template/Preview.html", "<div style=\"height:100%;width:100%;\">\n\n<div \tdojoType=\"dijit.layout.BorderContainer\"\n\t\tdojoAttachPoint=\"pneMain\"\n\t\tdesign=\"headline\"\n\t\tgutters=\"false\"\n        class=\"versaInfoPane\"\n\t\tstyle=\"height:100%;padding:8px;width:100%\">\n\n\t<div \tdojoType=\"dijit.layout.ContentPane\"\n\t\t\tdojoAttachPoint=\"pneContentNode\"\n\t\t\tregion=\"center\"\n\t\t\tsplitter=\"false\"\n\t\t\tstyle=\"padding: 0\">\n\n\t\t<div dojoAttachPoint=\"pnePreviewNode\" style=\"position:relative;width:100%;height:100%\">\n\n\t\t\t<iframe src=\"\"\n\t\t\t\t\tdojoAttachPoint=\"previewNode\"\n\t\t\t\t\tallowtransparency=\"true\"\n\t\t\t\t\tframeborder=\"0\"\n\t\t\t\t\theight=\"100%\"\n\t\t\t\t\twidth=\"100%\"\n\t\t\t\t\tmarginheight=\"0\"\n\t\t\t\t\tmarginwidth=\"0\"\n\t\t\t\t\tscrolling=\"no\"\n\t\t\t\t style=\"position:absolute;top:0;left:0;height:100%;width:100%\"></iframe>\n\n\n\t\t</div>\n\t\t<div dojoAttachPoint=\"stbPreviewNode\"></div>\n\n\t</div>\n\n</div>\n\n\n</div>\n"),
-	widgetsInTemplate: true,
-
-    _hndlOnLoad: null,
-    _stbPreview: null,
-
-    activeItem: null,
-    zone: null,
-
-    _onPreviewLoad: function(){
-        this._stbPreview.hide();
-        dojo.style(this.previewNode, 'visibility', 'visible');
-    },
-
-    _setActiveItemAttr: function(value){
-        this.activeItem = value;
-
-        dojo.style(this.previewNode, 'visibility', 'hidden');
-        this._stbPreview.show();
-		this.previewNode.src = bfree.api.Uploader.getPreviewUrl({zone: this.zone, item: this.activeItem });
-
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        if(this._hndlOnLoad){
-            dojo.unsubscribe(this._hndlOnLoad);
-            this._hndlOnLoad = null;
-        }
-
-        this.inherited('destroy', arguments);
-
-    },
-
-	postCreate: function(){
-		this.inherited('postCreate', arguments);
-
-        this._stbPreview = new dojox.widget.Standby({
-			target: this.pneContentNode.id,
-            image: '/images/loading/loading64.gif',
-			color: 'white',
-			zIndex: 1024
-		}, this.stbPreviewNode);
-
-        this._hndlOnLoad = dojo.subscribe('rko/bfree/preview/onLoad', this, this._onPreviewLoad);
-	},
-
-    resize: function(){
-        this.pneMain.resize();
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-        this._stbPreview.startup();
-    }
-
-});
-
-}
-
-if(!dojo._hasResource["dojox.fx._base"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dojox.fx._base"] = true;
-dojo.provide("dojox.fx._base");
-// summary: Experimental and extended Animations beyond Dojo Core / Base functionality.
-//	Provides advanced Lines, Animations, and convenience aliases.
-
-
-dojo.mixin(dojox.fx, {
-
-	// anim: Function
-	//	Alias of `dojo.anim` - the shorthand `dojo.animateProperty` with auto-play
-	anim: dojo.anim,
-
-	// animateProperty: Function
-	//	Alias of `dojo.animateProperty` - animate any CSS property
-	animateProperty: dojo.animateProperty,
-
-	// fadeTo: Function
-	//		Fade an element from an opacity to an opacity.
-	//		Omit `start:` property to detect. `end:` property is required.
-	//		Ultimately an alias to `dojo._fade`
-	fadeTo: dojo._fade,
-
-	// fadeIn: Function
-	//	Alias of `dojo.fadeIn` - Fade a node in.
-	fadeIn: dojo.fadeIn,
-	
-	// fadeOut: Function
-	//	Alias of `dojo.fadeOut` - Fades a node out.
-	fadeOut: dojo.fadeOut,
-
-	// combine: Function
-	//	Alias of `dojo.fx.combine` - Run an array of animations in parallel
-	combine: dojo.fx.combine,
-
-	// chain: Function
-	//	Alias of `dojo.fx.chain` - Run an array of animations in sequence
-	chain: dojo.fx.chain,
-
-	// slideTo: Function
-	//	Alias of `dojo.fx.slideTo` - Slide a node to a defined top/left coordinate
-	slideTo: dojo.fx.slideTo,
-
-	// wipeIn: Function
-	//	Alias of `dojo.fx.wipeIn` - Wipe a node to visible
-	wipeIn: dojo.fx.wipeIn,
-
-	// wipeOut: Function
-	//	Alias of `dojo.fx.wipeOut` - Wipe a node to non-visible
-	wipeOut: dojo.fx.wipeOut
-
-});
-
-dojox.fx.sizeTo = function(/* Object */args){
-	// summary:
-	//		Creates an animation that will size a node
-	//
-	// description:
-	//		Returns an animation that will size the target node
-	//		defined in args Object about it's center to
-	//		a width and height defined by (args.width, args.height),
-	//		supporting an optional method: chain||combine mixin
-	//		(defaults to chain).
-	//
-	//	- works best on absolutely or relatively positioned elements
-	//
-	// example:
-	//	|	// size #myNode to 400px x 200px over 1 second
-	//	|	dojo.fx.sizeTo({
-	//	|		node:'myNode',
-	//	|		duration: 1000,
-	//	|		width: 400,
-	//	|		height: 200,
-	//	|		method: "combine"
-	//	|	}).play();
-	//
-
-	var node = args.node = dojo.byId(args.node),
-		abs = "absolute";
-
-	var method = args.method || "chain";
-	if(!args.duration){ args.duration = 500; } // default duration needed
-	if(method == "chain"){ args.duration = Math.floor(args.duration / 2); }
-	
-	var top, newTop, left, newLeft, width, height = null;
-
-	var init = (function(n){
-		return function(){
-			var cs = dojo.getComputedStyle(n),
-				pos = cs.position,
-				w = cs.width,
-				h = cs.height
-			;
-			
-			top = (pos == abs ? n.offsetTop : parseInt(cs.top) || 0);
-			left = (pos == abs ? n.offsetLeft : parseInt(cs.left) || 0);
-			width = (w == "auto" ? 0 : parseInt(w));
-			height = (h == "auto" ? 0 : parseInt(h));
-			
-			newLeft = left - Math.floor((args.width - width) / 2);
-			newTop = top - Math.floor((args.height - height) / 2);
-
-			if(pos != abs && pos != 'relative'){
-				var ret = dojo.coords(n, true);
-				top = ret.y;
-				left = ret.x;
-				n.style.position = abs;
-				n.style.top = top + "px";
-				n.style.left = left + "px";
-			}
-		}
-	})(node);
-
-	var anim1 = dojo.animateProperty(dojo.mixin({
-		properties: {
-			height: function(){
-				init();
-				return { end: args.height || 0, start: height };
-			},
-			top: function(){
-				return { start: top, end: newTop };
-			}
-		}
-	}, args));
-	var anim2 = dojo.animateProperty(dojo.mixin({
-		properties: {
-			width: function(){
-				return { start: width, end: args.width || 0 }
-			},
-			left: function(){
-				return { start: left, end: newLeft }
-			}
-		}
-	}, args));
-
-	var anim = dojo.fx[(args.method == "combine" ? "combine" : "chain")]([anim1, anim2]);
-	return anim; // dojo.Animation
-
-};
-
-dojox.fx.slideBy = function(/* Object */args){
-	// summary:
-	//		Returns an animation to slide a node by a defined offset.
-	//
-	// description:
-	//		Returns an animation that will slide a node (args.node) from it's
-	//		current position to it's current posision plus the numbers defined
-	//		in args.top and args.left. standard dojo.fx mixin's apply.
-	//
-	// example:
-	//	|	// slide domNode 50px down, and 22px left
-	//	|	dojox.fx.slideBy({
-	//	|		node: domNode, duration:400,
-	//	|		top: 50, left: -22
-	//	|	}).play();
-
-	var node = args.node = dojo.byId(args.node),
-		top, left;
-
-	var init = (function(n){
-		return function(){
-			var cs = dojo.getComputedStyle(n);
-			var pos = cs.position;
-			top = (pos == 'absolute' ? n.offsetTop : parseInt(cs.top) || 0);
-			left = (pos == 'absolute' ? n.offsetLeft : parseInt(cs.left) || 0);
-			if(pos != 'absolute' && pos != 'relative'){
-				var ret = dojo.coords(n, true);
-				top = ret.y;
-				left = ret.x;
-				n.style.position = "absolute";
-				n.style.top = top + "px";
-				n.style.left = left + "px";
-			}
-		}
-	})(node);
-	init();
-	
-	var _anim = dojo.animateProperty(dojo.mixin({
-		properties: {
-			// FIXME: is there a way to update the _Line after creation?
-			// null start values allow chaining to work, animateProperty will
-			// determine them for us (except in ie6? -- ugh)
-			top: top + (args.top || 0),
-			left: left + (args.left || 0)
-		}
-	}, args));
-	dojo.connect(_anim, "beforeBegin", _anim, init);
-	return _anim; // dojo.Animation
-};
-
-dojox.fx.crossFade = function(/* Object */args){
-	// summary:
-	//		Returns an animation cross fading two element simultaneously
-	//
-	// args:
-	//	args.nodes: Array - two element array of domNodes, or id's
-	//
-	//	all other standard animation args mixins apply. args.node ignored.
-	//
-
-	// simple check for which node is visible, maybe too simple?
-	var node1 = args.nodes[0] = dojo.byId(args.nodes[0]),
-		op1 = dojo.style(node1,"opacity"),
-		node2 = args.nodes[1] = dojo.byId(args.nodes[1]),
-		op2 = dojo.style(node2, "opacity")
-	;
-	
-	var _anim = dojo.fx.combine([
-		dojo[(op1 == 0 ? "fadeIn" : "fadeOut")](dojo.mixin({
-			node: node1
-		},args)),
-		dojo[(op1 == 0 ? "fadeOut" : "fadeIn")](dojo.mixin({
-			node: node2
-		},args))
-	]);
-	return _anim; // dojo.Animation
-};
-
-dojox.fx.highlight = function(/*Object*/ args){
-	// summary:
-	//		Highlight a node
-	//
-	// description:
-	//		Returns an animation that sets the node background to args.color
-	//		then gradually fades back the original node background color
-	//
-	// example:
-	//	|	dojox.fx.highlight({ node:"foo" }).play();
-
-	var node = args.node = dojo.byId(args.node);
-
-	args.duration = args.duration || 400;
-	
-	// Assign default color light yellow
-	var startColor = args.color || '#ffff99',
-		endColor = dojo.style(node, "backgroundColor")
-	;
-
-	// safari "fix"
-	// safari reports rgba(0, 0, 0, 0) (black) as transparent color, while
-	// other browsers return "transparent", rendered as white by default by
-	// dojo.Color; now dojo.Color maps "transparent" to
-	// djConfig.transparentColor ([r, g, b]), if present; so we can use
-	// the color behind the effect node
-	if(endColor == "rgba(0, 0, 0, 0)"){
-		endColor = "transparent";
-	}
-
-	var anim = dojo.animateProperty(dojo.mixin({
-		properties: {
-			backgroundColor: { start: startColor, end: endColor }
-		}
-	}, args));
-
-	if(endColor == "transparent"){
-		dojo.connect(anim, "onEnd", anim, function(){
-			node.style.backgroundColor = endColor;
-		});
-	}
-
-	return anim; // dojo.Animation
-};
-
- 
-dojox.fx.wipeTo = function(/*Object*/ args){
-	// summary:
-	//		Animate a node wiping to a specific width or height
-	//
-	// description:
-	//		Returns an animation that will expand the
-	//		node defined in 'args' object from it's current to
-	//		the height or width value given by the args object.
-	//
-	//		default to height:, so leave height null and specify width:
-	//		to wipeTo a width. note: this may be deprecated by a
-	//
-	//		Note that the final value should not include
-	//		units and should be an integer.  Thus a valid args object
-	//		would look something like this:
-	//
-	//		|	dojox.fx.wipeTo({ node: "nodeId", height: 200 }).play();
-	//
-	//		Node must have no margin/border/padding, so put another
-	//		node inside your target node for additional styling.
-
-	args.node = dojo.byId(args.node);
-	var node = args.node, s = node.style;
-
-	var dir = (args.width ? "width" : "height"),
-		endVal = args[dir],
-		props = {}
-	;
-
-	props[dir] = {
-		// wrapped in functions so we wait till the last second to query (in case value has changed)
-		start: function(){
-			// start at current [computed] height, but use 1px rather than 0
-			// because 0 causes IE to display the whole panel
-			s.overflow = "hidden";
-			if(s.visibility == "hidden" || s.display == "none"){
-				s[dir] = "1px";
-				s.display = "";
-				s.visibility = "";
-				return 1;
-			}else{
-				var now = dojo.style(node,dir);
-				return Math.max(now, 1);
-			}
-		},
-		end: endVal
-	};
-
-	var anim = dojo.animateProperty(dojo.mixin({ properties: props }, args));
-	return anim; // dojo.Animation
-};
-
-}
-
-if(!dojo._hasResource['bfree.widget.document.Creator']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.document.Creator'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 09/11/11
- * Time: 9:01 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.document.Creator');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
-    templateString: dojo.cache("bfree/widget/document", "template/Creator.html", "<div style=\"height:100%;width:100%;position:relative\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n            <span style=\"position:absolute;right:16px;\">\n                File in Folder: <span dojoAttachPoint=\"folderNameNode\" class=\"dijitBoldLabel\"></span>\n            </span>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:96px;padding:0 8px 8px 8px\">\n\n                        <div dojoAttachPoint=\"fileGridNode\"></div>\n\n                    </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:0;padding:0;position:relative;display:none\">\n\n                            <span style=\"position:absolute;top:0;left:8px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:32px;padding:0 8px 8px 8px;position:relative\">\n\n                        <div dojoAttachPoint=\"addButtonNode\"></div>\n\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n\n            </div>\n\n        </div>\n\n\n    </div>\n\n</div>\n\n</div>\n"),
-    widgetsInTemplate: true,
-
-    _activeItem: null,
-
-    _btnAdd: null,
-    _chkAddMinor: null,
-    _documents: null,
-    _editor: null,
-    _fileGrid: null,
-    _isPreviewShowing: false,
-    _multiUploader: null,
-    _uploading: false,
-
-    folder: null,
-    library: null,
-    zone: null,
-    filesLoaded: false,
-
-    __setNextItem: function(startIdx, doWrap){
-
-         //select next available item
-        for(var i = startIdx; i < this._fileGrid.rowCount;i++){
-
-            if((i + 1) >= this._fileGrid.rowCount){
-                if(doWrap){
-                    i = -1;
-                    doWrap = false;
-                }
-                else{
-                    break;
-                }
-
-            }
-
-            var nextItem = this._fileGrid.getItem(i + 1);
-            var documentItem = this._fileGrid.store.getValue(nextItem, 'document');
-            if(documentItem.getState(bfree.api.Document.states.UPLOADED) && !(documentItem.getState(bfree.api.Document.states.PENDING))){
-                this._fileGrid.setSelectedIndex(i + 1);
-                this._fileGrid.scrollToRow(i + 1);
-                break;
-            }
-
-        }
-    },
-
-    _btnAdd_onClick: function(evt){
-        this._onSubmit();
-        this.filesLoaded=false;
-    },
-
-    _chkAddMinor_onChange: function(newValue){
-
-        var fileItem = this._fileGrid.selection.getFirstSelected();
-        if(!fileItem) return;
-
-        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
-        documentItem.isMinorVersion = newValue;
-
-    },
-
-    _loadItem: function(){
-
-        try{
-
-        }
-        finally{
-            this.onWidgetLoaded();
-        }
-
-    },
-
-    _onFileSelect: function(fileItem){
-        //File is selected...
-
-        //Check if file exists (by Name)
-        var existingItem = null;
-        this._fileGrid.store.fetchItemByIdentity({
-            identity: fileItem.name,
-            onItem: function(item){ existingItem = item; }
-        });
-
-        if(existingItem){
-            console.log('File is already selected: ' + existingItem.name);
-            return;
-        }
-
-        //Create Document
-        //default to first 'System' document type...should be 'Document'
-        var systemTypes = this._documentTypes.getSystem();
-        var documentType = systemTypes[0];
-
-        var documentItem = new bfree.api.Document({
-            name: fileItem.name,
-            document_type_id: documentType.id,
-            folder_id: ((this.folder) ? this.folder.id : null),
-            state: bfree.api.Document.states.PENDING,
-            isMinorVersion: false,
-            binary_file_name: fileItem.name,
-            binary_content_type: fileItem.type,
-            binary_file_size: fileItem.size
-        });
-
-        dojo.forEach(documentType.property_mappings, dojo.hitch(this, function(mapping, idx){
-            var def=this.library.getPropertyDefinitions().fetchById({id: mapping.property_definition_id});
-            var data=bfree.api.Application.getDataTypes().fetchById({id: def.data_type_id});
-            if(data.isFloat()||data.isInteger()){
-                this._documents.setValue(documentItem, def.column_name, 0);
-            }
-            if(mapping.default_value){
-                this._documents.setValue(documentItem, def.column_name, mapping.default_value);
-            }
-        }));
-
-        //add file item to the list and mark as "Pending"
-        this._fileGrid.addFileItem({
-            id: fileItem.name,
-            name: fileItem.name,
-            document: documentItem,
-            state: bfree.api.Document.states.PENDING
-        });
-
-        this.filesLoaded=true;
-
-    },
-
-    _onFileUploaded: function(tmpFileItem){
-
-        var fileItem = this._fileGrid.store.fetchItemById(tmpFileItem.name);
-
-        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
-        documentItem.state =  bfree.api.Document.states.UPLOADED;
-
-        //update info from server
-        documentItem.binary_file_name = tmpFileItem.name;
-        documentItem.binary_content_type = tmpFileItem.content_type;
-        documentItem.binary_file_size = tmpFileItem.size;
-
-        this._onValidChange(documentItem);
-
-        if((this._isPreviewShowing) && (this._editor.activeItem == documentItem)){
-            this._wdgPreview.set('activeItem', documentItem);
-        }
-
-        this._setState(this._activeItem);
-
-    },
-
-    _onHidePreview: function(e){
-
-        try{
-            this._wdgPreview.set('activeItem', null);
-
-            dojo.style(this.showPreviewNode, {display: 'block'});
-            dojox.fx.crossFade({
-                nodes : [this.hidePreviewNode, this.showPreviewNode],
-                duration:1000,
-                onEnd: dojo.hitch(this, function(){ dojo.style(this.hidePreviewNode, {display: 'none'}); })
-            }).play();
-
-            dojo.style(this.previewPane.domNode, {display: 'none'});
-            dojo.removeClass(this.headerPane.domNode, 'versaTopRightHeader');
-            dojo.removeClass(this.midTitlePane.domNode, 'versaMidRightHeader');
-
-            this.dialog.resize({w: 480});
-            this.dialog._position();
-
-        }
-        finally{
-            this._isPreviewShowing = false;
-            dojo.stopEvent(e);
-        }
-
-    },
-
-    _onSelectedFiles: function(items){
-
-        this._activeItem = items[0];
-        if(!this._activeItem)
-            return;
-
-        var documentItem = this._fileGrid.store.getValue(this._activeItem, 'document');
-        this._editor.set('activeItem', documentItem);
-        this._chkAddMinor.set('checked', documentItem.isMinorVersion);
-
-        this._setState(this._activeItem);
-
-        if((documentItem.getState(bfree.api.Document.states.UPLOADED) || (documentItem.getState(bfree.api.Document.states.CHECKED_IN))) && this._isPreviewShowing)
-            this._wdgPreview.set('activeItem', documentItem);
-
-    },
-
-    _onShowPreview: function(e){
-
-        try{
-            var v = dijit.getViewport();
-            var width = (v.w > 1216) ? 1216 : v.w;
-
-            dojo.style(this.hidePreviewNode, {display: 'block'});
-            dojox.fx.crossFade({
-                nodes : [this.showPreviewNode, this.hidePreviewNode],
-                duration:1000,
-                onEnd: dojo.hitch(this, function(){
-                    dojo.style(this.showPreviewNode, {display: 'none'});
-                })
-            }).play();
-
-            dojo.addClass(this.headerPane.domNode, 'versaTopRightHeader');
-            dojo.addClass(this.midTitlePane.domNode, 'versaMidRightHeader');
-            dojo.style(this.previewPane.domNode, {display: 'block'});
-
-            this.dialog.resize({w: width - 16});
-            this.dialog._position()
-
-            var fileItem = this._fileGrid.selection.getFirstSelected();
-            if(!fileItem) return;
-
-            var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
-            if(documentItem.getState(bfree.api.Document.states.UPLOADED) || (documentItem.getState(bfree.api.Document.states.CHECKED_IN)))
-                this._wdgPreview.set('activeItem', documentItem);
-
-
-        }
-        finally{
-            this._isPreviewShowing = true;
-            dojo.stopEvent(e);
-        }
-
-    },
-
-    _onSubmit: function(){
-
-        var items = [];
-
-        var idx = this._fileGrid.getItemIndex(this._activeItem);
-        this._btnAdd.set('disabled', true);
-        this._uploading = true;
-
-        try{
-
-            var documentItem = this._fileGrid.store.getValue(this._activeItem, 'document');
-
-            //Check for upload complete.
-            if(!documentItem.getState(bfree.api.Document.states.UPLOADED)){
-                alert('The file has not completed uploading');
-                return;
-            }
-
-            //Check for invalid properties.
-            if(!documentItem.isValid({library: this.library})){
-                throw new Error('One or more properties are missing or invalid');
-            }
-
-            //create document item in store and update state of grid item
-            this._btnAdd.set('disabled', true);
-
-            documentItem.state |= bfree.api.Document.states.PENDING;
-            this._fileGrid.updateRow(idx);
-            var newItem = this._documents.create(documentItem);
-            this._editor.set('activeItem', documentItem);
-            this._setState(this._activeItem);
-
-            function __onComplete(args){
-                //Set state after success
-                this._fileGrid.store.setValue(this._activeItem, 'document', newItem);
-                this._fileGrid.updateRow(idx);
-                this._editor.set('activeItem', newItem);
-                this._setState(this._activeItem);
-
-                this.__setNextItem(idx, true);
-            }
-
-            //save valid documents to server
-            this._documents.save({
-                onComplete: __onComplete,
-                scope: this
-            });
-
-        }
-        catch(e){
-
-            //Set state after error
-            documentItem.state = bfree.api.Document.states.ERROR;
-            this._fileGrid.updateRow(idx);
-            this._documents.create(documentItem);
-            this._editor.set('activeItem', documentItem);
-            this._setState(this._activeItem);
-
-            var err = new bfree.api.Error('Failed to add document to the library', e);
-			bfree.widget.ErrorManager.handleError({
-				error: err
-			});
-            this._documents.revert();
-        }
-        finally{
-            this._uploading = false;
-        }
-
-    },
-
-    _onUploadError: function(tmpFileItem, err){
-
-        var err = new bfree.api.Error(dojo.replace('Failed to upload file \'{0}\'', [tmpFileItem.name]), err);
-        bfree.widget.ErrorManager.handleError({
-            error: err
-        });
-
-        var fileItem = this._fileGrid.store.fetchItemById(tmpFileItem.name);
-
-        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
-        documentItem.state = bfree.api.Document.states.ERROR;
-
-        this._onValidChange(documentItem);
-
-        this._editor.set('activeItem', documentItem);
-        this._setState(this._activeItem);
-    },
-
-    _onValidChange: function(documentItem){
-
-        documentItem.validate({library: this.library});
-        var fileItem = this._fileGrid.store.fetchItemById(documentItem.binary_file_name);
-        if(fileItem){
-            var idx = this._fileGrid.getItemIndex(fileItem);
-            this._fileGrid.update(idx);
-        }
-        this._setState(this._activeItem);
-
-    },
-
-    _setState: function(fileItem){
-
-        var canAdd = !this._uploading;
-
-        var idx = this._fileGrid.getItemIndex(fileItem);
-        this._fileGrid.updateRow(idx);
-
-        var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
-        canAdd |= (documentItem.state == bfree.api.Document.states.UPLOADED);
-
-        if(documentItem.getState(bfree.api.Document.states.CHECKED_IN))
-            canAdd = false;
-
-        this._btnAdd.set('disabled', !canAdd);
-
-        var msg = '';
-        var canAddMinor = false;
-        var documentItem = (fileItem) ? this._fileGrid.store.getValue(fileItem, 'document') : null;
-
-        var msg = bfree.api.Document.getStateMessage(documentItem.state);
-        var icon = bfree.api.Document.getStateIcon(documentItem.state);
-
-        this.statusMsgNode.innerHTML = msg;
-        this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon]);
-
-    },
-
-    constructor: function(args){
-
-    },
-
-    destroy: function(){
-
-        this.destroyDescendants();
-
-        if(this._wdgPreview){
-            this._wdgPreview.destroy();
-            this._wdgPreview = null;
-        }
-
-        if(this._multiUploader != null){
-            this._multiUploader.destroy();
-            this._multiUploader = null;
-        }
-
-        if(this._fileGrid != null){
-            this._fileGrid.destroy();
-            this._fileGrid = null;
-        }
-
-        if(this._btnAdd){
-            this._btnAdd.destroy();
-            this._btnAdd = null;
-        }
-
-        if(this._editor != null){
-            this._editor.destroy();
-            this._editor = null;
-        }
-
-        this.inherited('destroy', arguments);
-    },
-
-    focus: function(){
-        this._btnAdd.focus();
-    },
-
-    isValid: function(){
-        return true;
-    },
-
-    onDialogClosing: function(dlgResult){
-        var canClose = false;
-
-        try{
-
-            if(this.filesLoaded){
-                if(!confirm("Files have not been added to VersaFile, closing this dialog will cause them to be lost.")){
-                    return false;
-                }
-            }
-
-            if(this._uploading){
-                alert("You must wait until all files are uploaded before closing this dialog.");
-                return false;
-            }
-
-            if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
-
-            }
-            else{
-
-            }
-
-            if(this._multiUploader)
-                this._multiUploader.clean();
-
-            canClose = true;
-        }
-        catch(e){
-           var err = new bfree.api.Error('Failed to close \'Create Documents\' dialog', e);
-            bfree.widget.ErrorManager.handleError({
-                error: err
-            });
-        }
-
-        return canClose;
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        this.folderNameNode.innerHTML = this.folder.name.display_limit(32);
-
-        this._documentTypes = this.library.getDocumentTypes();
-        this._documents = this.library.getDocuments();
-
-        this._multiUploader = new bfree.widget.file.MultiUploader({
-            id: 'uploader1',
-            zone: this.zone,
-            onFileSelect: dojo.hitch(this, this._onFileSelect),
-            onFileUploaded: dojo.hitch(this, this._onFileUploaded),
-            onError: dojo.hitch(this, this._onUploadError),
-            style: 'width:100%'
-        }, this.uploaderNode);
-
-        this._fileGrid = new bfree.widget.document.FileGrid({
-            id: 'fileGrid1',
-            'class': 'versaGridOutline versaNoHeader',
-            onSelectedItems: dojo.hitch(this, this._onSelectedFiles)
-        }, this.fileGridNode);
-
-        this._editor = new bfree.widget.document.Editor({
-            id: 'editor1',
-            library: this.library,
-            onValidChange: dojo.hitch(this, this._onValidChange),
-            onSubmit: dojo.hitch(this, this._onSubmit)
-        }, this.editorNode);
-
-        this._chkAddMinor = new dijit.form.CheckBox({
-            id: 'chkAddMinor',
-            checked: false,
-            scrollOnFocus: false,
-            disabled: true,
-            onChange: dojo.hitch(this, this._chkAddMinor_onChange)
-        }, this.addMinorNode);
-
-        this._btnAdd = new bfree.widget.Button({
-            id: 'btnAdd',
-            'class': 'versaButtonLarge',
-            iconClass: 'buttonIcon bfreeIconAdd',
-            disabledIconClass: 'buttonIcon bfreeIconAddD',
-            label: 'Add Document...',
-            disabled: true,
-            scrollOnFocus: false,
-            onClick: dojo.hitch(this, this._btnAdd_onClick)
-        }, this.addButtonNode);
-
-        this._wdgPreview = new bfree.widget.file.Preview({
-            zone: this.zone
-        }, this.previewNode);
-
-    },
-
-    resize: function(){
-        this.inherited('resize', arguments);
-        this.mainContainer.resize();
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-        this._multiUploader.startup();
-        this._fileGrid.startup();
-        this._wdgPreview.startup();
-
-        setTimeout(bfree.widget.document.Creator._loadFnRef(this), 10);
-    }
-
-
-});
-
-bfree.widget.document.Creator._loadFnRef = function(that){
-    return ( function() {
-       that._loadItem();
-    });
-}
-
-bfree.widget.document.Creator.show = function(args){
-
-    var v = dijit.getViewport();
-    var h = ((v.h > 800) ? 800 : v.h) - 32;
-
-    var dlg = new bfree.widget.Dialog({
-        id: 'dlgNewDocuments',
-        title: 'Add New Documents...',
-        widgetConstructor: bfree.widget.document.Creator,
-        widgetParams: {
-            folder: args.folder,
-            library: args.library,
-            zone: args.zone
-        },
-        noResize: true,
-        height: h,
-        width: 480,
-        zIndex: 1024,
-        buttons: bfree.widget.Dialog.buttons.close,
         onClose: args.onClose
     });
     dlg.startup();
@@ -64013,19 +64288,21 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
     templateString: dojo.cache("bfree/widget/document", "template/PropertyEditor.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:0px 8px 4px 8px;height:100%;width:100%;\">\n\n     <div   dojoType=\"dijit.layout.ContentPane\"\n            region=\"top\"\n            splitter=\"false\"\n            style=\"overflow:hidden;height:32px\">\n\n         <div dojoAttachPoint=\"headerNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            splitter=\"false\"\n            region=\"center\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"true\"\n                class=\"highlightPane\"\n                style=\"padding:8px\">\n\n           <div dojoAttachPoint=\"editorNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                region=\"bottom\"\n                splitter=\"false\"\n                style=\"padding:8px;overflow:hidden;height:128px\">\n\n             <div dojoAttachPoint=\"infoNode\"></div>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
     widgetsInTemplate: true,
 
+    _document: null,
     _editor: null,
     _wdgHeader: null,
     _wdgInfo: null,
 
-    document: null,
-    documents: null,
+    activeReference: null,
+    references: null,
     library: null,
+    zone: null,
 
     _doCancel: function(){
         var canClose = false;
 
         try{
-            this.library.getDocuments().revert();
+            //nothing to do here now
             canClose = true;
         }
         catch(e){
@@ -64043,12 +64320,12 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
 
         try{
 
-            if(!this.document.isValid({library: this.library})){
+            if(!this._document.isValid({library: this.library})){
                 throw new Error('One or more properties are missing or invalid');
             }
 
-            if(this.library.getDocuments().isDirty({item: this.document})){
-                this.library.getDocuments().save();
+            if(this.library.getReferences().isDirty({item: this.activeReference})){
+                this.library.getReferences().save();
             }
 
             canClose = true;
@@ -64061,11 +64338,11 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
             });
 
             //The store loses the "dirty" flag when item save fails and revert hasn't occurred
-            this.library.getDocuments().clone({item: this.document});
+            this.library.getDocuments().clone({item: this._document});
 
             if(e.status == 404){
                 canClose = this._doCancel();
-                this.library.getDocuments().store.onDelete(this.document);
+                this.library.getDocuments().store.onDelete(this._document);
             }
 
 
@@ -64076,31 +64353,54 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
 
     _loadItem: function(){
 
+        //Retrieve referenced document
+        this._document = this.library.getDocuments().refreshAsync({
+            scope: this,
+            identity: this.activeReference.document_id,
+            onItem: this._onItemLoaded,
+            onError: this._onItemError
+        });
+
+    },
+
+    _onItemError: function(e){
         try{
-
-            this.document = this.library.getDocuments().refreshItem(this.document.getId());
-            this.library.getDocuments().clone({item: this.document});
-
-            var documentType =  this.library.getDocumentTypes().fetchById({id: this.document.document_type_id});
-
-            this._editor.set('activeItem', documentType);
-            this._editor.setValues(this.document);
-
-            this._wdgInfo.set('activeItem', this.document);
+            var err = new bfree.api.Error('Failed to load document', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
         }
         finally{
             this.onWidgetLoaded();
         }
+    },
 
+    _onItemLoaded: function(item){
+        try{
+
+            this._document = item;
+            this.library.getDocuments().clone({item: this._document});
+
+            var documentType =  this.library.getDocumentTypes().fetchById({id: this._document.document_type_id});
+
+            this._wdgHeader.set('activeItem', this._document);
+            this._editor.set('activeItem', documentType);
+            this._editor.setValues(this._document);
+            this._wdgInfo.set('activeItem', this._document);
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
     },
 
     _onValueChange: function(id, value){
 
         var property_id = id.replace('documents.', '');
 
-        if(!this.document.valueEquals(property_id, value)){
-            this.library.getDocuments().setValue(this.document, property_id, value);
-            this._wdgHeader.set('activeItem', this.document);
+        if(!this._document.valueEquals(property_id, value)){
+            this.library.getDocuments().setValue(this._document, property_id, value);
+            this.library.getReferences().setValue(this.activeReference, property_id, value);
+            this._wdgHeader.set('activeItem', this._document);
             this.onValueChange();
         }
 
@@ -64123,29 +64423,33 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
 
     isValid: function(){
         //Check performance of this?
-        this.document.validate({library: this.library});
-        return ((this.library.getDocuments().isDirty({item: this.document})) && (!this.document.getState(bfree.api.Document.states.INVALID)));
+        this._document.validate({library: this.library});
+        return ((this.library.getDocuments().isDirty({item: this._document})) && (!this._document.getState(bfree.api.Document.states.INVALID)));
     },
 
     onDialogClosing: function(dlgResult){
         var canClose = false;
 
-
         try{
 
-            this.returnValue = this.documents;
+            this.returnValue = this.references;
             canClose = (dlgResult == bfree.widget.Dialog.dialogResult.ok) ?
                             this._doSave() :
                             this._doCancel();
 
         }
         catch(e){
-
             var err = new bfree.api.Error('Failed to close \'Edit Document\' dialog', e);
             bfree.widget.ErrorManager.handleError({
                 error: err
             });
         }
+        finally{
+            //always revert document object...update reference only
+            this.library.getDocuments().revert();
+            //this.library.getReferences().refreshItem(this.activeReference.getId());
+        }
+
 
         return canClose;
     },
@@ -64153,10 +64457,9 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
-        this.document = this.documents[0];
+        this.activeReference = this.references[0];
 
         this._wdgHeader = new bfree.widget.document.Header({
-            activeItem: this.document
         }, this.headerNode);
 
         var choiceLists = this.library.getChoiceLists();
@@ -64175,7 +64478,6 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
         this._wdgInfo = new bfree.widget.document.SystemInfo({
             id: 'wdgDocSysInfo1'
         }, this.infoNode);
-
 
     },
 
@@ -64197,15 +64499,15 @@ bfree.widget.document.PropertyEditor.show = function(args){
     if((!args.items) || (args.items.length < 1))
         throw new Error('No documents selected');
 
-    var document = args.items[0];
+    var reference = args.items[0];
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgEditDocument',
-        title: 'Edit Document: ' + document.name.display_limit(32),
+        title: 'Edit Document: ' + reference.name.display_limit(32),
         widgetConstructor: bfree.widget.document.PropertyEditor,
         widgetParams: {
             user: args.user,
-            documents: args.items,
+            references: args.items,
             library: args.library,
             zone: args.zone
         },
@@ -64326,10 +64628,11 @@ dojo.provide('bfree.widget.document.version.Grid');
 
 dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
 
-    versions: null,
-    document: null,
-
     _mnuVersion: null,
+
+    activeDocument: null,
+    library: null,
+    zone: null,
 
     _canEdit: function(cell, rowIndex){
         return false;
@@ -64341,6 +64644,36 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
 
     _onCommand: function(cmdId, option, params){
         this.onCommand(cmdId, option, params);
+    },
+
+    _onRowContextMenu: function(evt){
+
+        if((this._mnuVersion == null) || (evt.rowIndex < 0)){
+            this.rowHit = false;
+            evt.cancelBubble = true;
+        }
+        else{
+            var selected=this.selection.selected[evt.rowIndex];
+
+            var item;
+            if(selected){
+                item=this.getItem(evt.rowIndex);
+            }else{
+                this.selection.clear();
+                item=this.getItem(evt.rowIndex);
+                this.selection.select(evt.rowIndex);
+                this._mnuVersion.rowHit = true;
+                this._mnuVersion.activeItem = item;
+            }
+            this._mnuVersion.rowHit = true;
+            this._mnuVersion.activeItem = item;
+        }
+
+    },
+
+    _setActiveDocumentAttr: function(value){
+        this.activeDocument = value;
+        this.setStore(this.activeDocument.getVersions({zone: this.zone, library: this.library}).store, {}, {cache: true});
     },
 
 	constructor: function(/* Object */args){
@@ -64390,34 +64723,9 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
     onCommand: function(cmdId, option, params){
     },
 
-    _onRowContextMenu: function(evt){
-
-        if((this._mnuVersion == null) || (evt.rowIndex < 0)){
-            this.rowHit = false;
-            evt.cancelBubble = true;
-        }
-        else{
-            var selected=this.selection.selected[evt.rowIndex];
-
-            var item;
-            if(selected){
-                item=this.getItem(evt.rowIndex);
-            }else{
-                this.selection.clear();
-                item=this.getItem(evt.rowIndex);
-                this.selection.select(evt.rowIndex);
-                this._mnuVersion.rowHit = true;
-                this._mnuVersion.activeItem = item;
-            }
-            this._mnuVersion.rowHit = true;
-            this._mnuVersion.activeItem = item;
-        }
-
-    },
-
     startup: function(){
         this.inherited('startup', arguments);
-        this.setStore(this.versions.store, {}, {cache: true});
+        //this.setStore(this.versions.store, {}, {cache: true});
     }
 
 });
@@ -64433,6 +64741,7 @@ bfree.widget.document.version.Grid.formatState = function(data, rowIndex){
 }
 
 bfree.widget.document.version.Grid.getVersion=function(idx, item){
+
     if(!item){
         return '';
     }
@@ -64477,6 +64786,87 @@ bfree.widget.document.version.Grid.view = [
 
 }
 
+if(!dojo._hasResource['versa.widget.reference.Accessor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.reference.Accessor'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 05/04/12
+ * Time: 12:43 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.reference.Accessor');
+
+dojo.declare('versa.widget.reference.Accessor', null,{
+
+    activeLibrary: null,
+    activeZone: null,
+
+    constructor: function(args){
+        dojo.safeMixin(this, ((!args) ? { } : args));
+    },
+
+    doCancelCheckout: function(item){
+        try{
+            item.cancelCheckout({zone: this.activeZone, library: this.activeLibrary});
+        }
+        finally{
+            // Tell the store to refresh item, NOT the best way to do this
+            // OPTIONS:
+            // - Incorporate actions into custom ServiceStore
+            // - Use store 'EDIT' methods to automatically update store
+            this.activeLibrary.getReferences().refreshItem(item.getId());
+        }
+
+    },
+
+    doCheckout: function(item){
+
+        try{
+            item.checkout({zone: this.activeZone, library: this.activeLibrary});
+        }
+        finally{
+            // SEE notes in 'doCancelCheckout' on this.
+            this.activeLibrary.getReferences().refreshItem(item.getId());
+        }
+
+    },
+
+    doCopyLocal: function(item, version_id){
+        item.copyLocal({version_id: version_id, zone: this.activeZone, library: this.activeLibrary});
+    },
+
+    doMove: function(folder, item){
+        item.file({zone: this.activeZone, library: this.activeLibrary, folder: folder});
+    },
+
+    doRestore: function(item){
+        try{
+            item.restore({zone: this.activeZone, library: this.activeLibrary});
+        }
+        finally{
+            // SEE notes in 'doCancelCheckout' on this.
+            this.activeLibrary.getReferences().refreshItem(item.getId());
+        }
+    },
+
+    doShare: function(folder, item){
+        item.share({zone: this.activeZone, library: this.activeLibrary, folder: folder});
+    },
+
+    doUnshare: function(item){
+        item.unshare({zone: this.activeZone, library: this.activeLibrary});
+    },
+
+    doView: function(item, version_id){
+        var box = bfree.api.Utilities.getBox({scale: 0.75});
+        item.view({version_id: version_id, zone: this.activeZone, library: this.activeLibrary, windowBox: box});
+    }
+
+});
+
+}
+
 if(!dojo._hasResource['bfree.widget.document.version.Versions']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.widget.document.version.Versions'] = true;
 /**
@@ -64490,24 +64880,25 @@ dojo.provide('bfree.widget.document.version.Versions');
 
 
 
+
 dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
     templateString: dojo.cache("bfree/widget/document/version", "template/Versions.html", "<div style=\"height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            style=\"height:100%;width:100%;\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                region=\"center\"\n                splitter=\"false\"\n                style=\"\">\n\n            <div dojoAttachPoint=\"gridNode\"></div>\n\n        </div>\n\n    </div>\n\n</div>\n"),
     widgetsInTemplate: true,
 
     _accessor: null,
+    _document: null,
     _grdVersions: null,
 
-    document: null,
+    activeReference: null,
     library: null,
+    references: null,
     zone: null,
 
     __onCopy: function(args){
         var version = args.version;
 
         try{
-
-            this._accessor.doCopyLocal(this.document, version);
-
+            this._accessor.doCopyLocal(this.activeReference, version.getId());
         }
         catch(e){
             var err = new bfree.api.Error('Failed to copy document', e);
@@ -64521,7 +64912,7 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
         var version = args.version;
 
         try{
-            this._accessor.doView(this.document, version);
+            this._accessor.doView(this.activeReference, version.getId());
         }
         catch(e){
             var err = new bfree.api.Error('Failed to view version', e);
@@ -64534,12 +64925,13 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
 
      _loadItem: function(){
 
-        try{
-
-        }
-        finally{
-            this.onWidgetLoaded();
-        }
+        //Retrieve referenced document
+        this._document = this.library.getDocuments().refreshAsync({
+            scope: this,
+            identity: this.activeReference.document_id,
+            onItem: this._onItemLoaded,
+            onError: this._onItemError
+        });
 
     },
 
@@ -64556,14 +64948,31 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
 
     },
 
+    _onItemError: function(e){
+        try{
+            var err = new bfree.api.Error('Failed to load document', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+    },
+
+    _onItemLoaded: function(item){
+        try{
+            this._document = item;
+            this._grdVersions.set('activeDocument', this._document)
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+    },
+
     constructor: function(args){
 
     },
-
-    destroy: function(){
-        this.inherited('destroy', arguments);
-    },
-
 
     destroy: function(){
 
@@ -64571,6 +64980,8 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
             this._grdVersions.destroyRecursive();
             this._grdVersions = null;
         }
+
+        this.inherited('destroy', arguments);
     },
 
     onDialogClosing: function(){
@@ -64578,7 +64989,7 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
 
         try{
 
-            this.returnValue = this.documents;
+            this.returnValue = this.references;
             canClose = true;
         }
         catch(e){
@@ -64594,22 +65005,21 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
-        this.document = this.documents[0];
+        this.activeReference = this.references[0];
 
-        this._accessor = new bfree.widget.document.version.Accessor({
-            library: this.library,
-            zone: this.zone
+        this._accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.library,
+            activeZone: this.zone
         });
 
         this._grdVersions = new bfree.widget.document.version.Grid({
             id: 'grdVersions',
             'class': 'versaGridOutline',
-            versions: this.document.getVersions({zone: this.zone, library: this.library}),
-            document: this.document,
+            library: this.library,
+            zone: this.zone,
             onCommand: dojo.hitch(this, this._onCommand)
         }, this.gridNode);
 
-        this._grdVersions.startup();
 
     },
 
@@ -64632,14 +65042,14 @@ bfree.widget.document.version.Versions.show = function(args){
     if((!args.items) || (args.items.length < 1))
         throw new Error('No documents selected');
 
-    var document = args.items[0];
+    var reference = args.items[0];
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgVersions',
-        title: 'Versions: ' + document.name.display_limit(32),
+        title: 'Versions: ' + reference.name.display_limit(32),
         widgetConstructor: bfree.widget.document.version.Versions,
         widgetParams: {
-            documents: args.items,
+            references: args.items,
             library: args.library,
             zone: args.zone,
             onCommand: args.onCommand
@@ -64655,6 +65065,845 @@ bfree.widget.document.version.Versions.show = function(args){
     dlg.show();
 
 }
+
+}
+
+if(!dojo._hasResource["dijit.tree.dndSource"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dijit.tree.dndSource"] = true;
+dojo.provide("dijit.tree.dndSource");
+
+
+
+
+/*=====
+dijit.tree.__SourceArgs = function(){
+	// summary:
+	//		A dict of parameters for Tree source configuration.
+	// isSource: Boolean?
+	//		Can be used as a DnD source. Defaults to true.
+	// accept: String[]
+	//		List of accepted types (text strings) for a target; defaults to
+	//		["text", "treeNode"]
+	// copyOnly: Boolean?
+	//		Copy items, if true, use a state of Ctrl key otherwise,
+	// dragThreshold: Number
+	//		The move delay in pixels before detecting a drag; 0 by default
+	// betweenThreshold: Integer
+	//		Distance from upper/lower edge of node to allow drop to reorder nodes
+	this.isSource = isSource;
+	this.accept = accept;
+	this.autoSync = autoSync;
+	this.copyOnly = copyOnly;
+	this.dragThreshold = dragThreshold;
+	this.betweenThreshold = betweenThreshold;
+}
+=====*/
+
+dojo.declare("dijit.tree.dndSource", dijit.tree._dndSelector, {
+	// summary:
+	//		Handles drag and drop operations (as a source or a target) for `dijit.Tree`
+
+	// isSource: [private] Boolean
+	//		Can be used as a DnD source.
+	isSource: true,
+
+	// accept: String[]
+	//		List of accepted types (text strings) for the Tree; defaults to
+	//		["text"]
+	accept: ["text", "treeNode"],
+
+	// copyOnly: [private] Boolean
+	//		Copy items, if true, use a state of Ctrl key otherwise
+	copyOnly: false,
+
+	// dragThreshold: Number
+	//		The move delay in pixels before detecting a drag; 5 by default
+	dragThreshold: 5,
+
+	// betweenThreshold: Integer
+	//		Distance from upper/lower edge of node to allow drop to reorder nodes
+	betweenThreshold: 0,
+
+	constructor: function(/*dijit.Tree*/ tree, /*dijit.tree.__SourceArgs*/ params){
+		// summary:
+		//		a constructor of the Tree DnD Source
+		// tags:
+		//		private
+		if(!params){ params = {}; }
+		dojo.mixin(this, params);
+		this.isSource = typeof params.isSource == "undefined" ? true : params.isSource;
+		var type = params.accept instanceof Array ? params.accept : ["text", "treeNode"];
+		this.accept = null;
+		if(type.length){
+			this.accept = {};
+			for(var i = 0; i < type.length; ++i){
+				this.accept[type[i]] = 1;
+			}
+		}
+
+		// class-specific variables
+		this.isDragging = false;
+		this.mouseDown = false;
+		this.targetAnchor = null;	// DOMNode corresponding to the currently moused over TreeNode
+		this.targetBox = null;	// coordinates of this.targetAnchor
+		this.dropPosition = "";	// whether mouse is over/after/before this.targetAnchor
+		this._lastX = 0;
+		this._lastY = 0;
+
+		// states
+		this.sourceState = "";
+		if(this.isSource){
+			dojo.addClass(this.node, "dojoDndSource");
+		}
+		this.targetState = "";
+		if(this.accept){
+			dojo.addClass(this.node, "dojoDndTarget");
+		}
+
+		// set up events
+		this.topics = [
+			dojo.subscribe("/dnd/source/over", this, "onDndSourceOver"),
+			dojo.subscribe("/dnd/start", this, "onDndStart"),
+			dojo.subscribe("/dnd/drop", this, "onDndDrop"),
+			dojo.subscribe("/dnd/cancel", this, "onDndCancel")
+		];
+	},
+
+	// methods
+	checkAcceptance: function(source, nodes){
+		// summary:
+		//		Checks if the target can accept nodes from this source
+		// source: dijit.tree.dndSource
+		//		The source which provides items
+		// nodes: DOMNode[]
+		//		Array of DOM nodes corresponding to nodes being dropped, dijitTreeRow nodes if
+		//		source is a dijit.Tree.
+		// tags:
+		//		extension
+		return true;	// Boolean
+	},
+
+	copyState: function(keyPressed){
+		// summary:
+		//		Returns true, if we need to copy items, false to move.
+		//		It is separated to be overwritten dynamically, if needed.
+		// keyPressed: Boolean
+		//		The "copy" control key was pressed
+		// tags:
+		//		protected
+		return this.copyOnly || keyPressed;	// Boolean
+	},
+	destroy: function(){
+		// summary:
+		//		Prepares the object to be garbage-collected.
+		this.inherited("destroy",arguments);
+		dojo.forEach(this.topics, dojo.unsubscribe);
+		this.targetAnchor = null;
+	},
+
+	_onDragMouse: function(e){
+		// summary:
+		//		Helper method for processing onmousemove/onmouseover events while drag is in progress.
+		//		Keeps track of current drop target.
+
+		var m = dojo.dnd.manager(),
+			oldTarget = this.targetAnchor,			// the TreeNode corresponding to TreeNode mouse was previously over
+			newTarget = this.current,				// TreeNode corresponding to TreeNode mouse is currently over
+			oldDropPosition = this.dropPosition;	// the previous drop position (over/before/after)
+
+		// calculate if user is indicating to drop the dragged node before, after, or over
+		// (i.e., to become a child of) the target node
+		var newDropPosition = "Over";
+		if(newTarget && this.betweenThreshold > 0){
+			// If mouse is over a new TreeNode, then get new TreeNode's position and size
+			if(!this.targetBox || oldTarget != newTarget){
+				this.targetBox = dojo.position(newTarget.rowNode, true);
+			}
+			if((e.pageY - this.targetBox.y) <= this.betweenThreshold){
+				newDropPosition = "Before";
+			}else if((e.pageY - this.targetBox.y) >= (this.targetBox.h - this.betweenThreshold)){
+				newDropPosition = "After";
+			}
+		}
+
+		if(newTarget != oldTarget || newDropPosition != oldDropPosition){
+			if(oldTarget){
+				this._removeItemClass(oldTarget.rowNode, oldDropPosition);
+			}
+			if(newTarget){
+				this._addItemClass(newTarget.rowNode, newDropPosition);
+			}
+
+			// Check if it's ok to drop the dragged node on/before/after the target node.
+			if(!newTarget){
+				m.canDrop(false);
+			}else if(newTarget == this.tree.rootNode && newDropPosition != "Over"){
+				// Can't drop before or after tree's root node; the dropped node would just disappear (at least visually)
+				m.canDrop(false);
+			}else if(m.source == this && (newTarget.id in this.selection)){
+				// Guard against dropping onto yourself (TODO: guard against dropping onto your descendant, #7140)
+				m.canDrop(false);
+			}else if(this.checkItemAcceptance(newTarget.rowNode, m.source, newDropPosition.toLowerCase())
+					&& !this._isParentChildDrop(m.source, newTarget.rowNode)){
+				m.canDrop(true);
+			}else{
+				m.canDrop(false);
+			}
+
+			this.targetAnchor = newTarget;
+			this.dropPosition = newDropPosition;
+		}
+	},
+
+	onMouseMove: function(e){
+		// summary:
+		//		Called for any onmousemove events over the Tree
+		// e: Event
+		//		onmousemouse event
+		// tags:
+		//		private
+		if(this.isDragging && this.targetState == "Disabled"){ return; }
+		this.inherited(arguments);
+		var m = dojo.dnd.manager();
+		if(this.isDragging){
+			this._onDragMouse(e);
+		}else{
+			if(this.mouseDown && this.isSource &&
+				 (Math.abs(e.pageX-this._lastX)>=this.dragThreshold || Math.abs(e.pageY-this._lastY)>=this.dragThreshold)){
+				var nodes = this.getSelectedTreeNodes();
+				if(nodes.length){
+					if(nodes.length > 1){
+						//filter out all selected items which has one of their ancestor selected as well
+						var seen = this.selection, i = 0, r = [], n, p;
+						nextitem: while((n = nodes[i++])){
+							for(p = n.getParent(); p && p !== this.tree; p = p.getParent()){
+								if(seen[p.id]){ //parent is already selected, skip this node
+									continue nextitem;
+								}
+							}
+							//this node does not have any ancestors selected, add it
+							r.push(n);
+						}
+						nodes = r;
+					}
+					nodes = dojo.map(nodes, function(n){return n.domNode});
+					m.startDrag(this, nodes, this.copyState(dojo.isCopyKey(e)));
+				}
+			}
+		}
+	},
+
+	onMouseDown: function(e){
+		// summary:
+		//		Event processor for onmousedown
+		// e: Event
+		//		onmousedown event
+		// tags:
+		//		private
+		this.mouseDown = true;
+		this.mouseButton = e.button;
+		this._lastX = e.pageX;
+		this._lastY = e.pageY;
+		this.inherited(arguments);
+	},
+
+	onMouseUp: function(e){
+		// summary:
+		//		Event processor for onmouseup
+		// e: Event
+		//		onmouseup event
+		// tags:
+		//		private
+		if(this.mouseDown){
+			this.mouseDown = false;
+			this.inherited(arguments);
+		}
+	},
+
+	onMouseOut: function(){
+		// summary:
+		//		Event processor for when mouse is moved away from a TreeNode
+		// tags:
+		//		private
+		this.inherited(arguments);
+		this._unmarkTargetAnchor();
+	},
+
+	checkItemAcceptance: function(target, source, position){
+		// summary:
+		//		Stub function to be overridden if one wants to check for the ability to drop at the node/item level
+		// description:
+		//		In the base case, this is called to check if target can become a child of source.
+		//		When betweenThreshold is set, position="before" or "after" means that we
+		//		are asking if the source node can be dropped before/after the target node.
+		// target: DOMNode
+		//		The dijitTreeRoot DOM node inside of the TreeNode that we are dropping on to
+		//		Use dijit.getEnclosingWidget(target) to get the TreeNode.
+		// source: dijit.tree.dndSource
+		//		The (set of) nodes we are dropping
+		// position: String
+		//		"over", "before", or "after"
+		// tags:
+		//		extension
+		return true;
+	},
+
+	// topic event processors
+	onDndSourceOver: function(source){
+		// summary:
+		//		Topic event processor for /dnd/source/over, called when detected a current source.
+		// source: Object
+		//		The dijit.tree.dndSource / dojo.dnd.Source which has the mouse over it
+		// tags:
+		//		private
+		if(this != source){
+			this.mouseDown = false;
+			this._unmarkTargetAnchor();
+		}else if(this.isDragging){
+			var m = dojo.dnd.manager();
+			m.canDrop(false);
+		}
+	},
+	onDndStart: function(source, nodes, copy){
+		// summary:
+		//		Topic event processor for /dnd/start, called to initiate the DnD operation
+		// source: Object
+		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
+		// nodes: DomNode[]
+		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
+		// copy: Boolean
+		//		Copy items, if true, move items otherwise
+		// tags:
+		//		private
+
+		if(this.isSource){
+			this._changeState("Source", this == source ? (copy ? "Copied" : "Moved") : "");
+		}
+		var accepted = this.checkAcceptance(source, nodes);
+
+		this._changeState("Target", accepted ? "" : "Disabled");
+
+		if(this == source){
+			dojo.dnd.manager().overSource(this);
+		}
+
+		this.isDragging = true;
+	},
+
+	itemCreator: function(/*DomNode[]*/ nodes, target, /*dojo.dnd.Source*/ source){
+		// summary:
+		//		Returns objects passed to `Tree.model.newItem()` based on DnD nodes
+		//		dropped onto the tree.   Developer must override this method to enable
+		// 		dropping from external sources onto this Tree, unless the Tree.model's items
+		//		happen to look like {id: 123, name: "Apple" } with no other attributes.
+		// description:
+		//		For each node in nodes[], which came from source, create a hash of name/value
+		//		pairs to be passed to Tree.model.newItem().  Returns array of those hashes.
+		// returns: Object[]
+		//		Array of name/value hashes for each new item to be added to the Tree, like:
+		// |	[
+		// |		{ id: 123, label: "apple", foo: "bar" },
+		// |		{ id: 456, label: "pear", zaz: "bam" }
+		// |	]
+		// tags:
+		//		extension
+
+		// TODO: for 2.0 refactor so itemCreator() is called once per drag node, and
+		// make signature itemCreator(sourceItem, node, target) (or similar).
+
+		return dojo.map(nodes, function(node){
+			return {
+				"id": node.id,
+				"name": node.textContent || node.innerText || ""
+			};
+		}); // Object[]
+	},
+
+	onDndDrop: function(source, nodes, copy){
+		// summary:
+		//		Topic event processor for /dnd/drop, called to finish the DnD operation.
+		// description:
+		//		Updates data store items according to where node was dragged from and dropped
+		//		to.   The tree will then respond to those data store updates and redraw itself.
+		// source: Object
+		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
+		// nodes: DomNode[]
+		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
+		// copy: Boolean
+		//		Copy items, if true, move items otherwise
+		// tags:
+		//		protected
+		if(this.containerState == "Over"){
+			var tree = this.tree,
+				model = tree.model,
+				target = this.targetAnchor,
+				requeryRoot = false;	// set to true iff top level items change
+
+			this.isDragging = false;
+
+			// Compute the new parent item
+			var targetWidget = target;
+			var newParentItem;
+			var insertIndex;
+			newParentItem = (targetWidget && targetWidget.item) || tree.item;
+			if(this.dropPosition == "Before" || this.dropPosition == "After"){
+				// TODO: if there is no parent item then disallow the drop.
+				// Actually this should be checked during onMouseMove too, to make the drag icon red.
+				newParentItem = (targetWidget.getParent() && targetWidget.getParent().item) || tree.item;
+				// Compute the insert index for reordering
+				insertIndex = targetWidget.getIndexInParent();
+				if(this.dropPosition == "After"){
+					insertIndex = targetWidget.getIndexInParent() + 1;
+				}
+			}else{
+				newParentItem = (targetWidget && targetWidget.item) || tree.item;
+			}
+
+			// If necessary, use this variable to hold array of hashes to pass to model.newItem()
+			// (one entry in the array for each dragged node).
+			var newItemsParams;
+
+			dojo.forEach(nodes, function(node, idx){
+				// dojo.dnd.Item representing the thing being dropped.
+				// Don't confuse the use of item here (meaning a DnD item) with the
+				// uses below where item means dojo.data item.
+				var sourceItem = source.getItem(node.id);
+
+				// Information that's available if the source is another Tree
+				// (possibly but not necessarily this tree, possibly but not
+				// necessarily the same model as this Tree)
+				if(dojo.indexOf(sourceItem.type, "treeNode") != -1){
+					var childTreeNode = sourceItem.data,
+						childItem = childTreeNode.item,
+						oldParentItem = childTreeNode.getParent().item;
+				}
+
+				if(source == this){
+					// This is a node from my own tree, and we are moving it, not copying.
+					// Remove item from old parent's children attribute.
+					// TODO: dijit.tree.dndSelector should implement deleteSelectedNodes()
+					// and this code should go there.
+
+					if(typeof insertIndex == "number"){
+						if(newParentItem == oldParentItem && childTreeNode.getIndexInParent() < insertIndex){
+							insertIndex -= 1;
+						}
+					}
+					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
+				}else if(model.isItem(childItem)){
+					// Item from same model
+					// (maybe we should only do this branch if the source is a tree?)
+					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
+				}else{
+					// Get the hash to pass to model.newItem().  A single call to
+					// itemCreator() returns an array of hashes, one for each drag source node.
+					if(!newItemsParams){
+						newItemsParams = this.itemCreator(nodes, target.rowNode, source);
+					}
+
+					// Create new item in the tree, based on the drag source.
+					model.newItem(newItemsParams[idx], newParentItem, insertIndex);
+				}
+			}, this);
+
+			// Expand the target node (if it's currently collapsed) so the user can see
+			// where their node was dropped.   In particular since that node is still selected.
+			this.tree._expandNode(targetWidget);
+		}
+		this.onDndCancel();
+	},
+
+	onDndCancel: function(){
+		// summary:
+		//		Topic event processor for /dnd/cancel, called to cancel the DnD operation
+		// tags:
+		//		private
+		this._unmarkTargetAnchor();
+		this.isDragging = false;
+		this.mouseDown = false;
+		delete this.mouseButton;
+		this._changeState("Source", "");
+		this._changeState("Target", "");
+	},
+
+	// When focus moves in/out of the entire Tree
+	onOverEvent: function(){
+		// summary:
+		//		This method is called when mouse is moved over our container (like onmouseenter)
+		// tags:
+		//		private
+		this.inherited(arguments);
+		dojo.dnd.manager().overSource(this);
+	},
+	onOutEvent: function(){
+		// summary:
+		//		This method is called when mouse is moved out of our container (like onmouseleave)
+		// tags:
+		//		private
+		this._unmarkTargetAnchor();
+		var m = dojo.dnd.manager();
+		if(this.isDragging){
+			m.canDrop(false);
+		}
+		m.outSource(this);
+
+		this.inherited(arguments);
+	},
+
+	_isParentChildDrop: function(source, targetRow){
+		// summary:
+		//		Checks whether the dragged items are parent rows in the tree which are being
+		//		dragged into their own children.
+		//
+		// source:
+		//		The DragSource object.
+		//
+		// targetRow:
+		//		The tree row onto which the dragged nodes are being dropped.
+		//
+		// tags:
+		//		private
+
+		// If the dragged object is not coming from the tree this widget belongs to,
+		// it cannot be invalid.
+		if(!source.tree || source.tree != this.tree){
+			return false;
+		}
+
+
+		var root = source.tree.domNode;
+		var ids = source.selection;
+
+		var node = targetRow.parentNode;
+
+		// Iterate up the DOM hierarchy from the target drop row,
+		// checking of any of the dragged nodes have the same ID.
+		while(node != root && !ids[node.id]){
+			node = node.parentNode;
+		}
+
+		return node.id && ids[node.id];
+	},
+
+	_unmarkTargetAnchor: function(){
+		// summary:
+		//		Removes hover class of the current target anchor
+		// tags:
+		//		private
+		if(!this.targetAnchor){ return; }
+		this._removeItemClass(this.targetAnchor.rowNode, this.dropPosition);
+		this.targetAnchor = null;
+		this.targetBox = null;
+		this.dropPosition = null;
+	},
+
+	_markDndStatus: function(copy){
+		// summary:
+		//		Changes source's state based on "copy" status
+		this._changeState("Source", copy ? "Copied" : "Moved");
+	}
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.folder.DndSource']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.folder.DndSource'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: aaron
+ * Date: 28/11/11
+ * Time: 12:42 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.folder.DndSource');
+
+
+
+dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
+    singular: true,
+
+    _normalizedCreator: null,
+
+    _checkDocumentDrag: function(sourceItems){
+        var canDrag = true;
+        //Place holder for start of document drag
+        return canDrag;
+    },
+
+    _checkReferenceAcceptance: function(targetFolder, sourceItems){
+        var canDrop = true;
+
+        //We can drop a reference into:
+        //- Never its current folder
+        //- Trash Folder (with delete permissions)
+        //- "Share" folder (Not the share root)
+        //- Another content folder (with move permissions)
+        //- Can't 'move' deleted items (yet)
+        if(sourceItems[0].folder_id == targetFolder.getId()){
+            canDrop = false;
+        }
+        else if(sourceItems[0].isDeleted()){
+            canDrop = false;
+        }
+        else if(targetFolder.isSpecial()){
+            if(targetFolder.isTrash()){
+                canDrop = dojo.every(sourceItems, function(item, idx){
+                    return item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
+                }, this);
+            }
+            if(targetFolder.isSearch()){
+                canDrop = false;
+            }
+            else if(targetFolder.isShareRoot()){
+                canDrop = false;
+            }
+        }
+        else if(targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
+            canDrop = dojo.every(sourceItems, function(item, idx){
+                return item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA);
+            }, this);
+        }
+
+        return canDrop;
+    },
+
+    _checkFolderAcceptance: function(targetFolder, sourceItems){
+        var canDrop = true;
+
+        //We can drop a folder into:
+        // - Never its current parent
+        // - Never drop folder into search folder.
+        if(sourceItems[0].parent_id == targetFolder.getId()){
+            canDrop = false;
+        }
+        else if(targetFolder.isSearch() || targetFolder.isShare()){
+            canDrop = false;
+        }
+
+        return canDrop;
+
+    },
+
+    _checkFolderDrag: function(sourceItems){
+        var canDrag = true;
+
+        dojo.every(sourceItems, function(sourceItem, idx){
+
+            if(sourceItem.isSpecial()){
+                canDrag = false;
+            }
+
+            return canDrag;
+        }, this);
+
+        return canDrag;
+    },
+
+    _getSourceItems: function(source){
+        var items = [];
+
+        if(!source)
+            return items;
+
+        if(source.isInstanceOf(bfree.widget.folder.DndSource)){
+            items.push(source.anchor.item);
+        }
+        else if(source.isInstanceOf(versa.widget.reference.dnd.Source)){
+            var nodes = source.getSelectedNodes();
+            dojo.forEach(nodes, function(node, idx){
+                items.push(source.getItem(node.id).data);
+            });
+        }
+
+        return items;
+    },
+
+    _getTargetItem: function(target){
+        var targetNode = dijit.getEnclosingWidget(target);
+        return targetNode.item;
+    },
+
+    _onFolderDrop: function(targetFolder, sourceItems){
+
+        if(targetFolder.isTrash()){
+             this.onCommand(bfree.widget.Bfree.Commands.DESTROY, bfree.widget.Bfree.ObjectTypes.FOLDER, {folder: sourceItems[0]});
+        }
+        else if(targetFolder.isShareRoot()){
+            this.onCommand(bfree.widget.Bfree.Commands.NEW, bfree.widget.Bfree.ObjectTypes.SHARE, {folder: sourceItems[0]});
+        }
+    },
+
+    _onReferenceDrop: function(targetFolder, sourceItems){
+
+        if(targetFolder.isTrash()){
+            this.onCommand(bfree.widget.Bfree.Commands.DELETE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {items: sourceItems});
+        }
+        else if(targetFolder.isShare()){
+            this.onCommand(bfree.widget.Bfree.Commands.SHARE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
+        }
+        else{
+            this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems})
+        }
+
+    },
+
+
+    checkItemAcceptance: function(target, source, position){
+        var canDrop = false;
+
+        var targetItem = this._getTargetItem(target);
+        var sourceItems = this._getSourceItems(source);
+
+        if((!targetItem) || (sourceItems.length < 1))
+            return canDrop;
+
+        if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
+            canDrop = this._checkReferenceAcceptance(targetItem, sourceItems);
+        }
+        else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
+            canDrop = this._checkFolderAcceptance(targetItem, sourceItems);
+        }
+
+        return canDrop;
+
+    },
+
+    constructor: function(args){
+        //this._normalizedCreator = this._dndCreator;
+        this._normalizedCreator = this.creator;
+    },
+
+    creator: function(treeNode, hint){
+        var node = null;
+
+        if(hint == 'avatar'){
+
+            var imgSrc = bfree.api.Folder.getIconUrl(treeNode.item, 16);
+
+            node = dojo.create('div',{
+                'class': 'dijitDarkLabel',
+                innerHTML: treeNode.item.name,
+                style: {
+                    paddingLeft: '18px',
+                    height: '16px',
+                    position: 'relative'
+                }
+            });
+            dojo.create('img', {
+                src: imgSrc,
+                style: {
+                    left: '0',
+                    position: 'absolute',
+                    top: '0'
+                }
+            }, node);
+
+        }
+        else{
+            //create a 'dummy' node...will never be used for selection
+            node = dojo.create('div', {innerHTML: treeNode.item.name});
+        }
+
+        return {node: node, data: treeNode, type: 'folder'};
+    },
+
+    onCommand: function(cmdId, option, params){
+    },
+
+    onDndDrop: function(source, nodes, copy){
+
+        try{
+
+            if(!this.targetAnchor)
+                return;
+
+
+            var targetItem = this.targetAnchor.item;
+            var sourceItems = this._getSourceItems(source);
+
+            if((!targetItem) || (sourceItems.length < 1))
+                return;
+
+            if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
+                this._onReferenceDrop(targetItem, sourceItems);
+            }
+            else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
+                this._onFolderDrop(targetItem, sourceItems);
+            }
+
+            //this.tree._onItemsDnd(targetItem, sourceItems);
+        }
+        finally{
+            this.inherited('onDndCancel', arguments);
+        }
+    },
+
+    onDndStart: function(source, nodes, copy){
+
+        if(source === this){
+            //Can't dnd:
+            //- Root folder
+            //- Recycle Bin
+            //- Search
+            //- Shares
+            var canDnd = dojo.every(nodes, function(node, idx){
+                var treeNode = source.getItem(node.id).data;
+                return !(treeNode.item.root || treeNode.item.isTrash() || treeNode.item.isShareRoot() || treeNode.item.isShare() );
+            });
+
+            if(!canDnd){
+                dojo.dnd.manager().stopDrag();
+                return;
+            }
+        }
+
+        this.inherited('onDndStart', arguments);
+
+    },
+
+    moveFolder: function(args){
+        var anchor=args.anchor;
+        var targetAnchor=args.targetAnchor;
+        var parentNode=anchor.getParent();
+
+        targetAnchor.expand();
+
+        var targetId=targetAnchor.item.id||targetAnchor.item.root?targetAnchor.item.id:targetAnchor.item.$ref;
+
+        this.tree.folders.loadItem({
+            item: targetAnchor.item,
+            callback: dojo.hitch(this, function(item){
+                this.tree.folders.setValue(anchor.item, 'parent_id', targetId);
+                this.tree.model.pasteItem(anchor.item, parentNode.item, item, false);
+            })
+        });
+
+        this.tree.folders.save();
+
+
+        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowSelected');
+        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowHover');
+
+        this.tree.setSelectedPath(anchor.item.path);
+    },
+
+
+    onMouseDown: function(e){
+		// summary:
+		//		Event processor for onmousedown
+		// e: Event
+		//		onmousedown event
+		// tags:
+		//		private
+        if(!(e.target.type&&e.target.type=='text')){
+            this.mouseDown = true;
+            this.mouseButton = e.button;
+            this._lastX = e.pageX;
+            this._lastY = e.pageY;
+            this.inherited(arguments);
+        }
+	}
+});
 
 }
 
@@ -68910,7 +70159,7 @@ dojo.provide('bfree.widget.propdef.Grid');
 
 
 
-dojo.declare('bfree.widget.propdef.Grid', [bfree.widget._Grid], {
+dojo.declare('bfree.widget.propdef.Grid', bfree.widget._Grid, {
 
     selectionMode: 'single',
     propertyDefinitions: null,
@@ -69195,16 +70444,6 @@ dojo.declare('bfree.widget.propdef.Administration', [dijit._Widget, dijit._Templ
 
     destroy: function(){
 
-        if(this._cmdBar){
-            this._cmdBar.destroy();
-            this._cmdBar = null;
-        }
-
-        if(this._grdPropDefs){
-            this._grdPropDefs.destroy();
-            this._grdPropDefs = null;
-        }
-
         if(this._editor){
             this._editor.destroy();
             this._editor = null;
@@ -69335,7 +70574,7 @@ dojo.declare('bfree.widget.propdef.Administration', [dijit._Widget, dijit._Templ
     startup: function(){
         this.inherited('startup', arguments);
 
-        this._grdPropDefs.startup();
+        //this._grdPropDefs.startup();
         this._grdPropDefs.setSelectedIndex(0);
 
         setTimeout(bfree.widget.propdef.Administration._loadFnRef(this), 10);
@@ -70032,7 +71271,6 @@ dojo.declare('bfree.widget.search.TextBox', [dijit._Widget, dijit._Templated],{
 
     startup: function(){
         this.inherited('startup', arguments);
-        console.log('startup:> search/TextBox.js');
     }
 
 });
@@ -70654,7 +71892,6 @@ dojo.declare('bfree.widget.user.ProfileEditor', [dijit._Widget, dijit._Templated
         this._txtEmail.validate();
         setTimeout(bfree.widget.user.ProfileEditor._loadFnRef(this), 10);
     }
-
 
 });
 
@@ -72099,7 +73336,7 @@ dojo.declare('bfree.widget.view.Grid', [bfree.widget._Grid], {
 
     startup: function(){
         this.inherited('startup', arguments);
-        this.setStore(this.viewDefinitions.store, {}, {cache: true});
+        this.setStore(this.viewDefinitions.store, {is_template: true}, {cache: true});
     }
 
 });
@@ -72526,64 +73763,7 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
     },
 
     _buildFormatStore: function(){
-        var items = [
-            {
-                id: bfree.api.DataTypes.types.BOOLEAN + ':' + bfree.api.CellDefinition.formats.none,
-                format_id: bfree.api.CellDefinition.formats.none,
-                data_type_id: bfree.api.DataTypes.types.BOOLEAN,
-                name: 'None'
-            },
-            {
-                id: bfree.api.DataTypes.types.DATETIME + ':' + bfree.api.CellDefinition.formats.none,
-                format_id: bfree.api.CellDefinition.formats.none,
-                data_type_id: bfree.api.DataTypes.types.DATETIME,
-                name: 'None'
-            },
-            {
-                id: bfree.api.DataTypes.types.DATETIME + ':' + bfree.api.CellDefinition.formats.datetime,
-                format_id: bfree.api.CellDefinition.formats.datetime,
-                data_type_id: bfree.api.DataTypes.types.DATETIME,
-                name: 'Date'
-            },
-            {
-                id: bfree.api.DataTypes.types.FLOAT + ':' + bfree.api.CellDefinition.formats.none,
-                format_id: bfree.api.CellDefinition.formats.none,
-                data_type_id: bfree.api.DataTypes.types.FLOAT,
-                name: 'None'
-            },
-            {
-                id: bfree.api.DataTypes.types.INTEGER + ':' + bfree.api.CellDefinition.formats.none,
-                format_id: bfree.api.CellDefinition.formats.none,
-                data_type_id: bfree.api.DataTypes.types.INTEGER,
-                name: 'None'
-            },
-            {
-                id: bfree.api.DataTypes.types.INTEGER + ':' + bfree.api.CellDefinition.formats.size,
-                format_id: bfree.api.CellDefinition.formats.size,
-                data_type_id: bfree.api.DataTypes.types.INTEGER,
-                name: 'File Size'
-            },
-            {
-                id: bfree.api.DataTypes.types.STRING + ':' + bfree.api.CellDefinition.formats.none,
-                format_id: bfree.api.CellDefinition.formats.none,
-                data_type_id: bfree.api.DataTypes.types.STRING,
-                name: 'None'
-            },
-            {
-                id: bfree.api.DataTypes.types.TEXT + ':' + bfree.api.CellDefinition.formats.none,
-                format_id: bfree.api.CellDefinition.formats.none,
-                data_type_id: bfree.api.DataTypes.types.TEXT,
-                name: 'None'
-            }
-        ];
-
-        this._formatStore = new bfree.api.ItemFileWriteStore({
-            data: {
-                identifier: 'id',
-                label: 'name',
-                items: items
-            }
-        });
+        this._formatStore=bfree.api.Utilities.getFormatStore();
     },
 
     _buildPropertyStore: function(){
@@ -72658,33 +73838,7 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
 
 
     _getDefaultWidth: function(data_type_id){
-        var w = 128
-
-        switch(data_type_id){
-            case bfree.api.DataTypes.types.VOID:
-                w = 18;
-                break;
-            case bfree.api.DataTypes.types.BOOLEAN:
-                w = 18;
-                break;
-            case bfree.api.DataTypes.types.INTEGER:
-                w = 64;
-                break;
-            case bfree.api.DataTypes.types.FLOAT:
-                w = 64;
-                break;
-            case bfree.api.DataTypes.types.DATETIME:
-                w = 128;
-                break;
-            case bfree.api.DataTypes.types.STRING:
-                w = 128;
-                break;
-            case bfree.api.DataTypes.types.TEXT:
-                w = 128;
-                break;
-        }
-
-        return w;
+        return bfree.api.CellDefinitions.getDefaultWidth(data_type_id);
     },
 
     _onColumnChange: function(newValue){
@@ -73480,7 +74634,9 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
 
     activeUser: null,
     library: null,
+    doRefresh: false,
     zone: null,
+
 
     _onCommand: function(cmdId){
 
@@ -73575,7 +74731,8 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 created_by: this.activeUser.name,
                 created_at: new Date(),
                 updated_by: this.activeUser.name,
-                updated_at: new Date()
+                updated_at: new Date(),
+                is_template: true
             });
 
             var idx = 0;
@@ -73624,7 +74781,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 column_name: 'name',
                 label: 'Document Type',
                 name: 'Document Type',
-                noresize: true,
+                noresize: false,
                 width: '128px',
                 formatter: bfree.api.CellDefinition.formats.none,
                 style: ''
@@ -73637,7 +74794,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 column_name: 'version_number',
                 label: 'Version',
                 name: 'Version',
-                noresize: true,
+                noresize: false,
                 width: '64px',
                 formatter: bfree.api.CellDefinition.formats.none,
                 style: ''
@@ -73650,7 +74807,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 column_name: 'binary_file_size',
                 label: 'Size',
                 name: 'Size',
-                noresize: true,
+                noresize: false,
                 width: '64px',
                 formatter: bfree.api.CellDefinition.formats.size,
                 style: ''
@@ -73663,7 +74820,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 column_name: 'updated_by',
                 label: 'Owner',
                 name: 'Owner',
-                noresize: true,
+                noresize: false,
                 width: '128px',
                 formatter: bfree.api.CellDefinition.formats.none,
                 style: ''
@@ -73704,6 +74861,8 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
                 this._viewDefinitions.destroy({item: item});
                 this._grdViews.setSelectedIndex(idx);
                 this._editor.focus();
+
+                this.doRefresh = true;
             }
 
         }
@@ -73780,6 +74939,8 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
             else{
                 canClose = true;
             }
+
+            this.returnValue = this.doRefresh;
         }
         catch(e){
            var err = new bfree.api.Error('Failed to close View Definitions dialog', e);
@@ -73848,6 +75009,7 @@ dojo.declare('bfree.widget.view.Administration', [dijit._Widget, dijit._Template
         this._viewDefinitions.clearCache();
         this._grdViews.sort();
         this._grdViews.selectItem(item);
+        this.doRefresh = true;
     },
 
     startup: function(){
@@ -74541,7 +75703,12 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
     activeUser: null,
 
     _onCommand: function(cmdId, option, e){
-        this.onCommand(cmdId, option, {document: this.activeDocument, folder: this.activeFolder});
+
+        //Don't send folder if creating a new share
+        ((cmdId == bfree.widget.Bfree.Commands.NEW) && (option ==  bfree.widget.Bfree.ObjectTypes.SHARE)) ?
+            this.onCommand(cmdId, option, {document: this.activeDocument, folder: null}) :
+            this.onCommand(cmdId, option, {document: this.activeDocument, folder: this.activeFolder});
+
     },
 
     _setActiveFolderAttr: function(value){
@@ -74562,16 +75729,22 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
 
         var canAddFolders = true;
         var canAddDocuments = true;
+        var canAddShares = false;
 
         if(this.activeFolder){
-            var permissionSet = bfree.api.Folder.getPermissionSet(this.activeFolder, this.activeLibrary, this.activeUser);
-            canAddFolders = permissionSet[bfree.api.Folder.permissionIndices.CREATE];
-            canAddDocuments = permissionSet[bfree.api.Folder.permissionIndices.FILE];
+
+            var activePrmSet = this.activeFolder.getPermissionSet(this.activeLibrary, this.activeUser);
+
+            canAddFolders = (!this.activeFolder.isShareRoot()) && activePrmSet.getValue(versa.api.PermissionIndices.CREATE);
+            canAddDocuments = activePrmSet.getValue(versa.api.PermissionIndices.FILE);
+            canAddShares = this.activeFolder.isShareRoot() && activePrmSet.getValue(versa.api.PermissionIndices.CREATE);
         }
 
         this._mniDocument.set('disabled', !canAddDocuments);
         this._mniFolder.set('disabled', !canAddFolders);
-        this._btnNew.set('disabled', !(canAddDocuments || canAddFolders));
+        this._mniShare.set('disabled', !canAddShares);
+
+        this._btnNew.set('disabled', !(canAddDocuments || canAddFolders || canAddShares));
         this._btnExport.set('disabled', !canExport);
     },
 
@@ -74609,6 +75782,7 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
         this._mnuNewItems = new dijit.Menu();
         this._mniFolder = new dijit.MenuItem({
             label: 'Folder',
+            disabled: true,
             iconClass: 'menuIcon bfreeIconFolder',
             onClick: dojo.hitch(this, this._onCommand,
                 bfree.widget.Bfree.Commands.NEW,
@@ -74619,6 +75793,7 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
 
         this._mniDocument = new dijit.MenuItem({
             label: 'Document(s)',
+            disabled: true,
             iconClass: 'menuIcon bfreeIconDocument',
             onClick: dojo.hitch(this, this._onCommand,
                 bfree.widget.Bfree.Commands.NEW,
@@ -74626,6 +75801,17 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
             )
         });
         this._mnuNewItems.addChild(this._mniDocument);
+
+        this._mniShare = new dijit.MenuItem({
+            label: 'Share...',
+            disabled: true,
+            iconClass: 'menuIcon bfreeShareFolderClosed',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.NEW,
+                bfree.widget.Bfree.ObjectTypes.SHARE
+            )
+        });
+        this._mnuNewItems.addChild(this._mniShare);
 
         this._btnNew = new dijit.form.DropDownButton({
             label: 'Add New...',
@@ -74656,771 +75842,6 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
         this.inherited('startup', arguments);
     }
 
-});
-
-}
-
-if(!dojo._hasResource["dijit.tree.dndSource"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dijit.tree.dndSource"] = true;
-dojo.provide("dijit.tree.dndSource");
-
-
-
-
-/*=====
-dijit.tree.__SourceArgs = function(){
-	// summary:
-	//		A dict of parameters for Tree source configuration.
-	// isSource: Boolean?
-	//		Can be used as a DnD source. Defaults to true.
-	// accept: String[]
-	//		List of accepted types (text strings) for a target; defaults to
-	//		["text", "treeNode"]
-	// copyOnly: Boolean?
-	//		Copy items, if true, use a state of Ctrl key otherwise,
-	// dragThreshold: Number
-	//		The move delay in pixels before detecting a drag; 0 by default
-	// betweenThreshold: Integer
-	//		Distance from upper/lower edge of node to allow drop to reorder nodes
-	this.isSource = isSource;
-	this.accept = accept;
-	this.autoSync = autoSync;
-	this.copyOnly = copyOnly;
-	this.dragThreshold = dragThreshold;
-	this.betweenThreshold = betweenThreshold;
-}
-=====*/
-
-dojo.declare("dijit.tree.dndSource", dijit.tree._dndSelector, {
-	// summary:
-	//		Handles drag and drop operations (as a source or a target) for `dijit.Tree`
-
-	// isSource: [private] Boolean
-	//		Can be used as a DnD source.
-	isSource: true,
-
-	// accept: String[]
-	//		List of accepted types (text strings) for the Tree; defaults to
-	//		["text"]
-	accept: ["text", "treeNode"],
-
-	// copyOnly: [private] Boolean
-	//		Copy items, if true, use a state of Ctrl key otherwise
-	copyOnly: false,
-
-	// dragThreshold: Number
-	//		The move delay in pixels before detecting a drag; 5 by default
-	dragThreshold: 5,
-
-	// betweenThreshold: Integer
-	//		Distance from upper/lower edge of node to allow drop to reorder nodes
-	betweenThreshold: 0,
-
-	constructor: function(/*dijit.Tree*/ tree, /*dijit.tree.__SourceArgs*/ params){
-		// summary:
-		//		a constructor of the Tree DnD Source
-		// tags:
-		//		private
-		if(!params){ params = {}; }
-		dojo.mixin(this, params);
-		this.isSource = typeof params.isSource == "undefined" ? true : params.isSource;
-		var type = params.accept instanceof Array ? params.accept : ["text", "treeNode"];
-		this.accept = null;
-		if(type.length){
-			this.accept = {};
-			for(var i = 0; i < type.length; ++i){
-				this.accept[type[i]] = 1;
-			}
-		}
-
-		// class-specific variables
-		this.isDragging = false;
-		this.mouseDown = false;
-		this.targetAnchor = null;	// DOMNode corresponding to the currently moused over TreeNode
-		this.targetBox = null;	// coordinates of this.targetAnchor
-		this.dropPosition = "";	// whether mouse is over/after/before this.targetAnchor
-		this._lastX = 0;
-		this._lastY = 0;
-
-		// states
-		this.sourceState = "";
-		if(this.isSource){
-			dojo.addClass(this.node, "dojoDndSource");
-		}
-		this.targetState = "";
-		if(this.accept){
-			dojo.addClass(this.node, "dojoDndTarget");
-		}
-
-		// set up events
-		this.topics = [
-			dojo.subscribe("/dnd/source/over", this, "onDndSourceOver"),
-			dojo.subscribe("/dnd/start", this, "onDndStart"),
-			dojo.subscribe("/dnd/drop", this, "onDndDrop"),
-			dojo.subscribe("/dnd/cancel", this, "onDndCancel")
-		];
-	},
-
-	// methods
-	checkAcceptance: function(source, nodes){
-		// summary:
-		//		Checks if the target can accept nodes from this source
-		// source: dijit.tree.dndSource
-		//		The source which provides items
-		// nodes: DOMNode[]
-		//		Array of DOM nodes corresponding to nodes being dropped, dijitTreeRow nodes if
-		//		source is a dijit.Tree.
-		// tags:
-		//		extension
-		return true;	// Boolean
-	},
-
-	copyState: function(keyPressed){
-		// summary:
-		//		Returns true, if we need to copy items, false to move.
-		//		It is separated to be overwritten dynamically, if needed.
-		// keyPressed: Boolean
-		//		The "copy" control key was pressed
-		// tags:
-		//		protected
-		return this.copyOnly || keyPressed;	// Boolean
-	},
-	destroy: function(){
-		// summary:
-		//		Prepares the object to be garbage-collected.
-		this.inherited("destroy",arguments);
-		dojo.forEach(this.topics, dojo.unsubscribe);
-		this.targetAnchor = null;
-	},
-
-	_onDragMouse: function(e){
-		// summary:
-		//		Helper method for processing onmousemove/onmouseover events while drag is in progress.
-		//		Keeps track of current drop target.
-
-		var m = dojo.dnd.manager(),
-			oldTarget = this.targetAnchor,			// the TreeNode corresponding to TreeNode mouse was previously over
-			newTarget = this.current,				// TreeNode corresponding to TreeNode mouse is currently over
-			oldDropPosition = this.dropPosition;	// the previous drop position (over/before/after)
-
-		// calculate if user is indicating to drop the dragged node before, after, or over
-		// (i.e., to become a child of) the target node
-		var newDropPosition = "Over";
-		if(newTarget && this.betweenThreshold > 0){
-			// If mouse is over a new TreeNode, then get new TreeNode's position and size
-			if(!this.targetBox || oldTarget != newTarget){
-				this.targetBox = dojo.position(newTarget.rowNode, true);
-			}
-			if((e.pageY - this.targetBox.y) <= this.betweenThreshold){
-				newDropPosition = "Before";
-			}else if((e.pageY - this.targetBox.y) >= (this.targetBox.h - this.betweenThreshold)){
-				newDropPosition = "After";
-			}
-		}
-
-		if(newTarget != oldTarget || newDropPosition != oldDropPosition){
-			if(oldTarget){
-				this._removeItemClass(oldTarget.rowNode, oldDropPosition);
-			}
-			if(newTarget){
-				this._addItemClass(newTarget.rowNode, newDropPosition);
-			}
-
-			// Check if it's ok to drop the dragged node on/before/after the target node.
-			if(!newTarget){
-				m.canDrop(false);
-			}else if(newTarget == this.tree.rootNode && newDropPosition != "Over"){
-				// Can't drop before or after tree's root node; the dropped node would just disappear (at least visually)
-				m.canDrop(false);
-			}else if(m.source == this && (newTarget.id in this.selection)){
-				// Guard against dropping onto yourself (TODO: guard against dropping onto your descendant, #7140)
-				m.canDrop(false);
-			}else if(this.checkItemAcceptance(newTarget.rowNode, m.source, newDropPosition.toLowerCase())
-					&& !this._isParentChildDrop(m.source, newTarget.rowNode)){
-				m.canDrop(true);
-			}else{
-				m.canDrop(false);
-			}
-
-			this.targetAnchor = newTarget;
-			this.dropPosition = newDropPosition;
-		}
-	},
-
-	onMouseMove: function(e){
-		// summary:
-		//		Called for any onmousemove events over the Tree
-		// e: Event
-		//		onmousemouse event
-		// tags:
-		//		private
-		if(this.isDragging && this.targetState == "Disabled"){ return; }
-		this.inherited(arguments);
-		var m = dojo.dnd.manager();
-		if(this.isDragging){
-			this._onDragMouse(e);
-		}else{
-			if(this.mouseDown && this.isSource &&
-				 (Math.abs(e.pageX-this._lastX)>=this.dragThreshold || Math.abs(e.pageY-this._lastY)>=this.dragThreshold)){
-				var nodes = this.getSelectedTreeNodes();
-				if(nodes.length){
-					if(nodes.length > 1){
-						//filter out all selected items which has one of their ancestor selected as well
-						var seen = this.selection, i = 0, r = [], n, p;
-						nextitem: while((n = nodes[i++])){
-							for(p = n.getParent(); p && p !== this.tree; p = p.getParent()){
-								if(seen[p.id]){ //parent is already selected, skip this node
-									continue nextitem;
-								}
-							}
-							//this node does not have any ancestors selected, add it
-							r.push(n);
-						}
-						nodes = r;
-					}
-					nodes = dojo.map(nodes, function(n){return n.domNode});
-					m.startDrag(this, nodes, this.copyState(dojo.isCopyKey(e)));
-				}
-			}
-		}
-	},
-
-	onMouseDown: function(e){
-		// summary:
-		//		Event processor for onmousedown
-		// e: Event
-		//		onmousedown event
-		// tags:
-		//		private
-		this.mouseDown = true;
-		this.mouseButton = e.button;
-		this._lastX = e.pageX;
-		this._lastY = e.pageY;
-		this.inherited(arguments);
-	},
-
-	onMouseUp: function(e){
-		// summary:
-		//		Event processor for onmouseup
-		// e: Event
-		//		onmouseup event
-		// tags:
-		//		private
-		if(this.mouseDown){
-			this.mouseDown = false;
-			this.inherited(arguments);
-		}
-	},
-
-	onMouseOut: function(){
-		// summary:
-		//		Event processor for when mouse is moved away from a TreeNode
-		// tags:
-		//		private
-		this.inherited(arguments);
-		this._unmarkTargetAnchor();
-	},
-
-	checkItemAcceptance: function(target, source, position){
-		// summary:
-		//		Stub function to be overridden if one wants to check for the ability to drop at the node/item level
-		// description:
-		//		In the base case, this is called to check if target can become a child of source.
-		//		When betweenThreshold is set, position="before" or "after" means that we
-		//		are asking if the source node can be dropped before/after the target node.
-		// target: DOMNode
-		//		The dijitTreeRoot DOM node inside of the TreeNode that we are dropping on to
-		//		Use dijit.getEnclosingWidget(target) to get the TreeNode.
-		// source: dijit.tree.dndSource
-		//		The (set of) nodes we are dropping
-		// position: String
-		//		"over", "before", or "after"
-		// tags:
-		//		extension
-		return true;
-	},
-
-	// topic event processors
-	onDndSourceOver: function(source){
-		// summary:
-		//		Topic event processor for /dnd/source/over, called when detected a current source.
-		// source: Object
-		//		The dijit.tree.dndSource / dojo.dnd.Source which has the mouse over it
-		// tags:
-		//		private
-		if(this != source){
-			this.mouseDown = false;
-			this._unmarkTargetAnchor();
-		}else if(this.isDragging){
-			var m = dojo.dnd.manager();
-			m.canDrop(false);
-		}
-	},
-	onDndStart: function(source, nodes, copy){
-		// summary:
-		//		Topic event processor for /dnd/start, called to initiate the DnD operation
-		// source: Object
-		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
-		// nodes: DomNode[]
-		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
-		// copy: Boolean
-		//		Copy items, if true, move items otherwise
-		// tags:
-		//		private
-
-		if(this.isSource){
-			this._changeState("Source", this == source ? (copy ? "Copied" : "Moved") : "");
-		}
-		var accepted = this.checkAcceptance(source, nodes);
-
-		this._changeState("Target", accepted ? "" : "Disabled");
-
-		if(this == source){
-			dojo.dnd.manager().overSource(this);
-		}
-
-		this.isDragging = true;
-	},
-
-	itemCreator: function(/*DomNode[]*/ nodes, target, /*dojo.dnd.Source*/ source){
-		// summary:
-		//		Returns objects passed to `Tree.model.newItem()` based on DnD nodes
-		//		dropped onto the tree.   Developer must override this method to enable
-		// 		dropping from external sources onto this Tree, unless the Tree.model's items
-		//		happen to look like {id: 123, name: "Apple" } with no other attributes.
-		// description:
-		//		For each node in nodes[], which came from source, create a hash of name/value
-		//		pairs to be passed to Tree.model.newItem().  Returns array of those hashes.
-		// returns: Object[]
-		//		Array of name/value hashes for each new item to be added to the Tree, like:
-		// |	[
-		// |		{ id: 123, label: "apple", foo: "bar" },
-		// |		{ id: 456, label: "pear", zaz: "bam" }
-		// |	]
-		// tags:
-		//		extension
-
-		// TODO: for 2.0 refactor so itemCreator() is called once per drag node, and
-		// make signature itemCreator(sourceItem, node, target) (or similar).
-
-		return dojo.map(nodes, function(node){
-			return {
-				"id": node.id,
-				"name": node.textContent || node.innerText || ""
-			};
-		}); // Object[]
-	},
-
-	onDndDrop: function(source, nodes, copy){
-		// summary:
-		//		Topic event processor for /dnd/drop, called to finish the DnD operation.
-		// description:
-		//		Updates data store items according to where node was dragged from and dropped
-		//		to.   The tree will then respond to those data store updates and redraw itself.
-		// source: Object
-		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
-		// nodes: DomNode[]
-		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
-		// copy: Boolean
-		//		Copy items, if true, move items otherwise
-		// tags:
-		//		protected
-		if(this.containerState == "Over"){
-			var tree = this.tree,
-				model = tree.model,
-				target = this.targetAnchor,
-				requeryRoot = false;	// set to true iff top level items change
-
-			this.isDragging = false;
-
-			// Compute the new parent item
-			var targetWidget = target;
-			var newParentItem;
-			var insertIndex;
-			newParentItem = (targetWidget && targetWidget.item) || tree.item;
-			if(this.dropPosition == "Before" || this.dropPosition == "After"){
-				// TODO: if there is no parent item then disallow the drop.
-				// Actually this should be checked during onMouseMove too, to make the drag icon red.
-				newParentItem = (targetWidget.getParent() && targetWidget.getParent().item) || tree.item;
-				// Compute the insert index for reordering
-				insertIndex = targetWidget.getIndexInParent();
-				if(this.dropPosition == "After"){
-					insertIndex = targetWidget.getIndexInParent() + 1;
-				}
-			}else{
-				newParentItem = (targetWidget && targetWidget.item) || tree.item;
-			}
-
-			// If necessary, use this variable to hold array of hashes to pass to model.newItem()
-			// (one entry in the array for each dragged node).
-			var newItemsParams;
-
-			dojo.forEach(nodes, function(node, idx){
-				// dojo.dnd.Item representing the thing being dropped.
-				// Don't confuse the use of item here (meaning a DnD item) with the
-				// uses below where item means dojo.data item.
-				var sourceItem = source.getItem(node.id);
-
-				// Information that's available if the source is another Tree
-				// (possibly but not necessarily this tree, possibly but not
-				// necessarily the same model as this Tree)
-				if(dojo.indexOf(sourceItem.type, "treeNode") != -1){
-					var childTreeNode = sourceItem.data,
-						childItem = childTreeNode.item,
-						oldParentItem = childTreeNode.getParent().item;
-				}
-
-				if(source == this){
-					// This is a node from my own tree, and we are moving it, not copying.
-					// Remove item from old parent's children attribute.
-					// TODO: dijit.tree.dndSelector should implement deleteSelectedNodes()
-					// and this code should go there.
-
-					if(typeof insertIndex == "number"){
-						if(newParentItem == oldParentItem && childTreeNode.getIndexInParent() < insertIndex){
-							insertIndex -= 1;
-						}
-					}
-					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
-				}else if(model.isItem(childItem)){
-					// Item from same model
-					// (maybe we should only do this branch if the source is a tree?)
-					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
-				}else{
-					// Get the hash to pass to model.newItem().  A single call to
-					// itemCreator() returns an array of hashes, one for each drag source node.
-					if(!newItemsParams){
-						newItemsParams = this.itemCreator(nodes, target.rowNode, source);
-					}
-
-					// Create new item in the tree, based on the drag source.
-					model.newItem(newItemsParams[idx], newParentItem, insertIndex);
-				}
-			}, this);
-
-			// Expand the target node (if it's currently collapsed) so the user can see
-			// where their node was dropped.   In particular since that node is still selected.
-			this.tree._expandNode(targetWidget);
-		}
-		this.onDndCancel();
-	},
-
-	onDndCancel: function(){
-		// summary:
-		//		Topic event processor for /dnd/cancel, called to cancel the DnD operation
-		// tags:
-		//		private
-		this._unmarkTargetAnchor();
-		this.isDragging = false;
-		this.mouseDown = false;
-		delete this.mouseButton;
-		this._changeState("Source", "");
-		this._changeState("Target", "");
-	},
-
-	// When focus moves in/out of the entire Tree
-	onOverEvent: function(){
-		// summary:
-		//		This method is called when mouse is moved over our container (like onmouseenter)
-		// tags:
-		//		private
-		this.inherited(arguments);
-		dojo.dnd.manager().overSource(this);
-	},
-	onOutEvent: function(){
-		// summary:
-		//		This method is called when mouse is moved out of our container (like onmouseleave)
-		// tags:
-		//		private
-		this._unmarkTargetAnchor();
-		var m = dojo.dnd.manager();
-		if(this.isDragging){
-			m.canDrop(false);
-		}
-		m.outSource(this);
-
-		this.inherited(arguments);
-	},
-
-	_isParentChildDrop: function(source, targetRow){
-		// summary:
-		//		Checks whether the dragged items are parent rows in the tree which are being
-		//		dragged into their own children.
-		//
-		// source:
-		//		The DragSource object.
-		//
-		// targetRow:
-		//		The tree row onto which the dragged nodes are being dropped.
-		//
-		// tags:
-		//		private
-
-		// If the dragged object is not coming from the tree this widget belongs to,
-		// it cannot be invalid.
-		if(!source.tree || source.tree != this.tree){
-			return false;
-		}
-
-
-		var root = source.tree.domNode;
-		var ids = source.selection;
-
-		var node = targetRow.parentNode;
-
-		// Iterate up the DOM hierarchy from the target drop row,
-		// checking of any of the dragged nodes have the same ID.
-		while(node != root && !ids[node.id]){
-			node = node.parentNode;
-		}
-
-		return node.id && ids[node.id];
-	},
-
-	_unmarkTargetAnchor: function(){
-		// summary:
-		//		Removes hover class of the current target anchor
-		// tags:
-		//		private
-		if(!this.targetAnchor){ return; }
-		this._removeItemClass(this.targetAnchor.rowNode, this.dropPosition);
-		this.targetAnchor = null;
-		this.targetBox = null;
-		this.dropPosition = null;
-	},
-
-	_markDndStatus: function(copy){
-		// summary:
-		//		Changes source's state based on "copy" status
-		this._changeState("Source", copy ? "Copied" : "Moved");
-	}
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.folder.DndSource']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.folder.DndSource'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: aaron
- * Date: 28/11/11
- * Time: 12:42 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.folder.DndSource');
-
-
-
-dojo.declare('bfree.widget.folder.DndSource', [dijit.tree.dndSource], {
-    singular: true,
-
-    onDndDrop: function(source, nodes, copy){
-//        this.tree.folders.loadItem({item: this.targetAnchor.item});
-
-//        var nodes=this.tree.getNodesByItem(this.targetAnchor.item);
-        try{
-            if(this.containerState!=""&&this.targetAnchor!=null){
-                if(nodes[0].type == "Document"){
-
-
-                    var targetNode=dijit.getEnclosingWidget(nodes[0]);
-                    var documents=targetNode.payload;
-
-                    dojo.forEach(documents, dojo.hitch(this, function(document, idx){
-                        if(this.targetAnchor.item.is_trash){
-                            this.tree.documents.setValue(document, "state", document.setState(bfree.api.Document.states.DELETED, true));
-                        }else{
-                            if(document.getState(bfree.api.Document.states.DELETED)){
-                                this.tree.documents.setValue(document, "state", document.setState(bfree.api.Document.states.DELETED, false));
-                            }
-                            this.tree.documents.setValue(document, "folder_id", this.targetAnchor.item.$ref?this.targetAnchor.item.$ref:(this.targetAnchor.item.id));
-                        }
-                    }));
-                    this.tree.documents.save({onComplete: function(){
-                        targetNode.grid.selection.clear();
-                        targetNode.grid.refresh();
-                    }});
-                }else{
-                    if(this.targetAnchor.item.is_trash){
-                        this.tree.deleteFolder(this.anchor.item);
-                    }else if(this.anchor.item.root){
-                        this.moveFolder({anchor: this.anchor, targetAnchor: this.targetAnchor});
-                    }else{
-                        this.tree.folders.loadItem({
-                            item: this.anchor.item,
-                            onItem: dojo.hitch(this, this.moveFolder, {anchor: this.anchor, targetAnchor: this.targetAnchor})
-                        });
-                    }
-                }
-            }
-        }catch(e){
-            console.warn(e);
-        }finally{
-            this.inherited('onDndCancel', arguments);
-        }
-    },
-
-    onDndStart: function(source, nodes, copy){
-        //do not allow drag and drop of blank space
-        if(nodes[0].type!="Document"&&this.startNode.declaredClass!="bfree.widget._TreeNode"){
-            dojo.dnd.manager().stopDrag();
-            return;
-        }
-
-        //do now allow drag and drop of documents if user does not have correct permissions
-        if(nodes[0].type=="Document"){
-            var targetNode=dijit.getEnclosingWidget(nodes[0]);
-            var documents=targetNode.payload;
-
-            var allDelete=true;
-            var allMove=true;
-            dojo.forEach(documents, function(document, idx){
-
-                var permissionSet = document.getPermissionSet(null, this.tree.library, this.tree.user);
-
-                if(!permissionSet.getValue(versa.api.PermissionIndices.MOVE)){
-                    allMove=false;
-                }
-                if(!permissionSet.getValue(versa.api.PermissionIndices.DELETE)){
-                    allDelete=false;
-                }
-            }, this);
-            if(!allMove&&!allDelete){
-                dojo.dnd.manager().stopDrag();
-                return;
-            }
-        }
-
-        //do not allow drag and drop of trash and search folders
-        if(source.anchor.item&&(source.anchor.item.is_trash||source.anchor.item.is_search)){
-            dojo.dnd.manager().stopDrag();
-            return;
-        }
-
-        //do not allow drag and drop of folders if user is not an admin
-        if(nodes[0].type!="Document"&&!this.tree.user.is_admin){
-            dojo.dnd.manager().stopDrag();
-            return;
-        }
-
-		this.inherited('onDndStart', arguments)
-	},
-
-    moveFolder: function(args){
-        var anchor=args.anchor;
-        var targetAnchor=args.targetAnchor;
-        var parentNode=anchor.getParent();
-
-        targetAnchor.expand();
-
-        var targetId=targetAnchor.item.id||targetAnchor.item.root?targetAnchor.item.id:targetAnchor.item.$ref;
-
-        this.tree.folders.loadItem({
-            item: targetAnchor.item,
-            callback: dojo.hitch(this, function(item){
-                this.tree.folders.setValue(anchor.item, 'parent_id', targetId);
-                this.tree.model.pasteItem(anchor.item, parentNode.item, item, false);
-            })
-        });
-
-        this.tree.folders.save();
-
-
-        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowSelected');
-        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowHover');
-
-        this.tree.setSelectedPath(anchor.item.path);
-    },
-
-    checkItemAcceptance: function(target, source, position){
-        var targetNode=dijit.getEnclosingWidget(target);
-        var sourceNode=dijit.getEnclosingWidget(source.anchor);
-
-        var targetId=(targetNode.item.id||targetNode.item.root)?targetNode.item.id:targetNode.item.$ref;
-
-        if(!source.anchor){
-            return false;
-        }
-
-        if(source.anchor.item&&
-           targetId==source.anchor.item.parent_id){
-            return false;
-        }
-
-        if(source.anchor.type=="Document"){
-            var documents=targetNode.payload;
-
-            var allDelete=true;
-            var allMove=true;
-            dojo.forEach(documents, function(document, idx){
-                var permissionSet = bfree.api.Document.getPermissionSet(document, null, this.tree.library, this.tree.user);
-
-                if(!permissionSet[bfree.api.Document.permissionIndices.MOVE]){
-                    allMove=false;
-                }
-                if(!permissionSet[bfree.api.Document.permissionIndices.DELETE]){
-                    allDelete=false;
-                }
-            }, this);
-            if(!allDelete){
-                if(targetNode.item.is_trash){
-                    return false;
-                }
-            }
-            if(!allMove){
-                if(!targetNode.item.is_trash){
-                    return false;
-                }
-            }
-        }
-
-        var children=targetNode.getChildren();
-
-        for(var i in children){
-            if(children[i].item&&
-               children[i].item.name&&
-               source.anchor.item&&
-               children[i].item.name==source.anchor.item.name){
-                return false;
-            }
-        }
-
-        if(targetNode.item.is_search||targetNode.item.is_trash){
-//            console.log();
-            if(source.anchor.type=="Document"&&
-               targetNode.item.is_trash&&
-               !sourceNode.document.getState(bfree.api.Document.states.DELETED)){
-                return true;
-            }else if(source.anchor.type!="Document"&&
-                     targetNode.item.is_trash){
-                return true;
-            }
-
-            return false;
-        }
-
-        return true;
-    },
-
-    constructor: function(args){
-
-    },
-
-    onMouseDown: function(e){
-		// summary:
-		//		Event processor for onmousedown
-		// e: Event
-		//		onmousedown event
-		// tags:
-		//		private
-        if(!(e.target.type&&e.target.type=='text')){
-            this.mouseDown = true;
-            this.mouseButton = e.button;
-            this._lastX = e.pageX;
-            this._lastY = e.pageY;
-            this.inherited(arguments);
-        }
-	}
 });
 
 }
@@ -75647,7 +76068,9 @@ dojo.declare('bfree.widget.document.Info', [dijit._Widget, dijit._Templated],{
         this._documents = this.library.getDocuments();
 
         dojo.forEach(this.items, function(item, idx){
-            var id = item.getId();
+            var id = item.isInstanceOf(bfree.api.Document) ?
+                        item.getId() :
+                        item.document_id;
             this._itemMap[id] = item;
         }, this);
 
@@ -75780,7 +76203,7 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
         var itemData = this._initData();
 
         itemData[0].label = 'Type';
-        itemData[0].value = 'Content';
+        itemData[0].value = bfree.api.Folder.getTypeLabel(item);
 
         itemData[1].label = 'Document Count';
         itemData[1].value = item.document_count;
@@ -75815,17 +76238,7 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
         if(this.items.length == 1){
             var item =  this.items[0];
 
-
-            if(item.isTrash()){
-                imgSrc = bfree.api.Folder.getIconUrl(bfree.api.Folder.FolderTypes.TRASH, 48);
-            }
-            else if(item.isSearch()){
-                imgSrc = bfree.api.Folder.getIconUrl(bfree.api.Folder.FolderTypes.SEARCH, 48);
-            }
-            else{
-                imgSrc = bfree.api.Folder.getIconUrl(bfree.api.Folder.FolderTypes.CONTENT, 48);
-            }
-
+            imgSrc = bfree.api.Folder.getIconUrl(item, 48);
             imgAlt = item.text_path;
             name = item.name;
             //itemData = this._generateSingleItem(item);
@@ -76052,34 +76465,7 @@ dojo.declare('bfree.widget.ItemInfo', [dijit._Widget, dijit._Templated],{
         if(this._wdgInfo){
 		    this._wdgInfo.placeAt(this.mainNode, 'last');
             this._wdgInfo.startup();
-		}
-
-
-
-        /*
-		switch (type) {
-			case bfree.widget.ItemInfo.Type.document:
-				this._wdgInfo = new bfree.widget.document.Info({
-					activeItem: item,
-                    library: this.library
-				});
-				break;
-			case bfree.widget.ItemInfo.Type.folder:
-
-				break;
-			case bfree.widget.ItemInfo.Type.search:
-				this._wdgInfo = new bfree.widget.search.Info({
-					item: item
-				});
-				break;
-            case bfree.widget.ItemInfo.Type.documents:
-                this._wdgInfo = new bfree.widget.document.multiple.Info({
-                    items: item
-                });
-                break;
-		}
-		*/
-		
+        }
 
 	},
 
@@ -76125,6 +76511,1672 @@ dojo.declare('bfree.widget.ItemInfo', [dijit._Widget, dijit._Templated],{
 });
 
 bfree.widget.ItemInfo.Type = { 'none': 0, 'document': 1, 'folder': 2, 'search': 3 };
+
+}
+
+if(!dojo._hasResource['bfree.widget.document.ViewMenu']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.document.ViewMenu'] = true;
+/**
+ * @author Scott
+ */
+dojo.provide('bfree.widget.document.ViewMenu');
+
+
+dojo.declare('bfree.widget.document.ViewMenu', bfree.widget.HeaderMenu,
+{
+    menuLabel: 'Views',
+    user: null,
+    library: null,
+    activeView: null,
+    activeFolder: null,
+	rowHit: false,
+    viewDefinitions: null,
+    viewMappings: null,
+    propertyDefinitions: null,
+    parentMenu: null,
+    cancelRefresh: false,
+
+    _mnuTemplate: null,
+    _mnuTemplatePopup: null,
+
+	_buildViewMenus: function(){
+
+        //Retreive all the current view definitions and sort
+		var viewDefs = this.viewDefinitions.fetch();
+        viewDefs = viewDefs.sort(bfree.api.ViewDefinition.compare);
+
+        //for each view, create a menu item.
+		dojo.forEach(viewDefs, function(viewDef){
+
+            if(!viewDef.name)
+                return;
+
+            if(viewDef.is_template){
+                var icon = 'menuIcon menuViewIcon';
+
+                var mniView = new dijit.MenuItem({
+                    iconClass: icon,
+                    label: viewDef.name,
+                    onClick: dojo.hitch(this, this._onChange, mniView, viewDef)
+                });
+
+                mniView.set('viewDefinition', viewDef);
+                this._mnuTemplate.addChild(mniView);
+            }
+
+		}, this);
+
+	},
+
+    _buildColumnMenus: function(){
+
+        var propDefs = this.propertyDefinitions.fetch();
+
+        var getDbName=function(){
+            return this.table_name+"."+this.column_name;
+        };
+
+        propDefs.push({
+            id: 'document_types.name',
+            name: 'Document Type',
+            table_name: 'document_types',
+            column_name: 'name',
+            data_type_id: bfree.api.DataTypes.types.STRING,
+            getDbName: getDbName
+        });
+
+        propDefs.push({
+            id: 'versions.version_number',
+            name: 'Version',
+            table_name: 'versions',
+            column_name: 'version_number',
+            data_type_id: bfree.api.DataTypes.types.STRING,
+            getDbName: getDbName
+        });
+
+        propDefs.push({
+            id: 'versions.binary_file_size',
+            name: 'Size',
+            table_name: 'versions',
+            column_name: 'binary_file_size',
+            data_type_id: bfree.api.DataTypes.types.INTEGER,
+            format_id: bfree.api.CellDefinition.formats.size,
+            getDbName: getDbName
+        });
+
+        propDefs.sort(bfree.api.PropertyDefinition.compare);
+
+        dojo.forEach(propDefs, function(propDef){
+            if(!propDef.name){
+                return;
+            }
+
+            var icon = 'menuIcon menuViewIcon';
+
+            var mniProp = new dijit.MenuItem({
+                propertyDefinition: propDef,
+                iconClass: icon,
+                label: propDef.name,
+                onClick: dojo.hitch(this, this._onColumnToggle, propDef)
+            });
+
+            this.addChild(mniProp);
+        }, this);
+
+    },
+
+    _onColumnToggle: function(property_definition){
+        //Toggle on if cell doesn't exist in current view;
+        //Toggle off if cell exists in current_view;
+        var view_definition = this.library.getViewDefinitions().fetchById({id: this.activeView.id});
+        var cell_definition = view_definition.getCellByField(property_definition.getDbName());
+        this.onColumnToggle(property_definition, !cell_definition);
+    },
+
+    _onCommand: function(cmdId, options, params){
+        this.onCommand(cmdId, options, params);
+    },
+
+    clear: function(){
+
+        dojo.forEach(this.getChildren(), function(item, idx){
+            console.log(item);
+        }, this);
+
+    },
+
+    onColumnToggle: function(property_definition, condition){
+    },
+
+    onCommand: function(cmdId, options, params){
+    },
+
+    _onChange: function(mni, view_definition, evt){
+
+        var view = view_definition.getView(this.library);
+        this.set('activeView', view);
+        this.onChange(this.activeView);
+
+	},
+
+    _setActiveFolderAttr: function(value){
+        this.activeFolder = value;
+    },
+
+    _setActiveViewAttr: function(view){
+
+        this.activeView = view;
+        if(this.activeView)
+            this.updateMenu();
+
+    },
+
+    constructor: function(args){
+        this.parentMenu=args.parentMenu;
+    },
+
+    getSelectedId: function(){
+		var mnuItems = this._mnuTemplate.getChildren();
+		var id;
+		for(var i = 0; i<mnuItems.length; i++){
+			if(mnuItems[i].set('iconClass') == 'menuIcon bfreeIconOk')
+				id = mnuItems[i].viewDefId;
+		}
+		return id || -1;
+	},
+
+    onChange: function(view, evt){
+	},
+
+	//postCreate:
+	postCreate: function(){
+		this.inherited('postCreate', arguments);
+
+        this.propertyDefinitions = this.library.getPropertyDefinitions();
+        this.viewDefinitions = this.library.getViewDefinitions();
+
+        this._mnuTemplate = new dijit.Menu({});
+
+        this._mnuTemplatePopup = new dijit.PopupMenuItem({
+            label: 'Predefined Views',
+            popup: this._mnuTemplate,
+            iconClass: 'menuIcon'
+        });
+
+        this.addChild(this._mnuTemplatePopup);
+
+        this._buildViewMenus();
+
+        this._seperator1=new dijit.MenuSeparator();
+        this.addChild(this._seperator1);
+
+        this._buildColumnMenus();
+	},
+
+	refresh: function(){
+
+        this.clear();
+
+		var mnuItems = this._mnuTemplate.getChildren();
+		while(mnuItems.length > 0){
+			var mnuItem = mnuItems.pop();
+            console.log(mnuItem);
+			this._mnuTemplate.removeChild(mnuItem);
+		}
+
+		this._buildViewMenus();
+        this._buildColumnMenus();
+
+        this.set('activeView', this.activeView);
+
+	},
+
+    startup: function(){
+        this.inherited('startup', arguments);
+    },
+
+    updateMenu: function(){
+        var isTemplate = false;
+
+        //Mark selected if Template View selected
+        dojo.forEach(this._mnuTemplate.getChildren(), function(item, idx){
+            if(item.viewDefinition.id == this.activeView.id){
+                item.set('iconClass', 'menuIcon bfreeIconOk');
+                isTemplate = true;
+            }
+            else{
+                 item.set('iconClass', 'menuIcon bfreeIconBlank');
+            }
+        }, this);
+
+        (isTemplate) ?
+            this._mnuTemplatePopup.set('iconClass', 'menuIcon bfreeIconOk') :
+            this._mnuTemplatePopup.set('iconClass', 'menuIcon bfreeIconBlank');
+
+        var view_definition = this.library.getViewDefinitions().fetchById({id: this.activeView.id});
+        dojo.forEach(this.getChildren(), function(item, idx){
+            var property_definition = item.propertyDefinition;
+            if(property_definition){
+                var cell = view_definition.getCellByField(property_definition.getDbName());
+                (cell) ?
+                  item.set('iconClass', 'menuIcon bfreeIconOk') :
+                  item.set('iconClass', 'menuIcon bfreeIconBlank');
+            }
+        }, this);
+
+    }
+});
+
+}
+
+if(!dojo._hasResource['versa.widget.reference.dnd.Source']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.reference.dnd.Source'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 10/04/12
+ * Time: 9:49 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.reference.dnd.Source');
+
+
+dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
+    selfAccept: false,
+
+    _dndCreator: function(item, hint){
+        var node = null;
+
+        if(hint == 'avatar'){
+
+            var imgSrc = bfree.api.Document.getIconUrl(item.binary_content_type, 16);
+
+            node = dojo.create('div',{
+                'class': 'dijitDarkLabel',
+                innerHTML: item.name,
+                style: {
+                    paddingLeft: '20px',
+                    height: '16px',
+                    paddingTop: '2px',
+                    position: 'relative'
+                }
+            });
+            dojo.create('img', {
+                src: imgSrc,
+                style: {
+                    left: '0',
+                    position: 'absolute',
+                    top: '0'
+                }
+            }, node);
+        }
+        else{
+            //create a 'dummy' node...will never be used for selection
+            node = dojo.create('div', {innerHTML: item.name, style:{display:'none'}});
+        }
+
+        return {node: node, data: item, type: 'document'};
+    },
+
+    checkAcceptance: function(source, nodes){
+
+        if(this == source)
+            return this.selfAccept;
+
+        this.inherited('checkAcceptance', arguments);
+    },
+
+    constructor: function(node, params){
+        this.creator = dojo.hitch(this, this._dndCreator);
+    },
+
+    onDndStart: function(source, nodes, copy){
+
+        if(source !== this){
+            this.inherited('onDndStart', arguments);
+            return;
+        }
+
+        //Don't allow deleted items to be dragged (for now)
+        //- Don't allow 'share' references to be DnD'd
+        var canDnd = dojo.every(nodes, function(node, idx){
+            var item = source.getItem(node.id).data;
+            return !(item.isDeleted() || item.isShare());
+        });
+
+
+        if(!canDnd){
+            dojo.dnd.manager().stopDrag();
+        }
+        else{
+            this.inherited('onDndStart', arguments);
+        }
+    }
+
+
+
+});
+
+versa.widget.reference.dnd.Source.creator = function(node, hint){
+    console.log('create');
+    var n = dojo.create('div', {innerHTML: node})
+    return {node: n, data: node};
+};
+
+}
+
+if(!dojo._hasResource['versa.widget.reference.ContextMenu']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.reference.ContextMenu'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 05/04/12
+ * Time: 9:15 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.reference.ContextMenu');
+
+
+
+
+
+dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
+    menuLabel: 'Document',
+
+    _arrDivides: [],
+    _buttons: {},
+
+    activeItems: null,
+    activeFolder: null,
+    activeLibrary: null,
+    activeUser: null,
+    grid: null,
+
+    _onCommand: function(cmdId, option, e){
+        this.onCommand(cmdId, option, {items: this.activeItems});
+    },
+
+    _openMyself: function(evt){
+
+        //Do not open unless a row was clicked
+        if(this.grid.views.views[0].scrollboxNode === evt.target)
+            return;
+
+        this._setState();
+        this.inherited('_openMyself', arguments);
+    },
+
+    _setActiveItemsAttr: function(items){
+        this.activeItems = (!items) ? [] : items;
+    },
+
+    _setState: function(){
+
+        var hiddenItems = new Object();
+        var isSingleItem = (this.activeItems.length == 1);
+
+        var isDeleted = dojo.some(this.activeItems, function(item, idx){
+            return (item.isDeleted() || this.activeFolder.isTrash());
+        }, this);
+
+        var isShareRef = dojo.some(this.activeItems, function(item, idx){
+            return item.isShare();
+        }, this);
+
+
+        var hideDivs = (isDeleted || isShareRef);
+
+        hiddenItems.VIEW = false;
+        hiddenItems.COPY = isShareRef;
+        hiddenItems.EDIT = (isDeleted || isShareRef);
+        hiddenItems.VERSIONS = (isDeleted || isShareRef);
+        hiddenItems.MOVE = (isDeleted || isShareRef);
+        hiddenItems.CKO = (isDeleted || isShareRef);
+        hiddenItems.CKI = (isDeleted || isShareRef);
+        hiddenItems.CANCEL_CKO = (isDeleted || isShareRef);
+        hiddenItems.DELETE = (isDeleted || isShareRef);
+        hiddenItems.SECURE = (isDeleted);
+        hiddenItems.RESTORE = (!isDeleted);
+        hiddenItems.DESTROY = (!isDeleted);
+        hiddenItems.UNSHARE = (!isShareRef);
+
+        dojo.forEach(this._arrDivides, function(divider, idx){
+            dojo.toggleClass(divider.domNode, 'versaHide', hideDivs);
+        }, this);
+
+        dojo.toggleClass(this._buttons.VIEW.domNode, 'versaHide', hiddenItems.VIEW);
+        dojo.toggleClass(this._buttons.COPY.domNode, 'versaHide', hiddenItems.COPY);
+        dojo.toggleClass(this._buttons.EDIT.domNode, 'versaHide', hiddenItems.EDIT);
+        dojo.toggleClass(this._buttons.VERSIONS.domNode, 'versaHide', hiddenItems.VERSIONS);
+        dojo.toggleClass(this._buttons.MOVE.domNode, 'versaHide', hiddenItems.MOVE);
+        dojo.toggleClass(this._buttons.CKO.domNode, 'versaHide', hiddenItems.CKO);
+        dojo.toggleClass(this._buttons.CKI.domNode, 'versaHide', hiddenItems.CKI);
+        dojo.toggleClass(this._buttons.XCKO.domNode, 'versaHide', hiddenItems.CANCEL_CKO);
+        dojo.toggleClass(this._buttons.DELETE.domNode, 'versaHide', hiddenItems.DELETE);
+        dojo.toggleClass(this._buttons.ACL.domNode, 'versaHide', hiddenItems.SECURE);
+        dojo.toggleClass(this._buttons.RESTORE.domNode, 'versaHide', hiddenItems.RESTORE);
+        dojo.toggleClass(this._buttons.DESTROY.domNode, 'versaHide', hiddenItems.DESTROY);
+        dojo.toggleClass(this._buttons.UNSHARE.domNode, 'versaHide', hiddenItems.UNSHARE);
+
+        //calculate total permissions...will take the "least" amount of permissions
+        var doAnd = (this.activeItems.length > 0) ? true : false;
+        var activePrmSet = new versa.api.PermissionSet(doAnd);
+
+        dojo.forEach(this.activeItems, function(item, idx){
+            //perform AND to get "least" permissions
+            var prmSet = item.getPermissionSet(this.activeFolder, this.activeLibrary, this.activeUser);
+            activePrmSet = activePrmSet.andSet(prmSet);
+        }, this);
+
+        this._buttons.VIEW.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.VIEW) && isSingleItem));
+        this._buttons.COPY.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.COPY) && isSingleItem));
+        this._buttons.EDIT.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.EDIT) && isSingleItem));
+        this._buttons.VERSIONS.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.EDIT) && isSingleItem));
+
+        this._buttons.CKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKO) && isSingleItem));
+        this._buttons.CKI.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKI) && isSingleItem));
+        this._buttons.XCKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO) && isSingleItem));
+
+        this._buttons.MOVE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.MOVE)));
+        this._buttons.DELETE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));
+        this._buttons.ACL.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.SECURE) && isSingleItem));
+
+        this._buttons.RESTORE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.RESTORE)));
+        this._buttons.DESTROY.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DESTROY)));
+
+        this._buttons.UNSHARE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DESTROY)));
+    },
+
+    constructor: function(args){
+
+    },
+
+    onCommand: function(cmdId, option, params){
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        this._buttons.VIEW = new dijit.MenuItem({
+            label: 'View',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconViewDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.VIEW,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.VIEW);
+
+        this._buttons.COPY = new dijit.MenuItem({
+            label: 'Copy Local...',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconCopyDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.COPY,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+		this.addChild(this._buttons.COPY);
+
+        this._buttons.EDIT = new dijit.MenuItem({
+			label: 'Edit Properties',
+            disabled: true,
+			iconClass: 'menuIcon bfreeIconEditDocument',
+			onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.EDIT,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+		})
+		this.addChild(this._buttons.EDIT);
+
+        this._buttons.VERSIONS = new dijit.MenuItem({
+			label: 'Versions',
+            disabled: true,
+			iconClass: 'menuIcon bfreeIconNewDocument',
+			onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.EDIT,
+                bfree.widget.Bfree.ObjectTypes.VERSION)
+		})
+		this.addChild(this._buttons.VERSIONS);
+
+        this._arrDivides[0] = new dijit.MenuSeparator();
+		this.addChild(this._arrDivides[0]);
+
+        this._buttons.MOVE = new dijit.MenuItem({
+			label: 'Move To Folder...',
+            disabled: true,
+			iconClass: 'menuIcon bfreeIconMoveDocument',
+			onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.MOVE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+		});
+		this.addChild(this._buttons.MOVE);
+
+        this._arrDivides[1] = new dijit.MenuSeparator();
+		this.addChild(this._arrDivides[1]);
+
+        this._buttons.CKO = new dijit.MenuItem({
+            label: 'Checkout',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconCkoDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.CHECKOUT,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.CKO);
+
+		this._buttons.CKI = new dijit.MenuItem({
+            label: 'Checkin',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconCkiDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.CHECKIN,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.CKI);
+
+		this._buttons.XCKO = new dijit.MenuItem({
+            label: 'Cancel Checkout',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconCancelCkoDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.CANCEL_CKO,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.XCKO);
+
+		this._arrDivides[2] = new dijit.MenuSeparator();
+		this.addChild(this._arrDivides[2]);
+
+        this._buttons.DELETE = new dijit.MenuItem({
+            label: 'Delete',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconDeleteDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.DELETE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+		this.addChild(this._buttons.DELETE);
+
+        this._arrDivides[3] = new dijit.MenuSeparator();
+		this.addChild(this._arrDivides[3]);
+
+          this._buttons.ACL = new dijit.MenuItem({
+            label: 'Permissions...',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconSecureDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.SECURE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.ACL);
+
+        this._buttons.RESTORE = new dijit.MenuItem({
+            label: 'Restore',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconCkoDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.RESTORE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.RESTORE);
+
+        this._buttons.DESTROY = new dijit.MenuItem({
+            label: 'Delete Permanently',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconDeleteDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.DESTROY,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.DESTROY);
+
+        this._buttons.UNSHARE = new dijit.MenuItem({
+            label: 'Remove Share',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconDeleteDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.UNSHARE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.UNSHARE);
+
+
+    }
+
+});
+
+}
+
+if(!dojo._hasResource['versa.widget.reference.Grid']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.reference.Grid'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 04/04/12
+ * Time: 11:39 AM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.reference.Grid');
+
+
+
+
+
+
+
+
+dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
+
+    _dndSource: null,
+    _lastSelected: null,
+    _mnuReference: null,
+    _mnuViews: null,
+
+    activeFolder: null,
+    activeLibrary: null,
+    activeUser: null,
+    activeZone: null,
+
+    __doSearch: function(query){
+        this.setQuery(query, {cache: false});
+        this.resize();
+        this.setSelectedIndex(0, true);
+        this._lastSelected = this.getItem(0);
+        this.onQueryComplete();
+    },
+
+    __reWriteView: function(args){
+
+        //Retrieve active view definition
+        var view_definition = this.activeLibrary.getViewDefinitions().fetchById({id: this.activeView.id});
+
+        //If active view is based on template make a copy of the template to modify
+        if(view_definition.is_template){
+            view_definition = this.activeLibrary.getViewDefinitions().cloneItem(view_definition);
+            var customName = bfree.api.ViewDefinition.getCustomName(this.activeUser, this.activeFolder);
+            this.activeLibrary.getViewDefinitions().setValue(view_definition, 'name', customName);
+        }
+
+        //Copy new order of columns
+        cell_definitions = [];
+        for(var idx = 0; idx < this.layout.cellCount; idx++){
+            var cell = this.getCell(idx);
+
+            //skip property if being removed.
+            if((args.removeProperty) && (args.removeProperty.getDbName() == cell.field)){
+                continue;
+            }
+
+            var cell_definition = view_definition.getCellByField(cell.field);
+            var clone = bfree.api.CellDefinition.clone(cell_definition);
+
+            if((args.resizeIndex) && (args.resizeIndex == cell.index)){
+                clone.width = cell.unitWidth;
+            }
+            clone.column_order = cell_definitions.length;
+            cell_definitions.push(clone);
+        }
+
+        //Add new cell
+        if(args.addProperty){
+            cell_definitions.push({
+                table_name: args.addProperty.table_name,
+                column_name: args.addProperty.column_name,
+                name: args.addProperty.name,
+                label: args.addProperty.name,
+                formatter: args.addProperty.format_id ? args.addProperty.format_id : bfree.api.CellDefinition.formats.none,
+                noresize: false,
+                width: bfree.api.CellDefinitions.getDefaultWidth(args.addProperty.data_type_id)+'px',
+                style: '',
+                column_order: cell_definitions.length
+            });
+        }
+
+        if(args.sortInfo){
+            var is_desc = (args.sortInfo < 0);
+            var sort_by = this.getCell(Math.abs(args.sortInfo) - 1).field;
+            this.activeLibrary.getViewDefinitions().setValue(view_definition, 'sort_by', sort_by);
+            this.activeLibrary.getViewDefinitions().setValue(view_definition, 'is_desc', is_desc);
+        }
+
+        //Save updated/new view definition.
+        this.activeLibrary.getViewDefinitions().setValue(view_definition, 'cell_definitions', cell_definitions);
+        this.activeLibrary.getViewDefinitions().save();
+
+        return view_definition;
+    },
+
+    _canSort: function(columnIndex){
+        return !(columnIndex == 1 || this._isLoading);
+	},
+
+    _onCommand: function(cmdId, option, params){
+        this.onCommand(cmdId, option, params);
+    },
+
+    _onViewChange: function(view, evt){
+
+        //Called when a user manually changes the view.
+        this.set('activeView', view);
+        this.set('activeQuery',  this.activeFolder.getActiveQuery().getQuery());
+
+	},
+
+    _setActiveFolderAttr: function(folder){
+
+        //Don't re-query if user clicks on active folder...unless it is the 'Search' folder.
+        var doQuery = ((folder !== this.activeFolder) || folder.isSearch());
+
+        this.activeFolder = folder;
+        this._mnuReference.set('activeFolder', this.activeFolder);
+
+        var view_definition = this.activeLibrary.getViewDefinitions().fetchById({id: this.activeFolder.view_definition_id});
+
+        if(doQuery){
+            this.selection.clear();
+            this.set('activeView', view_definition.getView(this.activeLibrary));
+            this.set('activeQuery', this.activeFolder.getActiveQuery().getQuery());
+        }
+    },
+
+    _setActiveQueryAttr: function(query){
+        this._clearData();
+        this.showMessage(this.loadingMessage);
+        setTimeout(versa.widget.reference.Grid._searchFnRef(this, query), 10);
+    },
+
+    _setActiveViewAttr: function(view){
+
+        this.activeView = view;
+
+        this._clearData();
+        this.set('sortInfo', this.activeView.sort_column);
+        this.set('structure', this.activeView);
+        this.resize();
+
+        if(this._dndSource) this._dndSource.destroy();
+        this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
+            accept:[]
+        });
+
+        this._mnuViews.set('activeView', this.activeView);
+
+        //Update folder's view definition if it has changed.
+        if((this.activeFolder) && (!this.activeLibrary.getFolders().containsValue(this.activeFolder, 'view_definition_id', this.activeView.id))){
+            this.activeLibrary.getFolders().setValue(this.activeFolder, 'view_definition_id', this.activeView.id);
+            this.activeLibrary.getFolders().save();
+        }
+
+    },
+
+    constructor: function(args){
+
+        this.updateDelay = 0;
+		this.rowsPerPage = 25;
+
+		this.queryOptions = {cache: false};
+		this.selectionMode = 'extended';
+		this.clientSort = false;
+		this.canSort = this._canSort;
+		this.noDataMessage = 'No Documents Found';
+        this.columnReordering = true;
+
+    },
+
+    export_results: function(export_type){
+
+        var box = bfree.api.Utilities.getBox({scale: 0.75});
+
+        var sortProps = this.getSortProps();
+
+        this.activeLibrary.getReferences().export_query({
+            zone: this.activeZone,
+            library: this.activeLibrary,
+            windowBox: box,
+            type: export_type,
+            query: this.get('query'),
+            sort: ((sortProps) && (sortProps.length > 0)) ? sortProps[0] : null
+        });
+
+    },
+
+    onColumnToggle: function(property_definition, toggleOn){
+        var addProperty = null;
+        var removeProperty = null;
+
+        var view_definition = (toggleOn) ?
+            this.__reWriteView({addProperty: property_definition}) :
+            this.__reWriteView({removeProperty: property_definition});
+
+        this.set('activeView', view_definition.getView(this.activeLibrary));
+        this.set('activeQuery',  this.activeFolder.getActiveQuery().getQuery());
+    },
+
+    onCommand: function(cmdId, option, params){
+    },
+
+    onMoveColumn: function(){
+        var view_definition = this.__reWriteView({});
+        this.set('activeView', view_definition.getView(this.activeLibrary));
+        this.set('activeQuery',  this.activeFolder.getActiveQuery().getQuery());
+    },
+
+    onQueryComplete: function(){
+    },
+
+    onResizeColumn: function(cellIdx){
+        var view_definition = this.__reWriteView({resizeIndex: cellIdx});
+        this.set('activeView', view_definition.getView(this.activeLibrary));
+        this.set('activeQuery',  this.activeFolder.getActiveQuery().getQuery());
+    },
+
+    onRowContextMenu: function(evt){
+        if(evt.rowIndex < 0){
+            evt.cancelBubble = true;
+            return;
+        }
+
+        //Get all selected items
+        var items = this.selection.getSelected();
+
+        //If row is already selected, re-fire 'onSelectedItem' event
+        // *mimics normal left-click behaviour
+        if(this.selection.isSelected(evt.rowIndex)){
+            this.onSelectedItems(items);
+        }
+        else{
+            //if new row selected, make sure it is selected..
+            this.setSelectedIndex(evt.rowIndex)
+            items = this.selection.getSelected();
+        }
+
+        this._mnuReference.set('activeItems', items);
+
+    },
+
+    /*
+    onRowClick: function(evt){
+        dojo.stopEvent(evt);
+    },
+
+    onRowMouseDown: function(evt){
+        //this.inherited('onRowMouseDown', arguments);
+
+        if(evt.ctrlKey){
+            this._lastSelected = this.getItem(evt.rowIndex);
+            this.selection.addToSelection(evt.rowIndex);
+        }
+        else if(evt.shiftKey){
+            var idx = this.getItemIndex(this._lastSelected);
+            this.selection.clear();
+            this.selection.selectRange(idx, evt.rowIndex);
+        }
+        else{
+            var rowItem = this.getItem(evt.rowIndex);
+            var forceSelect = (rowItem === this._lastSelected);
+            this.selection.select(evt.rowIndex);            ;
+            if(forceSelect) this.onSelectedItems(this.selection.getSelected());
+            this._lastSelected = rowItem;
+        }
+
+    },
+    */
+
+    onRowDblClick: function(evt){
+
+        if(evt.rowIndex < 0){
+            evt.cancelBubble = true;
+            return;
+        }
+
+        var item = this.getItem(evt.rowIndex);
+        this._onCommand(bfree.widget.Bfree.Commands.VIEW, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {items: [item]});
+    },
+
+    onSelectionChanged: function(){
+        var items = this.selection.getSelected();
+        this._dndSource.deleteSelectedNodes();
+        this._dndSource.insertNodes(true, items);
+        this.inherited('onSelectionChanged', arguments);
+    },
+
+    postCreate: function(){
+		this.inherited('postCreate', arguments);
+
+        this._mnuReference = new versa.widget.reference.ContextMenu({
+            id: 'mnuReference',
+            grid: this,
+            activeLibrary: this.activeLibrary,
+            activeUser: this.activeUser,
+            targetNodeIds: [this.id],
+            onCommand: dojo.hitch(this, this._onCommand)
+        });
+
+        this._mnuViews = new bfree.widget.document.ViewMenu({
+            id: 'mnuViews',
+            library: this.activeLibrary,
+            parentMenu: this,
+            onChange: dojo.hitch(this, this._onViewChange),
+            onColumnToggle: dojo.hitch(this, this.onColumnToggle)
+		});
+
+    },
+
+    print_results: function(){
+
+        var box = bfree.api.Utilities.getBox({scale: 0.75});
+
+        var sortProps = this.getSortProps();
+
+        this.activeLibrary.getReferences().print_query({
+            zone: this.activeZone,
+            library: this.activeLibrary,
+            windowBox: box,
+            query: this.get('query'),
+            sort: ((sortProps) && (sortProps.length > 0)) ? sortProps[0] : null
+        });
+
+    },
+
+    refreshViews: function(reset){
+
+        if(this._mnuViews)
+            this._mnuViews.destroy();
+
+        this._mnuViews = new bfree.widget.document.ViewMenu({
+            id: 'mnuViews',
+            library: this.activeLibrary,
+            parentMenu: this,
+            onChange: dojo.hitch(this, this._onViewChange),
+            onColumnToggle: dojo.hitch(this, this.onColumnToggle)
+		});
+
+        this._mnuViews.startup();
+        this.set('headerMenu', this._mnuViews);
+        this._mnuViews.set('activeView', this.activeView);
+
+        if(reset){
+            var view_definition = this.activeLibrary.getViewDefinitions().fetchById({id: this.activeView.id});
+            this.set('activeView', view_definition.getView(this.activeLibrary));
+            this.set('activeQuery',  this.activeFolder.getActiveQuery().getQuery());
+        }
+
+    },
+
+    setBusy: function(item, isBusy){
+
+        var idx = this.getItemIndex(item);
+        if(idx < 0)
+            return;
+
+        if(isBusy){
+            var rowNode = this.getRowNode(idx);
+            var e = rowNode.getElementsByTagName('img');
+            dojo.forEach(e, function(node, idx){
+                if(node.name == 'statusIcon'){
+                    dojo.attr(node, 'src', '/images/loading/loading16.gif')
+                }
+            });
+        }
+        else{
+            this.updateRow(idx);
+        }
+    },
+
+    sort: function(){
+        var view_definition = this.__reWriteView({sortInfo: this.sortInfo});
+        this.set('activeView', view_definition.getView(this.activeLibrary));
+        this.set('activeQuery',  this.activeFolder.getActiveQuery().getQuery());
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        this._mnuViews.startup();
+
+        this.focus._delayedCellFocus = versa.widget.reference.Grid._delayedCellFocus;
+        this.set('headerMenu', this._mnuViews);
+
+        //Select 'default' initial view -- needed for startup
+        var viewDefinition = this.activeLibrary.getViewDefinitions().getSystem()[0];
+        this.set('activeView', viewDefinition.getView(this.activeLibrary));
+        this.set('autoRender', false);
+
+        this.setStore(this.activeLibrary.getReferences().store, { type: bfree.api.Search.types.NONE });
+
+        this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
+            accept:[]
+        });
+
+    }
+
+
+});
+
+versa.widget.reference.Grid._searchFnRef = function(that, query){
+    return ( function() {
+       that.__doSearch(query);
+    });
+}
+
+versa.widget.reference.Grid._delayedCellFocus = function(){
+    if(this.isNavHeader()||!this.grid._focused){
+            return;
+    }
+    var n = this.cell && this.cell.getNode(this.rowIndex);
+    if(n){
+        try{
+            if(!this.grid.edit.isEditing()){
+                dojo.toggleClass(n, this.focusClass, true);
+                if (this._colHeadNode){
+                    this.blurHeader();
+                }
+                dojox.grid.util.fire(n, "focus");
+            }
+        }
+        catch(e){}
+    }
+};
+
+}
+
+if(!dojo._hasResource['versa.widget.share.CopyLink']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.share.CopyLink'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 13/04/12
+ * Time: 4:46 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.share.CopyLink');
+
+
+
+
+
+
+
+
+
+
+
+dojo.declare('versa.widget.share.CopyLink', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
+    templateString: dojo.cache("versa/widget/share", "template/CopyLink.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:8px 8px 4px 8px;height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            splitter=\"false\"\n            region=\"center\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"top\"\n                splitter=\"false\"\n                style=\"padding:0 0 4px 0;overflow:hidden;height:16px;\">\n            <span class=\"dijitDarkLabel dijitMediumLabel\">Copy the following link to access the shared documents:</span>\n        </div>\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"false\"\n                class=\"highlightPane\"\n                style=\"padding:8px;overflow:hidden;text-align:center\">\n\n            <a dojoAttachPoint=\"anchorNode\" href=\"\" target=\"_blank\" class=\"dijitBoldLabel dijitLargeLabel versashare\"></a>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    share: null,
+    library: null,
+    zone: null,
+
+    _itemLoaded: function(){
+
+        console.log(this.share.share_url);
+        dojo.attr(this.anchorNode, {
+            href: this.share.share_url,
+            innerHTML: this.share.share_url
+        });
+
+        this._loadComplete();
+    },
+
+    _loadItem: function(){
+
+        try{
+
+            //make sure folder is loaded (not a reference) before creating a new sub-folder
+            this.library.getFolders().loadItem({
+                item: this.share,
+                callback: this._itemLoaded,
+                scope: this
+            });
+
+        }
+        finally{
+
+        }
+
+    },
+
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+        this.inherited('destroy', arguments);
+    },
+
+    isValid: function(){
+        return true;
+    },
+
+    onDialogClosing: function(dlgResult){
+        var canClose = false;
+
+        try{
+
+            canClose = true;
+        }
+        catch(e){
+           var err = new bfree.api.Error('Failed to close Share Copy Link dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+
+        }
+
+        return canClose;
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        setTimeout(versa.widget.share.CopyLink._loadFnRef(this), 0);
+    }
+
+});
+
+versa.widget.share.CopyLink._loadFnRef = function(that){
+    return ( function() {
+       that._loadItem();
+    });
+}
+
+versa.widget.share.CopyLink.show = function(args){
+
+    var dlg = new bfree.widget.Dialog({
+        id: 'dlgShareCopyLink',
+        title: 'Shared Folder Link: ' + args.share.name.display_limit(32),
+        widgetConstructor: versa.widget.share.CopyLink,
+        widgetParams: {
+            share: args.share,
+            library: args.library,
+            zone: args.zone
+        },
+        noResize: true,
+        height: 144,
+        width: 640,
+        buttons: bfree.widget.Dialog.buttons.close,
+        onClose: args.onClose
+    });
+    dlg.startup();
+    dlg.show();
+}
+
+
+}
+
+if(!dojo._hasResource['versa.widget.share.Editor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.share.Editor'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 23/02/12
+ * Time: 3:18 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.share.Editor');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
+    templateString: dojo.cache("versa/widget/share", "template/Editor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:8px 8px 4px 8px;height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            splitter=\"false\"\n            region=\"center\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"true\"\n                class=\"highlightPane\"\n                style=\"padding:8px;overflow:hidden;\">\n\n            <div dojoAttachPoint=\"formNode\">\n                <div dojoAttachPoint=\"tableNode\"></div>\n            </div>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _chkExpires: null,
+    _form: null,
+    _tblProperties: null,
+    _txtExpiryDate: null,
+    _txtName: null,
+    _txtPassword: null,
+    _txtRepeat: null,
+
+    creation: false,
+    item: null,
+    seed: null,
+    share: null,
+    library: null,
+    zone: null,
+
+    __doCancel: function(){
+        return true;
+    },
+
+    /*
+    __doCreate: function(){
+        var canClose = false;
+
+        var expiryDate = null;
+
+        if(!this._txtExpiryDate.disabled){
+            //Set to end of day on selected day
+            expiryDate =  this._txtExpiryDate.get('value');
+            expiryDate = dojo.date.add(expiryDate, 'day', 1);
+            expiryDate = dojo.date.add(expiryDate, 'second', -1);
+        }
+
+        this.share = this.library.createShare({
+            name: this._txtName.value,
+            password: this._txtPassword.value,
+            expiry: expiryDate,
+            seed: this.seed
+        });
+        canClose = true;
+
+        return canClose;
+    },
+
+    __doEdit: function(){
+        var canClose = false;
+
+        if(this.library.getFolders().isDirty({item: this.share})){
+            this.library.getFolders().save();
+        }
+        canClose = true;
+
+        return canClose;
+    },
+
+    */
+
+    __doSave: function(){
+        var canClose = false;
+
+        try{
+            if(this.library.getFolders().isDirty({item: this.share})){
+                this.library.getFolders().save();
+            }
+            canClose = true;
+        }
+        catch(e){
+
+            var err = new bfree.api.Error('Failed to save shared folder', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+
+            //The store loses the "dirty" flag when item save fails and revert hasn't occurred
+            this.library.getFolders().clone({item: this.share});
+
+            //TODO: Enable deletion detection
+            //if(e.status == 404){
+            //    canClose = this._doCancel();
+            //   this.library.getDocuments().store.onDelete(this._document);
+            //}
+
+        }
+
+        return canClose;
+    },
+
+    __onItemError: function(e){
+        try{
+            var err = new bfree.api.Error('Failed to load share information', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+    },
+
+    __onItemLoaded: function(shareRoot){
+
+        try{
+
+            if(this.share){
+                //Shared folder was passed in for editing
+                this.share = this.library.getFolders().refreshItem(this.share.getId());
+                this.library.getFolders().clone({item: this.share});
+
+                this._txtExpiryDate.set('value', this.share.expiry);
+                this._chkExpires.set('checked', (this.share.expiry));
+
+            }
+            else{
+                var shareName = (this.seed) ? this.seed.name : '';
+                this.share = this.library.createShare({
+                    name: shareName,
+                    seed: this.seed,
+                    expiry: null
+                });
+
+                this._chkPassword.set('checked', true);
+            }
+
+            this._txtName.set('value', this.share.name);
+            this._txtName.setFocus(true);
+
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+    },
+
+    _chkExpires_onChange: function(checked){
+        this._txtExpiryDate.set('disabled', !checked);
+
+        if(checked){
+            if(!this._txtExpiryDate.get('value')){
+                this._txtExpiryDate.set('value', dojo.date.add(new Date(), 'week', 1));
+            }
+        }
+        else{
+            this._txtExpiryDate.reset();
+        }
+    },
+
+     _chkPassword_onChange: function(checked){
+
+        this._txtPassword.set('value', '');
+        this._txtRepeat.set('value', '');
+
+        this._txtPassword.set('disabled', !checked);
+        this._txtRepeat.set('disabled', !checked);
+
+        if(checked){
+            this._txtPassword.validate();
+            this._txtRepeat.validate();
+            ///this._txtPassword.setFocus(true);
+        }
+
+        this.onValueChange();
+
+    },
+
+    _expiryValidator: function(value, constraints){
+
+        if(this._txtExpiryDate){
+            var now = new Date();
+            var expiryDate = this._txtExpiryDate.parse(value, constraints);
+            expiryDate = dojo.date.add(expiryDate, 'day', 1);
+            expiryDate = dojo.date.add(expiryDate, 'second', -1);
+
+            if(dojo.date.compare(expiryDate, now, 'date') < 0){
+                this._txtExpiryDate.set('invalidMessage', 'Selected date has already passed');
+                return false;
+            }
+        }
+
+        return true;
+    },
+
+    _nameValidator: function(value, constraints){
+
+        if(this._txtName){
+            if(String.isBlank(value)){
+                this._txtName.set('invalidMessage', 'Document type name cannot be blank');
+                return false;
+            }
+        }
+
+        return true;
+    },
+
+    _passwordValidator: function(value, constraints){
+
+        if(this._txtPassword){
+            if(String.isBlank(value)){
+                this._txtPassword.set('invalidMessage', 'Password cannot be blank');
+                return false;
+            }
+            else if(value.trim().length < 8){
+                this._txtPassword.set('invalidMessage', 'Passwords must be at least 8 characters in length.');
+                return false;
+            }
+        }
+
+        return true;
+    },
+
+    _repeatValidator: function(value, constraints){
+
+        if(this._txtRepeat){
+            if(String.isBlank(value)){
+                this._txtRepeat.set('invalidMessage', 'Password cannot be blank');
+                return false;
+            }
+            else if(this._txtPassword.value != value.trim()){
+                this._txtRepeat.set('invalidMessage', 'Passwords do not match');
+                return false;
+            }
+        }
+
+        return true;
+    },
+
+    _loadItem: function(){
+
+        //Refresh ShareRoot if needed.
+        this.library.getFolders().loadItem({
+            item: this.library.getFolders().getShareRootFolder(),
+            scope: this,
+            onItem: this.__onItemLoaded,
+            onError: this.__onItemError
+        });
+
+    },
+
+    _onExpiryChange: function(id, value){
+
+        this._txtExpiryDate.validate();
+
+        //Set to end of day on selected day (if not already set).
+        if(value){
+            value.setHours(23,59,59,999);
+        }
+
+        this._onValueChange(id, value);
+    },
+
+    _onRepeatChange: function(value){
+        this.onValueChange();
+    },
+
+    _onValueChange: function(id, value){
+
+
+        var doUpdate = (id == 'expiry') ?
+                            (dojo.date.compare(value, this.share.expiry, 'date') != 0) :
+                            !this.share.valueEquals(id, value);
+        if(doUpdate){
+            this.library.getFolders().setValue(this.share, id, value);
+            this.onValueChange();
+        }
+
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+        this.inherited('destroy', arguments);
+    },
+
+    isValid: function(){
+        var isValid = false;
+
+        var isDirty = this.library.getFolders().isDirty({item: this.share});
+        var isValid = (!isDirty) ?
+                        false :
+                        ((this._txtName.isValid()) &&
+                            (this._txtPassword.disabled || this._txtPassword.isValid()) &&
+                            (this._txtRepeat.disabled || this._txtRepeat.isValid()) &&
+                            (this._txtExpiryDate.disabled || this._txtExpiryDate.isValid()))
+
+        return isValid && isDirty;
+    },
+
+    onDialogClosing: function(dlgResult){
+        var canClose = false;
+
+        try{
+
+            canClose = (dlgResult == bfree.widget.Dialog.dialogResult.ok) ?
+                            this.__doSave() :
+                            this.__doCancel();
+            this.returnValue = this.share;
+
+        }
+        catch(e){
+           var err = new bfree.api.Error('Failed to close Share Creation dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+            this.library.getFolders().revert();
+        }
+
+        return canClose;
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        /*
+        this._form = new dijit.form.Form({
+            id: 'propDefForm'
+        }, this.formNode);
+        */
+
+        this._tblProperties = new dojox.layout.TableContainer({
+            id: 'tblProps1',
+            customClass: 'versa',
+            showLabels: true,
+            cols: 1,
+            labelWidth: 104,
+            style: 'width:100%'
+        }, this.tableNode);
+
+        this._txtName = new bfree.widget.ValidationTextBox({
+            id: 'txtName',
+            label: 'Name',
+            selectOnClick: true,
+            intermediateChanges: true,
+            required: true,
+            trim: true,
+            style: 'width:100%',
+            validator: dojo.hitch(this, this._nameValidator),
+            onChange: dojo.hitch(this, this._onValueChange, 'name')
+        });
+        this._tblProperties.addChild(this._txtName);
+
+        this._chkPassword = new dijit.form.CheckBox({
+			name: 'chkPassword',
+            label: 'Change Password',
+            onChange: dojo.hitch(this, this._chkPassword_onChange)
+		});
+        if(this.share)
+            this._tblProperties.addChild(this._chkPassword);
+
+        this._txtPassword = new bfree.widget.ValidationTextBox({
+            id: 'txtPassword',
+            type: 'password',
+            label: 'Password',
+            disabled: true,
+            selectOnClick: true,
+            intermediateChanges: true,
+            required: true,
+            style: 'width:100%',
+            validator: dojo.hitch(this, this._passwordValidator),
+            onChange: dojo.hitch(this, this._onValueChange, 'password')
+        });
+        this._tblProperties.addChild(this._txtPassword);
+
+        this._txtRepeat = new bfree.widget.ValidationTextBox({
+            id: 'txtRepeat',
+            type: 'password',
+            label: 'Repeat Password',
+            disabled: true,
+            selectOnClick: true,
+            intermediateChanges: true,
+            required: true,
+            style: 'width:100%',
+            validator: dojo.hitch(this, this._repeatValidator),
+            onChange: dojo.hitch(this, this._onRepeatChange)
+        });
+        this._tblProperties.addChild(this._txtRepeat);
+
+        this._chkExpires = new dijit.form.CheckBox({
+			name: 'chkExpires',
+            label: 'Share Expires',
+            onChange: dojo.hitch(this, this._chkExpires_onChange)
+		});
+        this._tblProperties.addChild(this._chkExpires);
+
+        this._txtExpiryDate = new bfree.widget.DateTextBox({
+            id: 'txtExpiry',
+            label: 'Expiry Date',
+            disabled: true,
+            required: true,
+            scrollOnFocus: false,
+            selectOnClick: true,
+            intermediateChanges: true,
+            constraints: {min: new Date(), selector: 'date'},
+            validator: dojo.hitch(this, this._expiryValidator),
+            onChange: dojo.hitch(this, this._onExpiryChange, 'expiry')
+        });
+        this._tblProperties.addChild(this._txtExpiryDate);
+
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        setTimeout(versa.widget.share.Editor._loadFnRef(this), 0);
+    }
+
+});
+
+versa.widget.share.Editor._loadFnRef = function(that){
+    return ( function() {
+       that._loadItem();
+    });
+}
+
+versa.widget.share.Editor.show = function(args){
+
+    var h = (!args.share) ? 212 : 228;
+
+    var dlg = new bfree.widget.Dialog({
+        id: 'dlgShareShow',
+        title: 'Shared Folder',
+        widgetConstructor: versa.widget.share.Editor,
+        widgetParams: {
+            mode: args.mode,
+            share: args.share,
+            seed: args.seed,
+            library: args.library,
+            zone: args.zone
+        },
+        noResize: true,
+        height: h,
+        width: 368,
+        buttons: bfree.widget.Dialog.buttons.ok | bfree.widget.Dialog.buttons.cancel,
+        onClose: args.onClose
+    });
+    dlg.startup();
+    dlg.show();
+}
 
 }
 
@@ -85878,6 +87930,7 @@ dojo.provide('bfree.widget.zone.Show');
 
 
 
+//dojo.require('bfree.widget.document.Grid');
 
 
 
@@ -85894,6 +87947,11 @@ dojo.provide('bfree.widget.zone.Show');
 
 
 
+
+
+
+
+//dojo.require('versa.widget.dnd.Avatar');
 
 
 
@@ -86144,6 +88202,15 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             case bfree.widget.Bfree.Commands.SECURE:
                 this.__onSecure(option, params);
                 break;
+            case bfree.widget.Bfree.Commands.SHARE:
+                this.__onShare(option, params);
+                break;
+            case bfree.widget.Bfree.Commands.UNSHARE:
+                this.__onUnshare(option, params);
+                break;
+            case bfree.widget.Bfree.Commands.RENAME:
+                this.__onRename(option, params);
+                break;
             case bfree.widget.Bfree.Commands.EMPTY:
                 this._onFolderTrashEmpty();
                 break;
@@ -86191,7 +88258,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onCancelCheckout: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentCancelCKO(params.documents);
+                this._onDocumentCancelCKO(params.items);
                 break;
         }
     },
@@ -86199,7 +88266,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onCheckin: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentCKI(params.documents);
+                this._onDocumentCKI(params.items);
                 break;
         }
     },
@@ -86207,7 +88274,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onCheckout: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentCKO(params.documents);
+                this._onDocumentCKO(params.items);
                 break;
         }
     },
@@ -86216,10 +88283,13 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentCopy(params.documents);
+                this._onDocumentCopy(params.items);
                 break;
             case bfree.widget.Bfree.ObjectTypes.VERSION:
                 this._onVersionCopy(params.document, params.version);
+                break;
+            case bfree.widget.Bfree.ObjectTypes.SHARE:
+                this._onShareShowLink(params.folder);
                 break;
         }
 
@@ -86229,8 +88299,10 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentDelete(params.documents);
+                this._onDocumentDelete(params.items);
                 break;
+            case bfree.widget.Bfree.ObjectTypes.SHARE:
+                this._onShar
         }
 
     },
@@ -86239,11 +88311,14 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentDestroy(params.documents);
+                this._onDocumentDestroy(params.items);
                 break;
             case bfree.widget.Bfree.ObjectTypes.FOLDER:
                 this._onFolderDestroy(params.folder);
                 break
+            case bfree.widget.Bfree.ObjectTypes.SHARE:
+                this._onShareDestroy(params.folder);
+                break;
         }
 
     },
@@ -86252,16 +88327,16 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentEdit(params.documents);
+                this._onDocumentEdit(params.items);
                 break
-            case bfree.widget.Bfree.ObjectTypes.FOLDER:
-                this._onFolderEdit(params.folder);
+            case bfree.widget.Bfree.ObjectTypes.SHARE:
+                this._onShareEdit(params.folder);
                 break
             case bfree.widget.Bfree.ObjectTypes.USER:
                 this._onUserEdit();
                 break
             case bfree.widget.Bfree.ObjectTypes.VERSION:
-                this._onVersionEdit(params.documents);
+                this._onVersionEdit(params.items);
                 break;
         }
 
@@ -86270,7 +88345,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onMove: function(object_type, params){
        switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentMove(params.documents);
+                (!params.folder) ?
+                    this._onDocumentMove(params.items):
+                    this._onDocumentQuickMove(params.folder, params.items);
                 break;
         }
     },
@@ -86283,6 +88360,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             case bfree.widget.Bfree.ObjectTypes.FOLDER:
                 this._onFolderNew(params.folder);
                 break;
+            case bfree.widget.Bfree.ObjectTypes.SHARE:
+                this._onShareNew(params.folder);
+                break;
         }
     },
 
@@ -86294,10 +88374,18 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         }
     },
 
+    __onRename: function(object_type, params){
+        switch(object_type){
+            case bfree.widget.Bfree.ObjectTypes.FOLDER:
+                this._onFolderRename(params.folder);
+                break;
+        }
+    },
+
     __onRestore: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                 this._onDocumentRestore(params.documents);
+                 this._onDocumentRestore(params.items);
                 break;
         }
     },
@@ -86305,10 +88393,29 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onSecure: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentSecure(params.documents);
+                this._onDocumentSecure(params.items);
                 break;
             case bfree.widget.Bfree.ObjectTypes.FOLDER:
                 this._onFolderSecure(params.folder);
+                break;
+        }
+    },
+
+    __onShare: function(object_type, params){
+        switch(object_type){
+            case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
+                this._onDocumentShare(params.folder, params.items);
+                break;
+            case bfree.widget.Bfree.ObjectTypes.FOLDER:
+                this._onFolderShare(params.folder);
+                break;
+        }
+    },
+
+    __onUnshare: function(object_type, params){
+        switch(object_type){
+            case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
+                this._onDocumentUnshare(params.items);
                 break;
         }
     },
@@ -86317,7 +88424,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentView(params.documents);
+                this._onDocumentView(params.items);
                 break;
             case bfree.widget.Bfree.ObjectTypes.VERSION:
                 this._onVersionView(params.document, params.version);
@@ -86326,18 +88433,12 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     },
 
+    __wdg_onFocus: function(type){
+        this.set('activeType', type);
+    },
+
     __wdgDocuments_onSelectedItems: function(items){
-        if(dojo.isArray(items) && items.length > 0){
-            this.set('activeDocuments', items);
-        }
-        else if(this._grdDocuments.rowCount < 1){
-            this.set('activeType', bfree.widget.Bfree.ObjectTypes.FOLDER);
-            this.activeFolder.document_count = this._grdDocuments.rowCount;
-            this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.FOLDER, [this.activeFolder]);
-            this._wdgItemInfo.loadItem({
-                item: this.activeFolder
-            });
-        }
+         this.set('activeDocuments', items);
     },
 
     __wdgFolders_onSelected: function(item, node){
@@ -86367,6 +88468,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     },
 
+    /*
     __wdgPane_onFocus: function(pane){
         if(pane === this.contentPane){
             this.set('activeType', bfree.widget.Bfree.ObjectTypes.DOCUMENT);
@@ -86378,6 +88480,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             this.set('activeType', bfree.widget.Bfree.ObjectTypes.NONE);
         }
     },
+    */
 
     _checkSession: function(){
         var isAlive = false;
@@ -86410,29 +88513,11 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         }
     },
 
-
-
     _onAdminPropDefs: function(){
 
         try{
             function __onClose(dlgResult, retValue){
-
-                var view = this._grdDocuments.activeView;
-                //clear the cache
-                this.activeLibrary.getViewDefinitions().clearCache();
-                //fetch all views, since some might have properties deleted
-                this.activeLibrary.getViewDefinitions().fetch();
-                //fetch the current view
-                var newView = this.activeLibrary.getViewDefinitions().fetchById({id: view.id});
-                var newStructure = newView.getView(this.activeLibrary);
-
-                this._grdDocuments.set('activeView', newStructure);
-                this._grdDocuments.set('structure', newStructure);
-                this._grdDocuments.set('sortInfo', newStructure.sort_column);
-                this._grdDocuments.refresh();
-
-                this._grdDocuments.refreshViews();
-
+                this._grdDocuments.refreshViews(false);
                 return true;
             }
 
@@ -86521,9 +88606,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     _onDocumentCancelCKO: function(items){
 
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
         });
 
         function __action(item){
@@ -86550,6 +88635,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _onDocumentCKI: function(items){
 
         function __onClose(dlgResult, items){
+            dojo.forEach(items, function(item, idx){
+                this.activeLibrary.getReferences().refreshItem(item.getId());
+            }, this);
             return true;
         };
 
@@ -86566,9 +88654,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     _onDocumentCKO: function(items){
 
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
         });
 
         function __action(item){
@@ -86592,10 +88680,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     //Copies document content from the server to the client machine
     _onDocumentCopy: function(items){
-
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
         });
 
         function __action(item){
@@ -86613,7 +88700,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         }
 
         this.__doAction(items, __action, __onComplete, __onError);
-
     },
 
     _onDocumentDelete: function(items){
@@ -86622,20 +88708,18 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         if(!confirm(msg))
             return;
 
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
-        });
-
         function __action(item){
-             accessor.library.getDocuments().destroy({
+             this.activeLibrary.getReferences().destroy({
                 soft: true,
                 item: item
             });
         }
 
         function __onComplete(items){
-
+            //this._grdDocuments.update();
+            //dojo.forEach(items, function(item, idx){
+            //    this._grdDocuments.store.onDelete(item);
+            //}, this);
         }
 
         function __onError(item, e){
@@ -86645,7 +88729,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, dojo.hitch(this, __onComplete), __onError);
+        this.__doAction(items, dojo.hitch(this, __action), dojo.hitch(this, __onComplete), __onError);
 
     },
 
@@ -86655,14 +88739,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         if(!confirm(msg))
             return;
 
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
-        });
-
         function __action(item){
-            accessor.library.getDocuments().destroy({
-                soft: false,
+            this.activeLibrary.getReferences().destroy({
                 item: item
             });
         }
@@ -86677,7 +88755,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onComplete, __onError);
+        this.__doAction(items, dojo.hitch(this, __action), dojo.hitch(this, __onComplete), __onError);
 
     },
 
@@ -86685,6 +88763,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _onDocumentEdit: function(items){
 
         function __onClose(dlgResult, items){
+            dojo.forEach(items, function(item, idx){
+                this.activeLibrary.getReferences().refreshItem(item.getId());
+            }, this);
             return true;
         };
 
@@ -86703,13 +88784,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _onDocumentMove: function(items){
 
         function __onClose(dlgResult, items){
-
-            //refresh grid.
-            if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
-                this._grdDocuments.refresh();
-                this._grdDocuments.update();
-            }
-
             return true;
         };
 
@@ -86757,15 +88831,39 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     },
 
-     _onDocumentRestore: function(items){
+    _onDocumentQuickMove: function(folder, items){
 
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
         });
 
         function __action(item){
-            accessor.doRestore(item, false);
+            accessor.doMove(folder, item);
+        }
+
+        function __onComplete(items){
+        }
+
+        function __onError(item, e){
+            var err = new bfree.api.Error(dojo.replace('Failed to move document \'{0}\'', [item.name]), e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+
+        this.__doAction(items, __action, __onComplete, __onError);
+    },
+
+     _onDocumentRestore: function(items){
+
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
+        });
+
+        function __action(item){
+            accessor.doRestore(item);
         }
 
         function __onComplete(items){
@@ -86801,12 +88899,59 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     },
 
+    _onDocumentShare: function(folder, items){
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
+        });
+
+        function __action(item){
+            accessor.doShare(folder, item);
+        }
+
+        function __onComplete(items){
+        }
+
+        function __onError(item, e){
+            var err = new bfree.api.Error(dojo.replace('Failed to share document \'{0}\'', [item.name]), e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+
+        this.__doAction(items, __action, __onComplete, __onError)
+    },
+
+    _onDocumentUnshare: function(items){
+
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
+        });
+
+        function __action(item){
+            accessor.doUnshare(item);
+        }
+
+        function __onComplete(items){
+        }
+
+        function __onError(item, e){
+            var err = new bfree.api.Error(dojo.replace('Failed to un-share document \'{0}\'', [item.name]), e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+
+        this.__doAction(items, __action, __onComplete, __onError)
+    },
+
      //Streams document content from the server for display in the browser
     _onDocumentView: function(items){
 
-        var accessor = new bfree.widget.document.Accessor({
-            library: this.activeLibrary,
-            zone: this.zone
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
         });
 
         function __action(item){
@@ -86855,29 +89000,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         }
     },
 
-
     _onFolderEdit: function(folder){
 
-        try{
-
-            if(!folder)
-                return;
-
-            //make sure folder is loaded (not a reference) before creating a new sub-folder
-            this.activeLibrary.getFolders().loadItem({
-                item: folder,
-                callback: dojo.hitch(this, function(item){
-                    this._tvwFolders.editFolder(item);
-                })
-            });
-
-		}
-		catch(e){
-			var err = new bfree.api.Error('Failed to rename folder', e);
-			bfree.widget.ErrorManager.handleError({
-				error: err
-			});
-		}
     },
 
     _onFolderNew: function(folder){
@@ -86908,6 +89032,30 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
 		}
 
+    },
+
+    _onFolderRename: function(folder){
+
+        try{
+
+            if(!folder)
+                return;
+
+            //make sure folder is loaded (not a reference) before creating a new sub-folder
+            this.activeLibrary.getFolders().loadItem({
+                item: folder,
+                callback: dojo.hitch(this, function(item){
+                    this._tvwFolders.editFolder(item);
+                })
+            });
+
+		}
+		catch(e){
+			var err = new bfree.api.Error('Failed to rename folder', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+		}
     },
 
     _onFolderSecure: function(folder){
@@ -86966,7 +89114,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             return;
 
         try{
-            this.activeLibrary.getDocuments().empty_recycling({zone: this.zone, library: this.activeLibrary});
+            this.activeLibrary.empty_trash({zone: this.zone});
             this._grdDocuments.refresh();
         }
         catch(e){
@@ -87047,6 +89195,106 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             });
         }
     },
+
+    _onShareDestroy: function(share){
+         try{
+
+            if(!share)
+                return;
+
+            this._tvwFolders.setBusy(share, true);
+
+            //make sure folder is loaded (not a reference) before creating a new sub-folder
+            this.activeLibrary.getFolders().loadItem({
+                item: share,
+                callback: dojo.hitch(this, function(item){
+                    this._tvwFolders.deleteFolder(item);
+                })
+            });
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to delete folder', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+    },
+
+    _onShareEdit: function(folder){
+        try{
+
+            function __onClose(dlgResult, retValue){
+                return true;
+            }
+
+           versa.widget.share.Editor.show({
+                share: folder,
+                seed: null,
+                library: this.activeLibrary,
+                zone: this.zone,
+                onClose: dojo.hitch(this, __onClose)
+            });
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to open \'Share Edit\' dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+    },
+
+    _onShareNew: function(folder){
+        try{
+
+            function __onClose(dlgResult, retValue){
+                return true;
+            }
+
+            versa.widget.share.Editor.show({
+                share: null,
+                seed: folder,
+                library: this.activeLibrary,
+                zone: this.zone,
+                onClose: dojo.hitch(this, __onClose)
+            });
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to open \'Share Creation\' dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+    },
+
+    _onShareShowLink: function(share){
+
+        try{
+
+            function __onClose(dlgResult, retValue){
+                return true;
+            }
+
+           versa.widget.share.CopyLink.show({
+                share: share,
+                library: this.activeLibrary,
+                zone: this.zone,
+                onClose: dojo.hitch(this, __onClose)
+            });
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to open \'Share Link\' dialog', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+
+
+    },
+
 
     _onUserAdmin: function(){
 
@@ -87129,16 +89377,19 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         function __onClose(dlgResult, items){
             return true;
-        };
+        }
 
-        function __onError(item, e){
-            var err = new bfree.api.Error(dojo.replace('Failed to display version information for document \'{0}\'', [item.name]), e);
-			bfree.widget.ErrorManager.handleError({
-				error: err
-			});
+        function __onError(items, e){
+            dojo.forEach(items, function(item, idx){
+                var err = new bfree.api.Error(dojo.replace('Failed to display version information for document \'{0}\'', [item.name]), e);
+                bfree.widget.ErrorManager.handleError({
+                    error: err
+                });
+            }, this);
         }
 
         this.__doDialog(items, bfree.widget.document.version.Versions.show, dojo.hitch(this, __onClose), __onError);
+
     },
 
     _onVersionView: function(document, version){
@@ -87169,19 +89420,10 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _onViewDefAdmin: function(){
         try{
 
-            function __onClose(dlgResult, retValue){
+            function __onClose(dlgResult, doRefresh){
 
-                var view = this._grdDocuments.activeView;
-                var newView = this.activeLibrary.getViewDefinitions().fetchById({id: view.id});
-                var newStructure = newView.getView(this.activeLibrary);
-
-                this._grdDocuments.set('activeView', newStructure);
-                this._grdDocuments.set('structure', newStructure);
-                this._grdDocuments.set('sortInfo', newStructure.sort_column);
-                this._grdDocuments.refresh();
-
-                this._grdDocuments.refreshViews();
-
+                if(doRefresh)
+                    this._grdDocuments.refreshViews(true);
                 return true;
             }
 
@@ -87202,7 +89444,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
     _setActiveDocumentsAttr: function(items){
 
-        //items may have "null" elements in it.
+        //items may have "null" elements in it...remove them
         items.clean();
 
         if((!items) || (items.length < 1)){
@@ -87212,32 +89454,30 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         this.activeDocuments = items;
 
+        //Set command bar/grid active folder (for context menu updates)
+        this._cmdBar.set('activeDocuments', this.activeDocuments);
+
         //Set info pane widget to "loading" of item
         //only if the folder pane has focus
         if(this.activeType == bfree.widget.Bfree.ObjectTypes.DOCUMENT){
             this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.DOCUMENT, items);
+
+            dojo.forEach(items, function(item, idx){
+
+                this.activeLibrary.getDocuments().store.fetchItemByIdentity({
+                    scope: this,
+                    identity: item.document_id,
+                    onItem: this.__onDocumentLoad,
+                    onError: this.__onDocumentLoadError
+                });
+
+            }, this);
+
         }
-
-        //Set command bar/grid active folder (for context menu updates)
-        this._cmdBar.set('activeDocuments', this.activeDocuments);
-
-        dojo.forEach(items, function(item, idx){
-            this.activeLibrary.getDocuments().loadItem({
-                item: item,
-                scope: this,
-                onItem: this.__onDocumentLoad,
-                onError: function(errData){
-                    this.__onDocumentLoadError(item, new bfree.api.Error(errData.responseText, errData));
-                }
-            });
-        }, this);
 
     },
 
     _setActiveFolderAttr: function(item){
-
-        //Don't re-query if user clicks on active folder...
-        var doQuery = ((item !== this.activeFolder) || item.isSearch());
 
         //Now set new active folder
         this.activeFolder = item;
@@ -87248,19 +89488,24 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.FOLDER, [item]);
         }
 
-        //Start query
-        if(doQuery) {
-            this.activeFolder.document_count = 0;
-            this._cmdBar.set('activeFolder', this.activeFolder);
-            this.queryDocuments(item.getActiveQuery());
-        }
-
-        //update row count
-        this.activeFolder.document_count = this._grdDocuments.rowCount;
-
         //Set command bar/grid active folder (for context menu updates)
         this._cmdBar.set('activeFolder', this.activeFolder);
         this._grdDocuments.set('activeFolder', item);
+
+        if(this.activeType == bfree.widget.Bfree.ObjectTypes.FOLDER){
+            //Load folder from server if it is a reference.
+            this.activeLibrary.getFolders().loadItem({
+                item: this.activeFolder,
+                scope: this,
+                onItem: this.__onFolderLoad,
+                onError: function(errData){
+                    this.__onFolderLoadError(item, new bfree.api.Error(errData.responseText, errData));
+                }
+            });
+        }
+        return;
+
+        this.activeFolder.document_count = this._grdDocuments.rowCount;
 
         //Load folder from server if it is a reference.
         this.activeLibrary.getFolders().loadItem({
@@ -87374,48 +89619,44 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         this._tvwFolders = new bfree.widget.folder.Tree({
             library: this.activeLibrary,
+            group: this.activeGroup,
             user: this.activeUser,
             folders: this.activeLibrary.getFolders(),
             documents: this.activeLibrary.getDocuments(),
-            dndController: "bfree.widget.folder.DndSource",
-            dndType: "Folder",
+            dndController: 'bfree.widget.folder.DndSource',
             onCommand: dojo.hitch(this, this.__onCommand),
             onSelected: dojo.hitch(this, this.__wdgFolders_onSelected),
             onNewNode: dojo.hitch(this, this.__wdgFolders_onNewNode),
             onUpdateNode: dojo.hitch(this, this.__wdgFolders_onUpdateNode),
-            style: "height: 100%"
+            onFocus: dojo.hitch(this, this.__wdg_onFocus, bfree.widget.Bfree.ObjectTypes.FOLDER)
+            //style: "height: 100%"
         }, this.folderTreeNode);
 
-        this._grdDocuments = new bfree.widget.document.Grid({
-            id: 'grdDocuments',
-            zone: this.zone,
-            library: this.activeLibrary,
-            user: this.activeUser,
-            style: 'width: 100%',
+        this._grdDocuments = new versa.widget.reference.Grid({
+            id: 'grdReferences',
+            activeLibrary: this.activeLibrary,
+            activeUser: this.activeUser,
+            activeZone: this.zone,
             onCommand: dojo.hitch(this, this.__onCommand),
-            onSelectedItems: dojo.hitch(this, this.__wdgDocuments_onSelectedItems)
-		}, this.documentGridNode);
+            onSelectedItems: dojo.hitch(this, this.__wdgDocuments_onSelectedItems),
+            onFocus: dojo.hitch(this, this.__wdg_onFocus, bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        }, this.documentGridNode);
 
         this._wdgItemInfo = new bfree.widget.ItemInfo({
 			library: this.activeLibrary,
             root: this._tvwFolders.rootNode
 		}, this.itemInfoNode);
 
-        bfree.widget.document.PropertyEditor.refresh=dojo.hitch(this, this._onDocumentsRefresh);
-        bfree.widget.acl.Editor.refresh=dojo.hitch(this, this._onDocumentsRefresh);
+        bfree.widget.document.PropertyEditor.refresh = dojo.hitch(this, this._onDocumentsRefresh);
+        bfree.widget.acl.Editor.refresh = dojo.hitch(this, this._onDocumentsRefresh);
 
-        this.versionSpan.innerHTML='V'+this.version;
+        this.versionSpan.innerHTML = dojo.replace('v{version}', this);
 
-        dojo.connect(this.folderPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.folderPane));
-        dojo.connect(this.contentPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.contentPane));
+        //dojo.connect(this.folderPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.folderPane));
+        //dojo.connect(this.contentPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.contentPane));
 
         this.onLoad(this);
     },
-
-    queryDocuments: function(searchItem){
-        this._grdDocuments.set('activeQuery', searchItem.getQuery());
-    },
-
 	showEditDocumentTypes: function(){
 
         try{
@@ -87441,17 +89682,13 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     },
 
     startup: function(){
-        this._grdDocuments.startup();
-
         this._cmdBar.set('activeLibrary', this.activeLibrary);
         this._cmdBar.set('activeUser', this.activeUser);
 
         this.inherited('startup', arguments);
 
-        this._grdDocuments.auto();
-
-        this._grdDocuments.initialize();
-        this._tvwFolders.initialize();
+        dijit.focus(this._tvwFolders.domNode);
+        this._tvwFolders.selectRoot();
     }
 
 });

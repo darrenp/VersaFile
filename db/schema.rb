@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120327161934) do
+ActiveRecord::Schema.define(:version => 20120417220327) do
 
   create_table "accounts", :force => true do |t|
     t.string   "email",                                      :null => false
@@ -149,7 +149,6 @@ ActiveRecord::Schema.define(:version => 20120327161934) do
   create_table "documents", :force => true do |t|
     t.integer  "zone_id"
     t.integer  "library_id"
-    t.integer  "folder_id"
     t.string   "name",                                                  :null => false
     t.integer  "document_type_id",                                      :null => false
     t.string   "checked_out_by"
@@ -314,13 +313,12 @@ ActiveRecord::Schema.define(:version => 20120327161934) do
     t.integer  "zone_id"
     t.integer  "library_id"
     t.integer  "parent_id"
-    t.string   "name",                          :null => false
-    t.boolean  "is_trash",   :default => false
-    t.boolean  "is_search",  :default => false
+    t.string   "name",        :null => false
     t.string   "created_by"
     t.string   "updated_by"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "folder_type"
   end
 
   create_table "groups", :force => true do |t|
@@ -408,6 +406,13 @@ ActiveRecord::Schema.define(:version => 20120327161934) do
     t.integer "choice_list_id"
   end
 
+  create_table "references", :force => true do |t|
+    t.integer "reference_type"
+    t.integer "library_id"
+    t.integer "folder_id"
+    t.integer "document_id"
+  end
+
   create_table "rko_users", :force => true do |t|
     t.string   "name"
     t.string   "first_name"
@@ -437,6 +442,14 @@ ActiveRecord::Schema.define(:version => 20120327161934) do
     t.boolean  "current",    :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "shares", :force => true do |t|
+    t.integer  "library_id"
+    t.integer  "folder_id"
+    t.string   "fingerprint"
+    t.string   "password"
+    t.datetime "expiry"
   end
 
   create_table "users", :force => true do |t|
@@ -482,6 +495,15 @@ ActiveRecord::Schema.define(:version => 20120327161934) do
     t.string   "updated_by"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "is_template", :default => true
+  end
+
+  create_table "view_mappings", :force => true do |t|
+    t.integer "library_id"
+    t.integer "folder_id"
+    t.integer "user_id"
+    t.integer "view_definition_id"
+    t.integer "sort_column"
   end
 
   create_table "zone_nodes", :force => true do |t|

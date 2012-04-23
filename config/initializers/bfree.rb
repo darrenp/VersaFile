@@ -7,7 +7,7 @@ require 'prawn'
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 4
-configatron.bfree.build_number = 401
+configatron.bfree.build_number = 2301
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
 
@@ -103,6 +103,45 @@ module Bfree
     end
 
     def self.TextMax
+      @@_text
+    end
+
+  end
+
+  module DataTypes
+    @@_void = 0
+    @@_boolean = 1
+    @@_integer = 2
+    @@_float = 3
+    @@_datetime = 4
+    @@_string = 5
+    @@_text = 6
+
+    def self.Void
+      @@_void
+    end
+
+    def self.Boolean
+      @@_boolean
+    end
+
+    def self.Integer
+      @@_integer
+    end
+
+    def self.Float
+      @@_float
+    end
+
+    def self.DateTime
+      @@_datetime
+    end
+
+    def self.String
+      @@_string
+    end
+
+    def self.Text
       @@_text
     end
 

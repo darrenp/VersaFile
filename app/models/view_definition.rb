@@ -3,6 +3,7 @@ class ViewDefinition < ActiveRecord::Base
   has_many  :cell_definitions,
             :order => "column_order",
             :dependent => :destroy
+  has_many :view_mappings, :dependent => :destroy
 
   attr_accessor :sort_id
 
@@ -18,6 +19,7 @@ class ViewDefinition < ActiveRecord::Base
       :scope => "*",
       :sort_by => "documents.name",
       :is_system => is_system,
+      :is_template=>true,
       :created_by => created_by,
       :updated_by => created_by
     )

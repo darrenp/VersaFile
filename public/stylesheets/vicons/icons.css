@@ -510,9 +510,18 @@
 .bfreeIconErrorRight32D          { background-position: -1632px; }
 .bfreeIconLogout32D              { background-position: -1664px; }
 
+.bfreeShareFolderOpened,
+.bfreeShareFolderClosed,
+.bfreeShareRootFolder,
 .bfreeSearchFolder,
-.bfreeTrashFolder {
+.bfreeTrashFolder,
+.bfreeRootFolder{
     background-image: url('images/icons.folder.16.png');
 }
-.bfreeTrashFolder { background-position: 0px; }
-.bfreeSearchFolder { background-position: -16px; }
+
+.bfreeRootFolder { background-position: 0px; }
+.bfreeTrashFolder { background-position: -16px; }
+.bfreeSearchFolder { background-position: -32px; }
+.bfreeShareRootFolder { background-position: -48px; }
+.bfreeShareFolderClosed{ background-position: -64px; }
+.bfreeShareFolderOpened { background-position: -80px; }

@@ -6,7 +6,6 @@ class ZonesController < ApplicationController
   end
   skip_before_filter :verify_authenticity_token, :only => [:create, :update]
 
-
   rescue_from Exceptions::AuthorizationRequired do |exception|
 
     begin
@@ -327,7 +326,7 @@ class ZonesController < ApplicationController
   # POST /zones.json
   def create
 
-    begin
+    #begin
 
       Zone.transaction do
 
@@ -369,6 +368,7 @@ class ZonesController < ApplicationController
 
         if ZoneTemplate.exists?(template_id)
           zone_template = ZoneTemplate.find(template_id)
+          logger.debug("Applying Template:> #{zone_template.name}")
           zone_template.apply(@zone)
         end
 
@@ -386,10 +386,10 @@ class ZonesController < ApplicationController
         format.json { render :json => @zone, :status => :created, :location => @zone.dojo_url }
       end
 
-    rescue => e
-      logger.error("Zone creation failed:> #{e.message}")
-      render :json => e.message, :status => :unprocessable_entity
-    end
+    #rescue => e
+    #  logger.error("Zone creation failed:> #{e.message}")
+    #  render :json => e.message, :status => :unprocessable_entity
+    #end
 
   end
 
