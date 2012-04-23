@@ -12,7 +12,7 @@ class CreateReferences < ActiveRecord::Migration
       r = Reference.create(
             :reference_type => d.deleted? ?  VersaFile::ReferenceTypes.Trash : VersaFile::ReferenceTypes.Content,
             :library => d.library,
-            :folder_id => d.folder.nil? ? 0 : d.folder.id,
+            :folder_id => d.folder_id.nil? ? 0 : d.folder_id,
             :document => d
         )
 

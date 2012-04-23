@@ -65,8 +65,14 @@ class FoldersController < ApplicationController
 
     begin
 
+      @parent = nil
       @share = nil
+
       folder_type = params[:folder_type].nil? ? VersaFile::FolderTypes.Content : params[:folder_type]
+      parent_id = params[:parent_id].nil? ? nil : params[:parent_id].to_i
+
+      @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(parent_id) unless parent_id.nil?
+      @parent = @library.root_folder if (@parent.nil? && (folder_type != VersaFile::FolderTypes.Root))
 
       Folder.transaction do
 
@@ -76,7 +82,7 @@ class FoldersController < ApplicationController
             :folder_type => folder_type,
             :created_by => @active_user.name,
             :updated_by => @active_user.name,
-            :parent_id => params[:parent_id]
+            :parent_id => @parent.nil? ? nil : @parent.id
         )
 
         unless @folder.save

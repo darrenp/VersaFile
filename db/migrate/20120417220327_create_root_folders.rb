@@ -14,20 +14,23 @@ class CreateRootFolders < ActiveRecord::Migration
 
         #create root folder
         puts "Creating root folder object..."
-        root_folder = zone.folders.create(
+        root_folder = library.zone.folders.create(
             :library => library,
             :name => library.name,
             :folder_type => VersaFile::FolderTypes.Root,
             :created_by => library.created_by,
             :updated_by => library.created_by,
-            :parent_id => nil?
+            :parent_id => nil
         )
         puts "done."
 
         #set all existing root-level children to be children of the root.
         puts "Resetting root folder children..."
-        subfolders = library.folders.where(:parent_id => 0).each do |subfolder|
-          subfolder.update_attribute(:parent_id, root_folder.id)
+        library.folders.where(:parent_id => 0).each do |subfolder|
+          subfolder.update_attribute(:parent_id, root_folder.id) unless subfolder.folder_type == VersaFile::FolderTypes.Root
+        end
+        library.references.where(:folder_id => 0).each do |ref|
+          ref.update_attribute(:folder_id, root_folder.id)
         end
         puts "done."
 

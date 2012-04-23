@@ -264,8 +264,6 @@ class Folder < ActiveRecord::Base
 
 private
 
-
-
   def self.merge(folder, data)
 
     begin
