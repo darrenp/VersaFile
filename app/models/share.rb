@@ -35,7 +35,8 @@ class Share < ActiveRecord::Base
     url = request.protocol <<
             self.library.zone.subdomain <<
             ".#{request.domain}"
-    url << ":#{request.port}" unless request.port.blank?
+    #Removed port here: seems rails is returning port 80 even for SSL
+    #url << ":#{request.port}" unless request.port.blank?
     url << "/shares/#{self.fingerprint}"
 
     return url

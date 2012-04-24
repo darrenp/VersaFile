@@ -229,7 +229,8 @@ class Document < ActiveRecord::Base
     self.update_attributes(
       :name => attributes[:name],
       :description => attributes[:description],
-      :updated_by => user.name
+      :updated_by => user.name,
+      :document_type_id=>attributes[:document_type_id]
     )
 
     self.update_metadata(attributes)

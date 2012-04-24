@@ -126,8 +126,7 @@ class Folder < ActiveRecord::Base
 
       json_obj[:children] = []
 
-      #self.children.viewable(options[:user], options[:group]).each do |child|
-      self.children.each do |child|
+      self.children.viewable(options[:user], options[:group]).each do |child|
 
         json_obj[:children] << {
             '$ref' => child.id,

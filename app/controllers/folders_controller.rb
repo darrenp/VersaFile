@@ -6,6 +6,7 @@ class FoldersController < ApplicationController
   def root
 
     @folders = @library.folders.viewable(@active_user, @active_group).root_folders
+    logger.debug("SIZE:> #{@folders.size}")
 
     respond_to do |format|
       format.html # index.html.erb
@@ -140,13 +141,13 @@ class FoldersController < ApplicationController
       @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(parent_id)
       @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
 
-      @folder[:name] = params[:name] unless params[:name].nil?
-      @folder[:parent] = @parent
+      @folder.name = params[:name] unless params[:name].nil?
+      @folder.parent = @parent
 
       #update share properties
       if(@folder.folder_type == VersaFile::FolderTypes.Share)
-        @folder.share[:password] = params[:password] unless params[:password].nil?
-        @folder.share[:expiry] = params[:expiry]
+        @folder.share.password = params[:password] unless params[:password].nil?
+        @folder.share.expiry = params[:expiry]
       end
 
       unless @folder.save

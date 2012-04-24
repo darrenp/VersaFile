@@ -11,7 +11,8 @@ class Reference < ActiveRecord::Base
       'references.folder_id' => 'references.folder_id',
       'documents.id' => 'documents.id AS \'document_id\'',
       'documents.state' => 'documents.state',
-      'documents.checked_out_by' => 'documents.checked_out_by'
+      'documents.checked_out_by' => 'documents.checked_out_by',
+      'document_types.id' => 'document_types.id AS \'document_type_id\''
   }
 
   REFERENCE_VERBOSE = {
