@@ -10,8 +10,8 @@ class Document < ActiveRecord::Base
             :conditions => {:is_current_version => true}
   has_one :acl, :as => :securable, :dependent => :destroy
 
-  before_create :create_acl
   before_save :on_before_save
+  after_save :on_after_save
 
   JOIN_STMT = 'INNER JOIN versions ON versions.document_id = documents.id AND versions.is_current_version=1 INNER JOIN document_types on documents.document_type_id=document_types.id'
 
@@ -150,6 +150,7 @@ class Document < ActiveRecord::Base
       :description => attributes[:description],
       :state => Bfree::DocumentStates.CheckedIn,
       :checked_out_by => nil,
+      :document_type_id=>attributes[:document_type_id],
       :updated_by => user.name
     )
 
@@ -211,21 +212,19 @@ class Document < ActiveRecord::Base
 
   def extract_content()
 
-    my_body = %x{java -jar tika-app-1.0.jar -t #{self.current_version.binary.path} }
-    my_metadata = %x{java -jar tika-app-1.0.jar -m #{self.current_version.binary.path} }
-    #my_custom_metadata = self.generate_custom_metadata()
+    my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
+    my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
 
     self.update_attributes(
         :body => my_body,
-        :metadata => my_metadata
-        #:custom_metadata => my_custom_metadata
+        :metadata => my_metadata,
+        :state => (self.state | Bfree::DocumentStates.Indexed)
     )
-    self.state = self.state | Bfree::DocumentStates.Indexed
-    self.save
 
   end
 
   def update_properties(user, attributes)
+
     self.update_attributes(
       :name => attributes[:name],
       :description => attributes[:description],
@@ -258,9 +257,6 @@ class Document < ActiveRecord::Base
 
     end
 
-    #Populate custom_metadata field...used for "simple" search
-    self.custom_metadata = self.generate_custom_metadata()
-
   end
 
   def dojo_url
@@ -273,6 +269,8 @@ class Document < ActiveRecord::Base
 
     text << self.name
     text << self.description unless self.description.blank?
+    text << self.document_type.name
+    text << self.current_version.binary_file_name
 
     #Create custom property columns
     #Strings
@@ -362,19 +360,13 @@ class Document < ActiveRecord::Base
     return count
   end
 
-  def create_acl
-
-=begin
-    self.acl = (self.folder.nil?) ?
-                  self.library.acl.deep_clone :
-                  self.folder.acl.deep_clone
-    self.acl.inherits = true
-=end
-  end
-
 protected
   def on_before_save
-    self.custom_metadata = self.generate_custom_metadata()
+
+  end
+
+  def on_after_save
+       self.update_attribute(:custom_metadata, self.generate_custom_metadata()) if self.custom_metadata.nil?
   end
 
 private

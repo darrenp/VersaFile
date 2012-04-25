@@ -7138,6 +7138,14 @@ bfree.api.PropertyMapping.formatValue = function(property_definition, value){
     return frmt_value;
 }
 
+//leavin this open for other default types
+bfree.api.PropertyMapping.types = {
+    date:{
+        fixed: 0,
+        floating: 1
+    }
+}
+
 bfree.api.PropertyMapping.schema = {
 	type: 'object',
 	properties: {
@@ -7169,7 +7177,11 @@ bfree.api.PropertyMapping.schema = {
 		'default_value': {
 			type: 'string',
 			'default': null
-		}
+		},
+        'default_type': {
+            type: 'integer',
+            'default': 0
+        }
 	}
 };
 
@@ -24132,7 +24144,7 @@ dojo.declare('bfree.widget.admin.CommandBar', [dijit.Toolbar], {
 
 
         this._btnSaveUser = new dijit.form.Button({
-			label: 'Save Changes...',
+			label: 'Save Changes',
 			showLabel: false,
 			disabled: true,
 			iconClass: 'commandIcon32 bfreeIconSave32',
@@ -24141,7 +24153,7 @@ dojo.declare('bfree.widget.admin.CommandBar', [dijit.Toolbar], {
 		this.addChild(this._btnSaveUser);
 
 		this._btnUndoUser = new dijit.form.Button({
-			label: 'Undo Unsaved Changes...',
+			label: 'Undo Unsaved Changes',
 			showLabel: false,
 			disabled: true,
 			iconClass: 'commandIcon32 bfreeIconUndo32',
@@ -53372,7 +53384,7 @@ dojo.declare('bfree.widget.choiceList.CommandBar', dijit.Toolbar,
 
         this._btnSave = new bfree.widget.Button({
                 id: 'btnPropDefsSave',
-                label: 'Save Changes...',
+                label: 'Save Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconSave',
@@ -53382,7 +53394,7 @@ dojo.declare('bfree.widget.choiceList.CommandBar', dijit.Toolbar,
         this.addChild(this._btnSave);
 
         this._btnUndo = new bfree.widget.Button({
-                label: 'Undo Unsaved Changes...',
+                label: 'Undo Unsaved Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconUndo',
@@ -54118,7 +54130,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
         this._btnUp = new bfree.widget.Button({
             id: 'btnValueUp',
             //'class': 'sidebarButton',
-            label: 'Move Value up...',
+            label: 'Move Value up',
             showLabel: false,
             disabled: true,
             iconClass: 'sidebarIcon bfreeIconUp',
@@ -54129,7 +54141,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
 
         this._btnDown = new bfree.widget.Button({
             id: 'btnValueDown',
-            label: 'Move Value down...',
+            label: 'Move Value down',
             showLabel: false,
             disabled: true,
             iconClass: 'sidebarIcon bfreeIconDown',
@@ -54141,7 +54153,7 @@ dojo.declare('bfree.widget.choiceList.ValueBar', [dijit.Toolbar], {
         this._btnRemove = new bfree.widget.Button({
                 id: 'btnRemoveValue',
                 //'class': 'sidebarButton',
-                label: 'Remove Value from Choice List...',
+                label: 'Remove Value from Choice List',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'sidebarIcon bfreeIconRemove',
@@ -54958,7 +54970,6 @@ dojo.provide('bfree.widget.choiceList.Administration');
 
 
 dojo.declare('bfree.widget.choiceList.Administration', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget], {
-    templateString: null,
     templateString: dojo.cache("bfree/widget/choiceList", "template/Administration.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n     <!-- Command Bar -->\n    <div    dojoType=\"dijit.layout.ContentPane\"\n            region=\"top\"\n            splitter=\"false\"\n            style=\"padding:0;overflow:hidden;height:27px\">\n\n        <div dojoAttachPoint=\"commandBarNode\"></div>\n\n    </div>\n\n     <div   dojoType=\"dijit.layout.BorderContainer\"\n            region=\"center\"\n            design=\"sidebar\"\n            gutters=\"false\"\n            liveSplitters=\"true\"\n            style=\"padding:8px;height:100%;width:100%\">\n\n\n         <div   dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"leading\"\n                style=\"padding:0 8px 0 0;width: 256px;\">\n\n            <div dojoAttachPoint=\"gridNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"true\"\n                region=\"center\"\n                class=\"highlightPane\"\n                style=\"padding:8px\">\n\n            <div dojoAttachPoint=\"editorNode\"></div>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
     widgetsInTemplate: true,
 
@@ -55265,7 +55276,7 @@ bfree.widget.choiceList.Administration.show = function(args){
 
      var dlg = new bfree.widget.Dialog({
         id: 'dlgChoiceLists',
-        title:'Choice List',
+        title:'Choice List Administration',
         widgetConstructor: bfree.widget.choiceList.Administration,
         widgetParams: {
             activeUser: args.user,
@@ -55784,6 +55795,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             label: label,
             smallDelta: 1,
             largeDelta:10,
+            intermediateChanges: true,
             constraints: { fractional: false, min: -2147483648, max: 2147483647 },
             scrollOnFocus: false,
             selectOnClick: true,
@@ -55797,6 +55809,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
             label: label,
             smallDelta: 1,
             largeDelta:10,
+            intermediateChanges: true,
             constraints: { places: '0,4' },
             scrollOnFocus: false,
             selectOnClick: true,
@@ -55808,7 +55821,7 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
     return wdg;
 }
 
-bfree.widget.propdef.Widget.getChoiceListWidget = function(wdgId, label, choiceList, showNone){
+bfree.widget.propdef.Widget.getChoiceListWidget = function(wdgId, label, choiceList, showNone, defaultValue){
     var wdg = null;
     var valueStore = bfree.widget.propdef.Widget.generateStore(choiceList, showNone);
 
@@ -55817,6 +55830,7 @@ bfree.widget.propdef.Widget.getChoiceListWidget = function(wdgId, label, choiceL
         label: label,
         query: {},
         store: valueStore,
+        value: defaultValue,
         scrollOnFocus: false,
         searchAttr: 'display'
     });
@@ -55832,7 +55846,7 @@ bfree.widget.propdef.Widget.generate = function(propertyMapping, propertyDefinit
     var id = bfree.widget.propdef.Widget.generateWdgName(propertyDefinition.getDbName());
 
     if(choiceList){
-        wdg = bfree.widget.propdef.Widget.getChoiceListWidget(id, propertyDefinition.name, choiceList);
+        wdg = bfree.widget.propdef.Widget.getChoiceListWidget(id, propertyDefinition.name, choiceList, false, propertyMapping.default_value);
     }
     else{
         wdg = bfree.widget.propdef.Widget.getWidget(dataType, id, propertyDefinition.name, bfree.widget.propdef.Widget.formats.LONG, propertyMapping.default_value, propertyDefinition.max_length);
@@ -57601,6 +57615,7 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
 
         if((this.documents+evt.length)>this.maxDocuments){
             alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
+            this.reset();
             return;
         }
 
@@ -58418,7 +58433,6 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
         this._editor = new bfree.widget.document.Editor({
             id: 'editor1',
             library: this.library,
-            disableDocumentType: true,
             onValidChange: dojo.hitch(this, this._onValidChange),
             onValueChange: dojo.hitch(this, this._onValueChange)
             //onSubmit: dojo.hitch(this, this._onSubmit)
@@ -59836,7 +59850,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         this.addChild(this._buttons.EDIT);
 
         this._buttons.DELETE = new dijit.MenuItem({
-            label: 'Delete Folder',
+            label: 'Delete',
             disabled: true,
             iconClass: 'menuIcon bfreeIconDeleteFolder',
             onClick: dojo.hitch(this, this._onCommand,
@@ -59864,7 +59878,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
 		mnuCreate.addChild(this._buttons.FLD_CREATE);
 
         this._buttons.DOC_CREATE = new dijit.MenuItem({
-            label: 'Document',
+            label: 'Document(s)...',
             disabled: true,
             iconClass: 'menuIcon bfreeIconNewDocument',
             onClick: dojo.hitch(this, this._onCommand,
@@ -63900,26 +63914,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         this.inherited('startup', arguments);
         this._mnuFolder.startup();
 
-        /*
-        //Can we mixin with "bfree.api.Folder"???;
-        var folderItem = new bfree.api.Folder({
-            id: 0,
-            active_permissions: this.library.active_permissions,
-            name: this.library.name,text_path: '/',
-            created_at: this.library.created_at,
-            updated_at: this.library.updated_at,
-            children: this.rootNode.item.children,
-            path: ['0'],
-            store: this.rootNode.item.store,
-            root: this.rootNode.item.root
-        });
-        this.rootNode.item = folderItem;
-        this.model.root = folderItem;
-
-        this.rootNode.item.children.sort(bfree.api.Folder.sort);
-        this.rootNode.setChildItems(this.rootNode.item.children);
-        */
-
         if(this.isSearchHidden)
             this.hideSearch();
         if(this.isTrashHidden)
@@ -64615,7 +64609,7 @@ bfree.widget.document.PropertyEditor.show = function(args){
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgEditDocument',
-        title: 'Edit Document: ' + reference.name.display_limit(32),
+        title: 'Edit Properties: ' + reference.name.display_limit(32),
         widgetConstructor: bfree.widget.document.PropertyEditor,
         widgetParams: {
             user: args.user,
@@ -64708,7 +64702,7 @@ dojo.declare('bfree.widget.document.version.ContextMenu', bfree.widget.HeaderMen
         this.addChild(this._btnDocView);
 
         this._btnDocCopy = new dijit.MenuItem({
-            label: 'Copy Local...',
+            label: 'Copy Local',
             iconClass: 'menuIcon bfreeIconCopyDocument',
             onClick: dojo.hitch(this, this._onCommand,
                 bfree.widget.Bfree.Commands.COPY,
@@ -65954,24 +65948,30 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
     onDndStart: function(source, nodes, copy){
 
-        if(source === this){
-            //Can't dnd:
-            //- Root folder
-            //- Recycle Bin
-            //- Search
-            //- Shares
-            var canDnd = dojo.every(nodes, function(node, idx){
-                var treeNode = source.getItem(node.id).data;
-                return !(treeNode.item.root || treeNode.item.isTrash() || treeNode.item.isShareRoot() || treeNode.item.isShare() );
-            });
-
-            if(!canDnd){
-                dojo.dnd.manager().stopDrag();
-                return;
-            }
+        if(source !== this){
+            this.inherited('onDndStart', arguments);
+            return;
         }
 
-        this.inherited('onDndStart', arguments);
+        //only drag tree nodes.
+        if(!this.startNode.isInstanceOf(bfree.widget._TreeNode)){
+            dojo.dnd.manager().stopDrag();
+            return;
+        }
+
+        //Can't dnd:
+        //- Root folder
+        //- Recycle Bin
+        //- Search
+        //- Shares
+        var canDnd = dojo.every(nodes, function(node, idx){
+            var treeNode = source.getItem(node.id).data;
+            return !(treeNode.item.isRoot() || treeNode.item.isTrash() || treeNode.item.isShareRoot() || treeNode.item.isShare() );
+        });
+
+        (canDnd) ?
+            this.inherited('onDndStart', arguments) :
+            dojo.dnd.manager().stopDrag();
 
     },
 
@@ -66087,7 +66087,7 @@ dojo.declare('bfree.widget.group.CommandBar', [dijit.Toolbar], {
 
          this._btnSave = new bfree.widget.Button({
                 id: 'btnGroupsSave',
-                label: 'Save Changes...',
+                label: 'Save Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconSave',
@@ -66098,7 +66098,7 @@ dojo.declare('bfree.widget.group.CommandBar', [dijit.Toolbar], {
 
         this._btnUndo = new bfree.widget.Button({
                 id: 'btnGroupsUndo',
-                label: 'Undo Unsaved Changes...',
+                label: 'Undo Unsaved Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconUndo',
@@ -66457,7 +66457,7 @@ dojo.declare('bfree.widget.group.UserBar', [dijit.Toolbar], {
 
         this._btnRemove = new bfree.widget.Button({
                 id: 'btnRemoveUser',
-                label: 'Remove User from Group...',
+                label: 'Remove User from Group',
                 showLabel: false,
                 disabled: false,
                 iconClass: 'sidebarIcon bfreeIconRemove',
@@ -67717,7 +67717,7 @@ dojo.declare('bfree.widget.doctype.CommandBar', dijit.Toolbar, {
 
          this._btnSave = new bfree.widget.Button({
                 id: 'btnPropDefsSave',
-                label: 'Save Changes...',
+                label: 'Save Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconSave',
@@ -67727,7 +67727,7 @@ dojo.declare('bfree.widget.doctype.CommandBar', dijit.Toolbar, {
         this.addChild(this._btnSave);
 
         this._btnUndo = new bfree.widget.Button({
-                label: 'Undo Unsaved Changes...',
+                label: 'Undo Unsaved Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconUndo',
@@ -68026,7 +68026,7 @@ dojo.declare('bfree.widget.doctype.PropMapBar', [dijit.Toolbar], {
 
         this._btnAdd = new bfree.widget.Button({
             id: 'btnAddValue',
-            label: 'Add Value to Choice List...',
+            label: 'Add Value to Document Type...',
             showLabel: false,
             disabled: false,
             iconClass: 'sidebarIcon bfreeIconAdd',
@@ -68037,7 +68037,7 @@ dojo.declare('bfree.widget.doctype.PropMapBar', [dijit.Toolbar], {
 
         this._btnUp = new bfree.widget.Button({
             id: 'btnValueUp',
-            label: 'Move Value up...',
+            label: 'Move Value up',
             showLabel: false,
             disabled: false,
             iconClass: 'sidebarIcon bfreeIconUp',
@@ -68048,7 +68048,7 @@ dojo.declare('bfree.widget.doctype.PropMapBar', [dijit.Toolbar], {
 
         this._btnDown = new bfree.widget.Button({
             id: 'btnValueDown',
-            label: 'Move Value down...',
+            label: 'Move Value down',
             showLabel: false,
             disabled: false,
             iconClass: 'sidebarIcon bfreeIconDown',
@@ -68059,7 +68059,7 @@ dojo.declare('bfree.widget.doctype.PropMapBar', [dijit.Toolbar], {
 
         this._btnRemove = new bfree.widget.Button({
                 id: 'btnRemoveValue',
-                label: 'Remove Value from Choice List...',
+                label: 'Remove Value from Choice List',
                 showLabel: false,
                 disabled: false,
                 iconClass: 'sidebarIcon bfreeIconRemove',
@@ -68154,6 +68154,13 @@ dojo.declare('bfree.widget.propdef.FilterGrid', [bfree.widget._Grid], {
                 items: items
             }
         });
+
+        this._store.comparatorMap={};
+        this._store.comparatorMap["name"]=function(item1, item2){
+            return item1-item2;
+        };
+
+        this._store.save();
 
     },
 
@@ -68342,6 +68349,109 @@ bfree.widget.propdef.List.show = function(args){
 
 }
 
+if(!dojo._hasResource['bfree.widget.Calendar']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.Calendar'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: aarons
+ * Date: 12/04/12
+ * Time: 4:23 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.Calendar');
+
+
+
+
+dojo.declare('bfree.widget.Calendar', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
+    templateString: dojo.cache("bfree/widget", "template/Calendar.html", "<div style=\"height:100%;width:100%\">\n    <div dojoAttachPoint=\"calendarNode\">\n\n    </div>\n</div>\n"),
+    widgetsInTemplate: true,
+
+    _calendar: null,
+
+    _loadItem: function(){
+
+        try{
+
+        }
+        finally{
+            this.onWidgetLoaded();
+        }
+
+    },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+        this.inherited('destroy', arguments);
+    },
+
+    isValid: function(){
+        return true;
+    },
+
+    onDialogClosing: function(dlgResult){
+        return true;
+    },
+
+
+    onLoaded: function(){
+    },
+
+    postCreate: function(){
+        this._calendar=new dijit.Calendar({
+            value: new Date(),
+            onChange: dojo.hitch(this, this._onChange),
+            zIndex: 2050
+        }, this.calendarNode);
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+        setTimeout(bfree.widget.Calendar._loadFnRef(this), 10);
+    },
+
+    _onChange: function(date){
+        this.onDateSelected(date);
+        this.dialog._onClose(bfree.widget.Dialog.dialogResult.ok);
+    },
+
+    onDateSelected: function(date){
+    }
+
+
+});
+
+bfree.widget.Calendar._loadFnRef = function(that){
+    return ( function() {
+       that._loadItem();
+    });
+}
+
+bfree.widget.Calendar.show = function(args){
+
+    var dlg = new bfree.widget.Dialog({
+        id: 'dlgCalendar',
+        title: 'Choose A Date...',
+        widgetConstructor: bfree.widget.Calendar,
+        widgetParams: {
+            onDateSelected: args.onDateSelected
+        },
+        buttons: bfree.widget.Dialog.buttons.none,
+        noResize: true,
+        width: 180,
+        height: 240,
+        zIndex: 2048
+    });
+    dlg.startup();
+    dlg.show();
+
+}
+
+}
+
 if(!dojo._hasResource['bfree.widget.doctype.Editor']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.widget.doctype.Editor'] = true;
 /**
@@ -68352,6 +68462,7 @@ dojo._hasResource['bfree.widget.doctype.Editor'] = true;
  * To change this template use File | Settings | File Templates.
  */
 dojo.provide('bfree.widget.doctype.Editor');
+
 
 
 
@@ -68500,6 +68611,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
                     data_type: dataType,
                     is_required: item.is_required,
                     default_value: item.default_value,
+                    default_type: item.default_type,
                     choice_list_id: item.choice_list_id,
                     is_system: propDef.is_system,
                     is_name: propDef.is_name
@@ -68561,6 +68673,8 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
                         newValue=null;
                     }
                     this._propMapStore.setValue(item, 'choice_list_id', newValue);
+                    this._propMapStore.setValue(item, 'default_type', 0);
+                    this._propMapStore.setValue(item, 'default_value', null);
                 })
         });
 
@@ -68620,7 +68734,8 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
             sort_order: this._propMapStore.getValue(newItem, 'sort'),
             property_definition_id: this._propMapStore.getIdentity(newItem),
             is_required: false,
-            choice_list_id: null
+            choice_list_id: null,
+            default_type: 0
         });
         this.onValueChange(this.activeItem, 'property_mappings', [], this.activeItem.property_mappings);
 
@@ -68785,19 +68900,45 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
                 if(this.activeItem.property_mappings[i].default_value!=newValue){
                     this.activeItem.property_mappings[i].default_value=newValue;
                     this.documentTypes.setValue(this.activeItem, 'property_mappings', this.activeItem.property_mappings);
-//                    this.activeItem.property_mappings[i].default_value=newValue;
                 }
             }
         }
-//        this._propMapStore.fetchItemByIdentity({
-//            identity: id,
-//            onItem: dojo.hitch(this,
-//                function(item){
-//                    var value = this._propMapStore.getValue(item, 'default_value');
-//                    if(value != newValue)
-//                        this._propMapStore.setValue(item, 'default_value', newValue);
-//                })
-//        });
+    },
+
+    _wdgDefaultDate_onChange: function(id, newValue){
+
+        var item = null;
+        for(var i in this.activeItem.property_mappings){
+            if(this.activeItem.property_mappings[i].property_definition_id==id){
+                this.activeItem.property_mappings[i].default_type=newValue;
+                if(newValue==bfree.api.PropertyMapping.types.date.fixed){
+                    //fixed selected, popup a date selection box
+                    this.activeItem.property_mappings[i].default_type=bfree.api.PropertyMapping.types.date.fixed;
+                    bfree.widget.Calendar.show({
+                        onDateSelected: dojo.hitch(this, function(newDate){
+                            this.activeItem.property_mappings[i].default_value=newDate;
+                            this._setStore();
+                            this._grdPropertyMappings.refresh();
+                        })
+                    });
+                }else if(newValue==bfree.api.PropertyMapping.types.date.floating){
+                    //floating was selected, just set default type to 1 (floating) and value to 0 (today),
+                    //as of right now we only support today for the floating date type, but other default values
+                    //will add the specified number of days to the current date
+                    this.activeItem.property_mappings[i].default_value=0;
+                }else if(newValue==-1){
+                    //none was selected, set default type to fixed and default value to null;
+                    this.activeItem.property_mappings[i].default_type=bfree.api.PropertyMapping.types.date.fixed;
+                    this.activeItem.property_mappings[i].default_value=null;
+                }else{
+                    //the existing date value was selected, this is to allow the user to click on the default date
+                    //that is currently selected, since this is the current default value, do nothing;
+                    return;
+                }
+                this.documentTypes.setValue(this.activeItem, 'property_mappings', this.activeItem.property_mappings);
+                return;
+            }
+        }
     },
 
     constructor: function(args){
@@ -69014,27 +69155,93 @@ bfree.widget.doctype.Editor.generateDefaultWidget = function(default_value, rowI
     var item = this._grdPropertyMappings.getItem(rowIndex);
 	var isDirty = this.documentTypes.isDirty({ item: this.activeItem });
     var dataType = this._propMapStore.getValue(item, 'data_type');
+    var defaultType = this._propMapStore.getValue(item, 'default_type');
 
 	if(isDirty){
         if(item.choice_list_id[0]!=null){
             var choiceList = this.choiceLists.fetchById({id: item.choice_list_id[0] });
-            wdg=bfree.widget.propdef.Widget.getChoiceListWidget(null, '', choiceList, true);
+            wdg=bfree.widget.propdef.Widget.getChoiceListWidget(null, '', choiceList, true, default_value);
             wdg.onChange = dojo.hitch(this, this._wdgDefault_onChange, this._propMapStore.getIdentity(item));
             wdg.set('style', {width: '128px'});
             wdg.set('required', false);
         }else{
-            wdg = bfree.widget.propdef.Widget.getWidget(dataType, null, '', bfree.widget.propdef.Widget.formats.SHORT, default_value);
-            wdg.set('intermediateChanges', false);
-            wdg.onChange = dojo.hitch(this, this._wdgDefault_onChange, this._propMapStore.getIdentity(item));
+            if(dataType.isDateTime()){
+                wdg = bfree.widget.doctype.Editor.generateDateTimeDefaultWidget(default_value, defaultType);
+                wdg.onChange = dojo.hitch(this, this._wdgDefaultDate_onChange, this._propMapStore.getIdentity(item));
+            }else{
+                wdg = bfree.widget.propdef.Widget.getWidget(dataType, null, '', bfree.widget.propdef.Widget.formats.SHORT, default_value);
+                wdg.set('intermediateChanges', false);
+                wdg.onChange = dojo.hitch(this, this._wdgDefault_onChange, this._propMapStore.getIdentity(item));
+            }
         }
 
 	}
     else{
-        wdg = (!default_value) ? '' : default_value;
+        if(dataType.isDateTime()&&default_value){
+            if(defaultType==bfree.api.PropertyMapping.types.date.floating){
+                wdg = "Current Date";
+            }else{
+                wdg = versa.api.Formatter.formatDateTime(default_value);
+            }
+        }else{
+            wdg = (!default_value) ? '' : default_value;
+        }
     }
 
 	return wdg;
 };
+
+bfree.widget.doctype.Editor.generateDateTimeDefaultWidget = function(defaultValue, defaultType){
+    var items = [];
+
+    items.push({
+        id: -1,
+        display: "None"
+    });
+
+    items.push({
+        id: 0,
+        display: "Fixed Date"
+    });
+
+    items.push({
+        id: 1,
+        display: "Current Date"
+    });
+
+    if(defaultValue&&defaultType==bfree.api.PropertyMapping.types.date.fixed){
+        items.push({
+            id: defaultValue,
+            display: versa.api.Formatter.formatDateTime(defaultValue)
+        })
+    }
+
+    var store = new bfree.api.ItemFileWriteStore({
+        data: {
+            identifier: 'id',
+            label: 'display',
+            items: items
+        }
+    });
+
+    var def//=defaultType==bfree.api.PropertyMapping.types.date.fixed&&defaultValue?defaultValue:defaultType;
+    if(defaultType==bfree.api.PropertyMapping.types.date.fixed){
+        def=defaultValue?defaultValue:-1;
+    }else{
+        def=bfree.api.PropertyMapping.types.date.floating
+    }
+
+    var wdg = new bfree.widget.FilteringSelect({
+        query: {},
+        store: store,
+        value: def,
+        scrollOnFocus: false,
+        searchAttr: 'display',
+        style: 'width:100%'
+    });
+
+    return wdg;
+}
 
 bfree.widget.doctype.Editor.generateRequiredWidget = function(is_required, rowIndex){
 
@@ -69626,7 +69833,7 @@ bfree.widget.doctype.Administration._loadFnRef = function(that){
 bfree.widget.doctype.Administration.show = function(args){
     var dlg = new bfree.widget.Dialog({
         id: 'dlgEditDocTypes',
-        title:'Document Types',
+        title:'Document Type Administration',
         widgetConstructor: bfree.widget.doctype.Administration,
         widgetParams: {
             activeUser: args.user,
@@ -69743,7 +69950,7 @@ dojo.declare('bfree.widget.propdef.CommandBar', [dijit.Toolbar], {
 
         this._btnSave = new bfree.widget.Button({
                 id: 'btnPropDefsSave',
-                label: 'Save Changes...',
+                label: 'Save Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconSave',
@@ -69753,7 +69960,7 @@ dojo.declare('bfree.widget.propdef.CommandBar', [dijit.Toolbar], {
         this.addChild(this._btnSave);
 
         this._btnUndo = new bfree.widget.Button({
-                label: 'Undo Unsaved Changes...',
+                label: 'Undo Unsaved Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconUndo',
@@ -72116,7 +72323,7 @@ dojo.declare('bfree.widget.user.CommandBar', [dijit.Toolbar], {
 
          this._btnSave = new bfree.widget.Button({
                 id: 'btnUsersSave',
-                label: 'Save Changes...',
+                label: 'Save Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconSave',
@@ -72127,7 +72334,7 @@ dojo.declare('bfree.widget.user.CommandBar', [dijit.Toolbar], {
 
         this._btnUndo = new bfree.widget.Button({
                 id: 'btnUsersUndo',
-                label: 'Undo Unsaved Changes...',
+                label: 'Undo Unsaved Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconUndo',
@@ -73341,7 +73548,7 @@ dojo.declare('bfree.widget.view.CommandBar', [dijit.Toolbar], {
 
         this._btnSave = new bfree.widget.Button({
                 id: 'btnViewDefsSave',
-                label: 'Save Changes...',
+                label: 'Save Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconSave',
@@ -73351,7 +73558,7 @@ dojo.declare('bfree.widget.view.CommandBar', [dijit.Toolbar], {
         this.addChild(this._btnSave);
 
         this._btnUndo = new bfree.widget.Button({
-                label: 'Undo Unsaved Changes...',
+                label: 'Undo Unsaved Changes',
                 showLabel: false,
                 disabled: true,
                 iconClass: 'commandIcon bfreeIconUndo',
@@ -73643,7 +73850,7 @@ dojo.declare('bfree.widget.view.CellBar', [dijit.Toolbar], {
 
         this._btnUp = new bfree.widget.Button({
             id: 'btnCellUp',
-            label: 'Move Column to the left...',
+            label: 'Move Column to the left',
             showLabel: false,
             disabled: false,
             iconClass: 'sidebarIcon bfreeIconUp',
@@ -73654,7 +73861,7 @@ dojo.declare('bfree.widget.view.CellBar', [dijit.Toolbar], {
 
         this._btnDown = new bfree.widget.Button({
             id: 'btnCellDown',
-            label: 'Move Column to the right...',
+            label: 'Move Column to the right',
             showLabel: false,
             disabled: false,
             iconClass: 'sidebarIcon bfreeIconDown',
@@ -73665,7 +73872,7 @@ dojo.declare('bfree.widget.view.CellBar', [dijit.Toolbar], {
 
         this._btnRemove = new bfree.widget.Button({
                 id: 'btnRemoveCell',
-                label: 'Remove Column from View...',
+                label: 'Remove Column from View',
                 showLabel: false,
                 disabled: false,
                 iconClass: 'sidebarIcon bfreeIconRemove',
@@ -75179,7 +75386,7 @@ bfree.widget.view.Administration._loadFnRef = function(that){
 bfree.widget.view.Administration.show = function(args){
     var dlg = new bfree.widget.Dialog({
         id: 'dlgEditViewDefs',
-        title: 'View Definitions',
+        title: 'View Administration',
         widgetConstructor: bfree.widget.view.Administration,
         widgetParams: {
             activeUser: args.user,
@@ -75342,7 +75549,7 @@ dojo.declare('bfree.widget.zone.ExportMenu', dijit.Menu,
         this.addChild(
 			new dijit.MenuItem({
                 iconClass: 'menuIcon bfreeIconPrint',
-				label: 'Printable Version...',
+				label: 'Printable Version',
 				onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.PRINT)
 			})
 		);
@@ -75599,7 +75806,7 @@ dojo.declare('bfree.widget.zone.CommandBar', [dijit.Toolbar], {
         this.addChild(this._btnDocView);
 
         this._btnDocCopy = new bfree.widget.Button({
-            label: 'Copy Local...',
+            label: 'Copy Local',
             showLabel: false,
             disabled: true,
             iconClass: 'commandIcon32 bfreeIconCopyDocument32',
@@ -75915,10 +76122,9 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
                 bfree.widget.Bfree.ObjectTypes.FOLDER
             )
         });
-        this._mnuNewItems.addChild(this._mniFolder);
 
         this._mniDocument = new dijit.MenuItem({
-            label: 'Document(s)',
+            label: 'Document(s)...',
             disabled: true,
             iconClass: 'menuIcon bfreeIconDocument',
             onClick: dojo.hitch(this, this._onCommand,
@@ -75927,6 +76133,8 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
             )
         });
         this._mnuNewItems.addChild(this._mniDocument);
+        this._mnuNewItems.addChild(this._mniFolder);
+
 
         this._mniShare = new dijit.MenuItem({
             label: 'Share...',
@@ -75940,7 +76148,7 @@ dojo.declare('bfree.widget.zone.Toolbar', [dijit._Widget, dijit._Templated],{
         this._mnuNewItems.addChild(this._mniShare);
 
         this._btnNew = new dijit.form.DropDownButton({
-            label: 'Add New...',
+            label: 'Add New',
             showLabel: true,
             scrollOnFocus: false,
             dropDown: this._mnuNewItems
@@ -76149,7 +76357,7 @@ dojo.declare('bfree.widget.document.Info', [dijit._Widget, dijit._Templated],{
         var name = '';
         var itemData = null;
 
-        if(!item.isInstanceOf(bfree.api.Document))
+        if(!(item.isInstanceOf(bfree.api.Document) || item.isInstanceOf(bfree.api.Reference)))
             return;
 
         if(this.items.length == 1){
@@ -76182,7 +76390,11 @@ dojo.declare('bfree.widget.document.Info', [dijit._Widget, dijit._Templated],{
             this._tblProperties.refresh();
         }
 
-        delete this._itemMap[item.getId()];
+        var id = item.isInstanceOf(bfree.api.Document) ?
+                        item.getId() :
+                        item.document_id;
+
+          delete this._itemMap[id];
         if(Object.keys(this._itemMap).length < 1)
             this.setBusy(false);
 
@@ -76926,7 +77138,9 @@ dojo.provide('versa.widget.reference.dnd.Source');
 
 
 dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
+
     selfAccept: false,
+    grid: null,
 
     _dndCreator: function(item, hint){
         var node = null;
@@ -76972,6 +77186,11 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
 
     constructor: function(node, params){
         this.creator = dojo.hitch(this, this._dndCreator);
+        this.grid = params.grid;
+    },
+
+    copyState: function(){
+        return false;
     },
 
     onDndStart: function(source, nodes, copy){
@@ -76981,6 +77200,8 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
             return;
         }
 
+        this.grid._deferSelect = false;
+
         //Don't allow deleted items to be dragged (for now)
         //- Don't allow 'share' references to be DnD'd
         var canDnd = dojo.every(nodes, function(node, idx){
@@ -76988,13 +77209,10 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
             return !(item.isDeleted() || item.isShare());
         });
 
-
-        if(!canDnd){
+        (canDnd) ?
+            this.inherited('onDndStart', arguments) :
             dojo.dnd.manager().stopDrag();
-        }
-        else{
-            this.inherited('onDndStart', arguments);
-        }
+
     }
 
 
@@ -77002,7 +77220,6 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
 });
 
 versa.widget.reference.dnd.Source.creator = function(node, hint){
-    console.log('create');
     var n = dojo.create('div', {innerHTML: node})
     return {node: n, data: node};
 };
@@ -77152,7 +77369,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
         this.addChild(this._buttons.VIEW);
 
         this._buttons.COPY = new dijit.MenuItem({
-            label: 'Copy Local...',
+            label: 'Copy Local',
             disabled: true,
             iconClass: 'menuIcon bfreeIconCopyDocument',
             onClick: dojo.hitch(this, this._onCommand,
@@ -77162,7 +77379,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
 		this.addChild(this._buttons.COPY);
 
         this._buttons.EDIT = new dijit.MenuItem({
-			label: 'Edit Properties',
+			label: 'Edit Properties...',
             disabled: true,
 			iconClass: 'menuIcon bfreeIconEditDocument',
 			onClick: dojo.hitch(this, this._onCommand,
@@ -77208,7 +77425,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
         this.addChild(this._buttons.CKO);
 
 		this._buttons.CKI = new dijit.MenuItem({
-            label: 'Checkin',
+            label: 'Checkin...',
             disabled: true,
             iconClass: 'menuIcon bfreeIconCkiDocument',
             onClick: dojo.hitch(this, this._onCommand,
@@ -77310,6 +77527,9 @@ dojo.provide('versa.widget.reference.Grid');
 
 dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
+    _sourceIndex: -1,
+    _deferSelect: false,
+
     _dndSource: null,
     _lastSelected: null,
     _mnuReference: null,
@@ -77324,7 +77544,7 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         this.setQuery(query, {cache: false});
         this.resize();
         this.setSelectedIndex(0, true);
-        this._lastSelected = this.getItem(0);
+        this._sourceIndex = 0;
         this.onQueryComplete();
     },
 
@@ -77439,7 +77659,8 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
         if(this._dndSource) this._dndSource.destroy();
         this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
-            accept:[]
+            accept:[],
+            grid: this
         });
 
         this._mnuViews.set('activeView', this.activeView);
@@ -77537,38 +77758,29 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
     },
 
-    /*
-    onRowClick: function(evt){
+
+    //Attempt to make grid selection work with DnD (Based on Windows7 behaviour)
+    onRowClick: function(evt){;
+
+        if(this._deferSelect){
+            this.selection.clickSelect(evt.rowIndex, evt.ctrlKey, evt.shiftKey);
+        }
+
         dojo.stopEvent(evt);
     },
 
     onRowMouseDown: function(evt){
-        //this.inherited('onRowMouseDown', arguments);
 
-        if(evt.ctrlKey){
-            this._lastSelected = this.getItem(evt.rowIndex);
-            this.selection.addToSelection(evt.rowIndex);
-        }
-        else if(evt.shiftKey){
-            var idx = this.getItemIndex(this._lastSelected);
-            this.selection.clear();
-            this.selection.selectRange(idx, evt.rowIndex);
-        }
-        else{
-            var rowItem = this.getItem(evt.rowIndex);
-            var forceSelect = (rowItem === this._lastSelected);
-            this.selection.select(evt.rowIndex);            ;
-            if(forceSelect) this.onSelectedItems(this.selection.getSelected());
-            this._lastSelected = rowItem;
-        }
+        this._deferSelect = this.selection.isSelected(evt.rowIndex);
+        if(!this._deferSelect)
+            this.selection.clickSelect(evt.rowIndex, evt.ctrlKey, evt.shiftKey);
 
     },
-    */
 
     onRowDblClick: function(evt){
 
         if(evt.rowIndex < 0){
-            evt.cancelBubble = true;
+            dojo.stopEvent(evt);
             return;
         }
 
@@ -77687,7 +77899,8 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         this.setStore(this.activeLibrary.getReferences().store, { type: bfree.api.Search.types.NONE });
 
         this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
-            accept:[]
+            accept:[],
+            grid: this
         });
 
     }
@@ -89618,29 +89831,26 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         if(this.activeType == bfree.widget.Bfree.ObjectTypes.DOCUMENT){
             this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.DOCUMENT, items);
 
-            dojo.forEach(items, function(item, idx){
-                this.activeLibrary.getDocuments().refreshAsync({
-                    scope: this,
-                    identity: item.document_id,
-                    onItem: this.__onDocumentLoad,
-                    onError: this.__onDocumentLoadError
-                });
-            }, this);
+            //TODO: don't really like how this works...come up with better way to
+            //display items in info pane.
+            //Only load info if a single document is selected...
+            //to many queries to server if many documents selected.
+            if(items.length <= 1){
+                dojo.forEach(items, function(item, idx){
+                    this.activeLibrary.getDocuments().refreshAsync({
+                        scope: this,
+                        identity: item.document_id,
+                        onItem: this.__onDocumentLoad,
+                        onError: this.__onDocumentLoadError
+                    });
+                }, this);
+            }
+            else{
+                dojo.forEach(items, function(item, idx){
+                    this.__onDocumentLoad(item);
+                }, this);
+            }
 
-            /*
-            dojo.forEach(items, function(item, idx){
-
-
-
-                this.activeLibrary.getDocuments().store.fetchItemByIdentity({
-                    scope: this,
-                    identity: item.document_id,
-                    onItem: this.__onDocumentLoad,
-                    onError: this.__onDocumentLoadError
-                });
-
-            }, this);
-            */
 
         }
 
@@ -89661,6 +89871,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         this._cmdBar.set('activeFolder', this.activeFolder);
         this._grdDocuments.set('activeFolder', item);
 
+        //this.activeFolder.document_count = this._grdDocuments.rowCount;
+
         if(this.activeType == bfree.widget.Bfree.ObjectTypes.FOLDER){
             //Load folder from server if it is a reference.
             this.activeLibrary.getFolders().loadItem({
@@ -89672,19 +89884,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 }
             });
         }
-        return;
-
-        this.activeFolder.document_count = this._grdDocuments.rowCount;
-
-        //Load folder from server if it is a reference.
-        this.activeLibrary.getFolders().loadItem({
-            item: this.activeFolder,
-            scope: this,
-            onItem: this.__onFolderLoad,
-            onError: function(errData){
-                this.__onFolderLoadError(item, new bfree.api.Error(errData.responseText, errData));
-            }
-        });
 
     },
 

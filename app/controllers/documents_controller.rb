@@ -172,9 +172,7 @@ class DocumentsController < ApplicationController
           :state => Bfree::DocumentStates.CheckedIn,
           :created_by => @active_user.name,
           :updated_by => @active_user.name,
-          :versions => [
-            @version
-          ]
+          :versions => [ @version ]
       })
 
       @document.update_metadata(params)
@@ -193,8 +191,7 @@ class DocumentsController < ApplicationController
         :folder_id => (@folder.nil? ? 0 : @folder.id)
       })
 
-      #@document[:active_permissions] = @document.acl.get_role(@active_user, @active_group).permissions
-      @document.delay.extract_content()
+      @document.extract_content()
 
     end
 
@@ -227,14 +224,14 @@ class DocumentsController < ApplicationController
           :updated_by => @active_user.name,
           :state => params[:state],
           :folder_id => params[:folder_id],
-          :document_type_id => params[:document_type_id]
+          :document_type_id => params[:document_type_id],
+          :custom_metadata => nil
       )
 
       @document_type=DocumentType.find(@document.document_type_id)
       @document.document_type_name = @document_type.name
 
       @document.update_metadata(params)
-      @document.custom_metadata = @document.generate_custom_metadata()
 
       unless @document.save
         raise @document.errors

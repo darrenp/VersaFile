@@ -7,7 +7,7 @@ require 'prawn'
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 4
-configatron.bfree.build_number = 2401
+configatron.bfree.build_number = 2501
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
 
@@ -25,8 +25,6 @@ Pony.options = {:via => :smtp, :via_options => {
   :authentication       => :login #:plain#, # :plain, :login, :cram_md5, no auth by default
   #:domain               => "localhost.localdomain" # the HELO domain provided by the client to the server
 }}
-
-
 
 module Bfree
 

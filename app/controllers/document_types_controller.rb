@@ -107,7 +107,8 @@ class DocumentTypesController < ApplicationController
               :sort_order => property_mapping[:sort_order],
               :is_required => property_mapping[:is_required],
               :choice_list_id => property_mapping[:choice_list_id],
-              :default_value => property_mapping[:default_value]
+              :default_value => property_mapping[:default_value],
+              :default_type => property_mapping[:default_type]
           )
         end
 
@@ -155,7 +156,8 @@ class DocumentTypesController < ApplicationController
               :sort_order => property_mapping[:sort_order],
               :is_required => property_mapping[:is_required],
               :choice_list_id => property_mapping[:choice_list_id],
-              :default_value => property_mapping[:default_value]
+              :default_value => property_mapping[:default_value],
+              :default_type => property_mapping[:default_type]
           )
         end
 

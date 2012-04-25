@@ -318,6 +318,7 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/doctype/PropMapBar.js
 ./../../../dojo-1.6.1.p/bfree/widget/propdef/FilterGrid.js
 ./../../../dojo-1.6.1.p/bfree/widget/propdef/List.js
+./../../../dojo-1.6.1.p/bfree/widget/Calendar.js
 ./../../../dojo-1.6.1.p/bfree/widget/doctype/Editor.js
 ./../../../dojo-1.6.1.p/bfree/widget/doctype/Grid.js
 ./../../../dojo-1.6.1.p/bfree/widget/doctype/Administration.js
