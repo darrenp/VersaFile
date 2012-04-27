@@ -3,7 +3,7 @@
 <div    dojoType="dijit.layout.BorderContainer"
         design="headline"
         gutters="false"
-        style="padding:0px 8px 4px 8px;height:100%;width:100%;">
+        style="padding:0px;height:100%;width:100%;">
 
      <div   dojoType="dijit.layout.ContentPane"
             region="top"
@@ -21,11 +21,19 @@
             region="center">
 
         <div    dojoType="dijit.layout.ContentPane"
+                dojoAttachPoint="midTitlePane"
+                region="top"
+                splitter="false"
+                class="versaMidHeader"
+                style="height:16px;padding:4px 8px 4px 8px;position:relative;">
+            Custom Properties
+        </div>
+
+        <div    dojoType="dijit.layout.ContentPane"
                 splitter="false"
                 region="center"
                 splitter="true"
-                class="highlightPane"
-                style="padding:8px">
+                style="padding:0">
 
            <div dojoAttachPoint="editorNode"></div>
 
@@ -34,7 +42,7 @@
         <div    dojoType="dijit.layout.ContentPane"
                 region="bottom"
                 splitter="false"
-                style="padding:8px;overflow:hidden;height:128px">
+                style="padding:0 8px 0 16px;;overflow:hidden;height:128px">
 
              <div dojoAttachPoint="infoNode"></div>
 

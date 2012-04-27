@@ -151,10 +151,10 @@ class ReferencesController < ApplicationController
         @query = @library.references.viewable(@active_user, @active_group).in_folder(@folder).not_deleted
       when Bfree::SearchTypes.Simple
           @simple_text = params[:query]
-          @query = @library.references.viewable(@active_user, @active_group).simple(@simple_text).not_deleted
+          @query = @library.references.viewable(@active_user, @active_group).simple(@simple_text).not_deleted.content
       when Bfree::SearchTypes.Advanced
         @advanced = ActiveSupport::JSON.decode(params[:query])
-        @query = @library.references.viewable(@active_user, @active_group).advanced(@library, @advanced).not_deleted
+        @query = @library.references.viewable(@active_user, @active_group).advanced(@library, @advanced).not_deleted.content
       when Bfree::SearchTypes.Trash
         @query = @library.references.viewable(@active_user, @active_group).deleted
     end
@@ -296,15 +296,18 @@ class ReferencesController < ApplicationController
    #PUT /references/1/restore.json
   def restore
 
-     @reference = @library.references.viewable(@active_user, @active_group).full.find(params[:id])
+    @folder = nil
+    @reference = @library.references.viewable(@active_user, @active_group).full.find(params[:id])
 
     #CHECK PERMISSIONS HERE
     unless Acl.has_rights(@reference.active_permissions, Bfree::Acl::Permissions.Delete)
       raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Delete)
     end
 
+    @folder = @library.folders.viewable(@active_user, @active_group).find_by_id(params[:folder_id]) unless params[:folder_id].nil?
+
     Reference.transaction do
-      @reference.soft_restore(@active_user)
+      @reference.soft_restore(@folder, @active_user)
     end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)

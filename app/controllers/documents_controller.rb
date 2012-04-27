@@ -191,7 +191,7 @@ class DocumentsController < ApplicationController
         :folder_id => (@folder.nil? ? 0 : @folder.id)
       })
 
-      @document.extract_content()
+      @document.delay.extract_content()
 
     end
 

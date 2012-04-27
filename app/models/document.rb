@@ -237,6 +237,9 @@ class Document < ActiveRecord::Base
 
   def update_metadata(properties)
 
+    #clear ALL custom properties first (in case document type has changed)
+    self.clear_metadata
+
     #for each of the properties...
     properties.each do |property|
       prp_name = property[0]
@@ -369,8 +372,47 @@ protected
        self.update_attribute(:custom_metadata, self.generate_custom_metadata()) if self.custom_metadata.nil?
   end
 
-private
+  def clear_metadata
 
+    #Strings
+    Bfree::ColumnMaximum.StringMax.times do |n|
+      column_name = "prp_str%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Booleans
+    Bfree::ColumnMaximum.BooleanMax.times do |n|
+      column_name = "prp_bln%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Integers
+    Bfree::ColumnMaximum.IntegerMax.times do |n|
+      column_name = "prp_int%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Floats
+    Bfree::ColumnMaximum.FloatMax.times do |n|
+      column_name = "prp_flt%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Dates
+    Bfree::ColumnMaximum.DateTimeMax.times do |n|
+      column_name = "prp_dtt%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Text
+    Bfree::ColumnMaximum.TextMax.times do |n|
+      column_name = "prp_txt%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+  end
+
+private
 
 
   def self.merge(document, data)

@@ -6548,6 +6548,32 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
     library: null,
     state: 0x0000,  //NONE
 
+    clean_properties: function(args){
+        var library = args.library;
+
+        var document_type = library.getDocumentTypes().fetchById({id: this.document_type_id});
+
+        //For each property
+        for(var p in this){
+            //exclude functions
+            if(!dojo.isFunction(this[p])){
+                //retrieve the property_definition based on dbName (only lookup documents.*)
+                var dbName = dojo.replace('documents.{0}', [p]);
+                var property_definition = library.getPropertyDefinitions().fetchByDbName(dbName);
+
+                //Exclude if property wasn't found or is a system property
+                if((property_definition) && (!property_definition.is_system)){
+                    //if current document type does not include property, delete it.
+                    if(!document_type.hasProperty(property_definition.id)){
+                        delete this[p];
+                    }
+                }
+
+            }
+        }
+
+    },
+
     constructor: function(args){
         dojo.safeMixin(this, ((!args) ? { } : args));
 
@@ -6621,7 +6647,7 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
     },
 
     getState: function(stateFlag){
-       return ((this.state & stateFlag) == stateFlag);
+       return bfree.api.Document._isState(this.state, stateFlag);
     },
 
     getVersions: function(args){
@@ -6735,59 +6761,56 @@ bfree.api.Document.getIconUrl = function(content_type, size){
     return dojo.replace('/icons/{0}?size={1}', [encodeURIComponent(content_type), size]);
 }
 
-bfree.api.Document.getStateIcon = function(state){
-    var icon = 'none.16.png';
+bfree.api.Document._isState = function(stateMask, stateFlag){
+    return ((stateMask & stateFlag) == stateFlag);
+}
 
-    switch(state){
-        case (bfree.api.Document.states.PENDING || bfree.api.Document.states.UPLOADED):
-            icon = 'pending.16.gif';
-            break;
-        case bfree.api.Document.states.PENDING:
-            icon = 'pending.16.gif';
-            break;
-        case bfree.api.Document.states.UPLOADED:
-            icon = 'uploaded.16.png';
-            break;
-        case bfree.api.Document.states.CHECKED_IN:
-            icon = 'cki.16.png';
-            break;
-        case bfree.api.Document.states.INVALID:
-            icon = 'invalid.16.png';
-            break;
-        case bfree.api.Document.states.ERROR:
-            icon = 'error.16.png'
-            break;
+bfree.api.Document.getStateIcon = function(stateMask){
+
+    var icon = 'none.16.png'
+
+    if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.ERROR)){
+        icon = 'error.16.png'
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.INVALID)){
+        icon = 'invalid.16.png';
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.CHECKED_IN)){
+        icon = 'cki.16.png';
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.PENDING)){
+        icon = 'pending.16.gif';
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.UPLOADED)){
+        icon = 'uploaded.16.png'
     }
 
     return icon;
 }
 
-bfree.api.Document.getStateMessage = function(state){
+bfree.api.Document.getStateMessage = function(stateMask){
     var msg = '';
 
-    switch(state){
-        case (bfree.api.Document.states.PENDING || bfree.api.Document.states.UPLOADED):
-            msg = 'The file is being added to VersaFile';
-            break;
-        case bfree.api.Document.states.PENDING:
-            msg = 'Uploading...';
-            break;
-        case bfree.api.Document.states.UPLOADED:
-            msg = 'The file has been uploaded and is ready for checkin';
-            break;
-        case bfree.api.Document.states.CHECKED_IN:
-            msg = 'The file has been added to VersaFile';
-            break;
-        case bfree.api.Document.states.INVALID:
-            msg = 'The file contains missing or invalid property values';
-            break;
-        case bfree.api.Document.states.ERROR:
-            msg = 'An error occurred';
-            break;
+    if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.ERROR)){
+        msg = 'An error occurred';
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.INVALID)){
+        msg = 'The file contains missing or invalid property values';
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.CHECKED_IN)){
+        msg = 'The file has been added to VersaFile';
+    }
+    else if(bfree.api.Document._isState(stateMask, (bfree.api.Document.states.PENDING | bfree.api.Document.states.UPLOADED))){
+        msg = 'The file is being added to VersaFile';
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.PENDING)){
+        msg = 'Uploading...';;
+    }
+    else if(bfree.api.Document._isState(stateMask, bfree.api.Document.states.UPLOADED)){
+        msg = 'The file has been uploaded and is ready for checkin';
     }
 
     return msg;
-
 }
 
 bfree.api.Document.VW_TRGT = '/zones/{0}/libraries/{1}/documents/{2}/download/?disposition=inline';
@@ -7218,6 +7241,15 @@ dojo.declare('bfree.api.DocumentType', [bfree.api._Object], {
         return true;
     },
 
+    hasProperty: function(id){
+
+        var has = dojo.some(this.property_mappings, function(mapping, idx){
+            return (mapping.property_definition_id == id);
+        }, this);
+
+        return has;
+    },
+
     isValid: function(){
         var isValid = true;
 
@@ -7517,6 +7549,10 @@ dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
         prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL) && (!this.isSpecial() || this.isShare()));
 
         return prmSet;
+    },
+
+    isContent: function(){
+        return (this.folder_type == bfree.api.Folder.FolderTypes.CONTENT);
     },
 
     isRoot: function(){
@@ -8073,6 +8109,32 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
     zone: null,
     library: null,
 
+    clean_properties: function(args){
+        var library = args.library;
+
+        var document_type = library.getDocumentTypes().fetchById({id: this.document_type_id});
+
+        //For each property
+        for(var p in this){
+            //exclude functions
+            if(!dojo.isFunction(this[p])){
+                //retrieve the property_definition based on dbName (only lookup documents.*)
+                var dbName = dojo.replace('documents.{0}', [p]);
+                var property_definition = library.getPropertyDefinitions().fetchByDbName(dbName);
+
+                //Exclude if property wasn't found or is a system property
+                if((property_definition) && (!property_definition.is_system)){
+                    //if current document type does not include property, delete it.
+                    if(!document_type.hasProperty(property_definition.id)){
+                        delete this[p];
+                    }
+                }
+
+            }
+        }
+
+    },
+
     constructor: function(args){
         dojo.safeMixin(this, ((!args) ? { } : args));
         this.securable_type = bfree.api._Securable.types.Reference;
@@ -8194,7 +8256,9 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
         var library = args.library;
 
         var url = dojo.replace(bfree.api.Reference.RESTORE_TRGT,  [zone.subdomain, library.getId(), this.getId()]);
-        var putData = {};
+        var putData = {
+            folder_id: (args.folder) ? args.folder.id : null
+        };
 
         var result = bfree.api.XhrHelper.doPutAction({
             target: url,
@@ -9323,7 +9387,6 @@ bfree.api.ViewDefinition._getVersionAttrFn = function(rowIndex, item){
     }
     return (!value) ? '' : value;
 };
-
 
 
 bfree.api.ViewDefinition.compare=function(viewA, viewB){
@@ -29896,7 +29959,8 @@ dojo.provide("dojox.grid._View");
 								this.grid.headerMenu.onCancel(true);
 							}
 							// IE reports a left click as 1, where everything else reports 0
-							if(e.button === (dojo.isIE ? 1 : 0)){
+							//if(e.button === (dojo.isIE ? 1 : 0)){
+                            if(dojo.mouseButtons.isLeft(e)){
 								dojo.dnd.Source.prototype.onMouseDown.call(this.source, e);
 							}
 						}
@@ -56125,6 +56189,7 @@ dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templ
             this._tblProperties = null;
         }
 
+
         if(this._propertyEditor){
             this._propertyEditor.destroy();
             this._propertyEditor = null;
@@ -56134,15 +56199,12 @@ dojo.declare('bfree.widget.doctype.InstanceEditor', [dijit._Widget, dijit._Templ
     },
 
     focus: function(){
-
     },
 
-    onChange: function(){
-
+    onChange: function(document_type){
     },
 
     onValueChange: function(){
-
     },
 
     postCreate: function(){
@@ -56217,6 +56279,7 @@ dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
 
     activeItem: null,
     library: null,
+    allowDisable: true,
 
     _btnAdd_onClick: function(evt){
         this.onSubmit();
@@ -56226,6 +56289,7 @@ dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
         var state = this.activeItem.state;
 
         if(documentType){
+
             if(documentType.id != this.activeItem.document_type_id){
 //                this.activeItem.document_type_id = documentType.id;
 //                this.activeItem.document_type_name = documentType.name;
@@ -56295,13 +56359,18 @@ dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
 
             var document_type = this._documentTypes.fetchById({id:item.document_type_id});
 
-//            var isDisabled = this.activeItem.getState(bfree.api.Document.states.CHECKED_IN) ||
-
-            var isDisabled = this.activeItem.getState(bfree.api.Document.states.ERROR);
+            var isDisabled = (this.allowDisable) ?
+                                this.activeItem.getState(bfree.api.Document.states.ERROR) || this.activeItem.getState(bfree.api.Document.states.CHECKED_IN) :
+                                false;
 
             this._docTypeEditor.set('activeItem', document_type);
             this._docTypeEditor.set('disabled', isDisabled);
         }
+    },
+
+    _setDisabledAttr: function(value){
+        if(this.allowDisable)
+            this._docTypeEditor.set('disabled', value);
     },
 
     constructor: function(args){
@@ -56327,7 +56396,6 @@ dojo.declare('bfree.widget.document.Editor', [dijit._Widget, dijit._Templated],{
     },
 
     onValidChange: function(item){
-
     },
 
     onValueChange: function(id, value){
@@ -58114,6 +58182,7 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
     widgetsInTemplate: true,
 
     _chkAddMinor: null,
+    _document: null,
     _fileItem: null,
     _isPreviewShowing: false,
     _multiUploader: null,
@@ -58150,6 +58219,10 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
         var canClose = false;
 
         try{
+
+            //Purge document of all properties NOT in selected document type.
+            this.activeReference.clean_properties({library: this.library});
+            this._document.clean_properties({library: this.library});
 
             if(!this._document.isValid({library: this.library})){
                 throw new Error('One or more properties are missing or invalid');
@@ -58278,6 +58351,7 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
             this._document = item;
             this.library.getDocuments().clone({item: this._document});
             this._editor.set('activeItem', this._document);
+            this._editor.set('disabled', true);
         }
         finally{
             this.onWidgetLoaded();
@@ -58337,33 +58411,51 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
     },
 
     _onValidChange: function(documentItem){
+        this._setState();
         this.onValueChange();
     },
 
-    _onValueChange: function(property_id, value){
-        this.library.getReferences().setValue(this.activeReference, property_id, value);
+    _onValueChange: function(id, value){
+
+        var property_id = id.replace('documents.', '');
+
+        if(!this._document.valueEquals(property_id, value)){
+            this.library.getDocuments().setValue(this._document, property_id, value);
+            this.library.getReferences().setValue(this.activeReference, property_id, value);
+            this.onValueChange();
+        }
+
     },
 
     _setState: function(){
 
-        var icon = bfree.api.Document.getStateIcon(this._fileItem.state);
-        var stateSrc = dojo.replace('/images/icons/states/{0}', [icon]);
+        this._editor.set('disabled', (!this._fileItem));
 
-        var typeSrc =  bfree.api.Document.getIconUrl(this._fileItem.content_type, 16);
+        if(this._fileItem){
+            var icon = (this._document.getState(bfree.api.Document.states.INVALID)) ?
+                             bfree.api.Document.getStateIcon(this._fileItem.state | bfree.api.Document.states.INVALID) :
+                             bfree.api.Document.getStateIcon(this._fileItem.state);
 
-        this.stateIconNode.src = stateSrc;
-        this.typeIconNode.src = typeSrc;
-        this.fileNameNode.innerHTML = this._fileItem.name;
-        this.fileSizeNode.innerHTML = bfree.api.Utilities.readablizeBytes({ bytes: this._fileItem.size });
+            var stateSrc = dojo.replace('/images/icons/states/{0}', [icon]);
+            var typeSrc =  bfree.api.Document.getIconUrl(this._fileItem.content_type, 16);
+
+            this.stateIconNode.src = stateSrc;
+            this.typeIconNode.src = typeSrc;
+            this.fileNameNode.innerHTML = this._fileItem.name;
+            this.fileSizeNode.innerHTML = bfree.api.Utilities.readablizeBytes({ bytes: this._fileItem.size });
+
+            var msg = bfree.api.Document.getStateMessage(this._fileItem.state | this._document.state);
+            var icon = bfree.api.Document.getStateIcon(this._fileItem.state | this._document.state);
+            this.statusMsgNode.innerHTML = msg;
+            this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon]);
+        }
+        else{
+            this.statusMsgNode.innerHTML = 'Select a file to checkin';
+            this.statusIcnNode.src = '/images/icons/states/invalid.16.png';
+        }
 
         var canAddMinor = false;
         this._chkAddMinor.set('disabled', !canAddMinor);
-
-        var msg = bfree.api.Document.getStateMessage(this._fileItem.state);
-        var icon = bfree.api.Document.getStateIcon(this._fileItem.state);
-
-        this.statusMsgNode.innerHTML = msg;
-        this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon])
 
     },
 
@@ -58387,7 +58479,9 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
     },
 
     isValid: function(){
-        return (this._fileItem) && (!this._document.getState(bfree.api.Document.states.INVALID));
+        this._document.validate({library: this.library});
+        this._setState();
+        return ((this._fileItem) && (!this._document.getState(bfree.api.Document.states.INVALID)));
     },
 
     onDialogClosing: function(dlgResult){
@@ -58447,10 +58541,10 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
             onChange: dojo.hitch(this, this._chkAddMinor_onChange)
         }, this.addMinorNode);
 
-
         this._wdgPreview = new bfree.widget.file.Preview({
             zone: this.zone
         }, this.previewNode);
+
 
     },
 
@@ -59382,8 +59476,11 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
                 return;
             }
 
+            //Purge document of all properties NOT in selected document type.
+            documentItem.clean_properties({library: this.library});
+
             //Check for invalid properties.
-            if(!documentItem.isValid({library: this.library})){
+            if(!documentItem.validate({library: this.library})){
                 throw new Error('One or more properties are missing or invalid');
             }
 
@@ -59474,8 +59571,11 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         var documentItem = this._fileGrid.store.getValue(fileItem, 'document');
         canAdd |= (documentItem.state == bfree.api.Document.states.UPLOADED);
 
-        if(documentItem.getState(bfree.api.Document.states.CHECKED_IN))
+        if(documentItem.getState(bfree.api.Document.states.CHECKED_IN) ||
+           documentItem.getState(bfree.api.Document.states.ERROR) ||
+           documentItem.getState(bfree.api.Document.states.INVALID)){
             canAdd = false;
+        }
 
         this._btnAdd.set('disabled', !canAdd);
 
@@ -59778,7 +59878,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         hiddenItems.EDIT = !folder.isShare();
         hiddenItems.DELETE = folder.isSpecial();
         hiddenItems.NEW = folder.isSpecial();
-        hiddenItems.ACL = folder.isSpecial() && !folder.isShare();
+        hiddenItems.ACL = folder.isSpecial() && !(folder.isShare() || folder.isShareRoot());
         hiddenItems.EMPTY = !folder.isTrash();
         hiddenItems.SHARE = !folder.isShareRoot();
         hiddenItems.UNSHARE = !folder.isShare();
@@ -59839,6 +59939,17 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         });
         this.addChild(this._buttons.RENAME);
 
+        this._buttons.COPY = new dijit.MenuItem({
+            label: 'Copy Link',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconCopyDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.COPY,
+                bfree.widget.Bfree.ObjectTypes.SHARE)
+        });
+        this.addChild(this._buttons.COPY);
+
+
          this._buttons.EDIT = new dijit.MenuItem({
             label: 'Edit Properties...',
             disabled: true,
@@ -59866,6 +59977,16 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         var mnuCreate = new dijit.Menu({
         });
 
+        this._buttons.DOC_CREATE = new dijit.MenuItem({
+            label: 'Document(s)...',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconNewDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.NEW,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        mnuCreate.addChild(this._buttons.DOC_CREATE);
+
         this._buttons.FLD_CREATE = new dijit.MenuItem({
             label: 'Folder',
             disabled: true,
@@ -59875,17 +59996,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
                 bfree.widget.Bfree.ObjectTypes.FOLDER
             )
         });
-		mnuCreate.addChild(this._buttons.FLD_CREATE);
-
-        this._buttons.DOC_CREATE = new dijit.MenuItem({
-            label: 'Document(s)...',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconNewDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.NEW,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-		mnuCreate.addChild(this._buttons.DOC_CREATE);
+        mnuCreate.addChild(this._buttons.FLD_CREATE);
 
         this._buttons.NEW = new dijit.PopupMenuItem({
             label: 'New',
@@ -59897,24 +60008,6 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
 
         this._arrDivides[1] = new dijit.MenuSeparator();
 		this.addChild(this._arrDivides[1]);
-
-        this._buttons.ACL = new dijit.MenuItem({
-            label: 'Permissions...',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconSecureFolder',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.SECURE,
-                bfree.widget.Bfree.ObjectTypes.FOLDER)
-        });
-        this.addChild(this._buttons.ACL);
-
-        this._buttons.EMPTY = new dijit.MenuItem({
-            label: 'Empty Recycle Bin',
-            disabled: false,
-            iconClass: 'menuIcon bfreeTrashFolder',
-            onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.EMPTY)
-        });
-        this.addChild(this._buttons.EMPTY);
 
         this._buttons.SHARE = new dijit.MenuItem({
             label: 'Create Share',
@@ -59936,15 +60029,24 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         });
         this.addChild( this._buttons.UNSHARE);
 
-        this._buttons.COPY = new dijit.MenuItem({
-            label: 'Copy Link',
+        this._buttons.ACL = new dijit.MenuItem({
+            label: 'Permissions...',
             disabled: true,
-            iconClass: 'menuIcon bfreeIconDeleteDocument',
+            iconClass: 'menuIcon bfreeIconSecureFolder',
             onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.COPY,
-                bfree.widget.Bfree.ObjectTypes.SHARE)
+                bfree.widget.Bfree.Commands.SECURE,
+                bfree.widget.Bfree.ObjectTypes.FOLDER)
         });
-        this.addChild(this._buttons.COPY);
+        this.addChild(this._buttons.ACL);
+
+        this._buttons.EMPTY = new dijit.MenuItem({
+            label: 'Empty Recycle Bin',
+            disabled: false,
+            iconClass: 'menuIcon bfreeTrashFolder',
+            onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.EMPTY)
+        });
+        this.addChild(this._buttons.EMPTY);
+
 
     },
 
@@ -63829,6 +63931,50 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
 	},
 
+    moveFolder: function(parent, folder){
+
+
+        var folderNode = this.getNodesByItem(folder)[0];
+        var newParentNode = this.getNodesByItem(parent)[0];
+        var oldParentNode = folderNode.getParent();
+
+        newParentNode.expand();
+
+        this.library.getFolders().setValue(folder, 'parent_id', parent.getId());
+        this.model.pasteItem(folder, oldParentNode.item, parent, false);
+
+        this.library.getFolders().save();
+
+        this.setSelectedPath(folder.path);
+
+        /*
+        var anchor=args.anchor;
+        var targetAnchor=args.targetAnchor;
+        var parentNode=anchor.getParent();
+
+        targetAnchor.expand();
+
+        var targetId=targetAnchor.item.id||targetAnchor.item.root?targetAnchor.item.id:targetAnchor.item.$ref;
+
+        this.tree.folders.loadItem({
+            item: targetAnchor.item,
+            callback: dojo.hitch(this, function(item){
+                this.tree.folders.setValue(anchor.item, 'parent_id', targetId);
+                this.tree.model.pasteItem(anchor.item, parentNode.item, item, false);
+            })
+        });
+
+        this.tree.folders.save();
+
+
+        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowSelected');
+        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowHover');
+
+        this.tree.setSelectedPath(anchor.item.path);
+            */
+
+    },
+
     onNewNode: function(node){
         //changed to 'setSelectedItem' => 'setSelectedNode' didn't highlight row in all cases
         this.setSelectedItem(node.item);
@@ -64384,7 +64530,7 @@ dojo.provide('bfree.widget.document.PropertyEditor');
 
 
 dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
-    templateString: dojo.cache("bfree/widget/document", "template/PropertyEditor.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:0px 8px 4px 8px;height:100%;width:100%;\">\n\n     <div   dojoType=\"dijit.layout.ContentPane\"\n            region=\"top\"\n            splitter=\"false\"\n            style=\"overflow:hidden;height:32px\">\n\n         <div dojoAttachPoint=\"headerNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            splitter=\"false\"\n            region=\"center\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"true\"\n                class=\"highlightPane\"\n                style=\"padding:8px\">\n\n           <div dojoAttachPoint=\"editorNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                region=\"bottom\"\n                splitter=\"false\"\n                style=\"padding:8px;overflow:hidden;height:128px\">\n\n             <div dojoAttachPoint=\"infoNode\"></div>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
+    templateString: dojo.cache("bfree/widget/document", "template/PropertyEditor.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:0px;height:100%;width:100%;\">\n\n     <div   dojoType=\"dijit.layout.ContentPane\"\n            region=\"top\"\n            splitter=\"false\"\n            style=\"overflow:hidden;height:32px\">\n\n         <div dojoAttachPoint=\"headerNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            splitter=\"false\"\n            region=\"center\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"midTitlePane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaMidHeader\"\n                style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n            Custom Properties\n        </div>\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"true\"\n                style=\"padding:0\">\n\n           <div dojoAttachPoint=\"editorNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                region=\"bottom\"\n                splitter=\"false\"\n                style=\"padding:0 8px 0 16px;;overflow:hidden;height:128px\">\n\n             <div dojoAttachPoint=\"infoNode\"></div>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
     widgetsInTemplate: true,
 
     _document: null,
@@ -64411,13 +64557,17 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
             });
         }
 
-        return canClose;
+        return canClose;                                           l
     },
 
     _doSave: function(){
         var canClose = false;
 
         try{
+
+            //Purge document of all properties NOT in selected document type.
+            this.activeReference.clean_properties({library: this.library});
+            this._document.clean_properties({library: this.library});
 
             if(!this._document.isValid({library: this.library})){
                 throw new Error('One or more properties are missing or invalid');
@@ -64494,6 +64644,10 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
         }
     },
 
+    _onValidChange: function(){
+        this.onValueChange();
+    },
+
     _onValueChange: function(id, value){
 
         var property_id = id.replace('documents.', '');
@@ -64555,10 +64709,6 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
         return canClose;
     },
 
-    _onValidChange: function(){
-        this.onValueChange();
-    },
-
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
@@ -64576,6 +64726,7 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
         this._editor = new bfree.widget.document.Editor({
             id: 'editor1',
             library: this.library,
+            allowDisable: false,
             onValidChange: dojo.hitch(this, this._onValidChange),
             onSubmit: dojo.hitch(this, this._onSubmit),
             onValueChange: dojo.hitch(this, this._onValueChange)
@@ -64948,9 +65099,9 @@ dojo.declare('versa.widget.reference.Accessor', null,{
         item.file({zone: this.activeZone, library: this.activeLibrary, folder: folder});
     },
 
-    doRestore: function(item){
+    doRestore: function(folder, item){
         try{
-            item.restore({zone: this.activeZone, library: this.activeLibrary});
+            item.restore({zone: this.activeZone, library: this.activeLibrary, folder: folder});
         }
         finally{
             // SEE notes in 'doCancelCheckout' on this.
@@ -65742,29 +65893,33 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         var canDrop = true;
 
         //We can drop a reference into:
-        //- Never its current folder
+        //- Never its current folder (unless it is in the trash bin (current folder is original folder)
         //- Trash Folder (with delete permissions)
         //- "Share" folder (Not the share root)
         //- Another content folder (with move permissions)
         //- Can't 'move' deleted items (yet)
-        if(sourceItems[0].folder_id == targetFolder.getId()){
+        if((sourceItems[0].folder_id == targetFolder.getId()) && (!sourceItems[0].isDeleted())){
             canDrop = false;
         }
-        else if(sourceItems[0].isDeleted()){
-            canDrop = false;
-        }
+
         else if(targetFolder.isSpecial()){
             if(targetFolder.isTrash()){
+                //don't allow for items already deleted.
                 canDrop = dojo.every(sourceItems, function(item, idx){
-                    return item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
+                    return (!item.isDeleted()) && item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
                 }, this);
             }
-            if(targetFolder.isSearch()){
+            else if(targetFolder.isSearch()){
                 canDrop = false;
             }
             else if(targetFolder.isShareRoot()){
                 canDrop = false;
             }
+            else if(targetFolder.isShare()){
+                //Can't share deleted items.
+                canDrop = !sourceItems[0].isDeleted();
+            }
+
         }
         else if(targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
             canDrop = dojo.every(sourceItems, function(item, idx){
@@ -65839,6 +65994,9 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         else if(targetFolder.isShareRoot()){
             this.onCommand(bfree.widget.Bfree.Commands.NEW, bfree.widget.Bfree.ObjectTypes.SHARE, {folder: sourceItems[0]});
         }
+        else if(targetFolder.isContent()){
+            this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.FOLDER, {parent: targetFolder, folder: sourceItems[0]});
+        }
     },
 
     _onReferenceDrop: function(targetFolder, sourceItems){
@@ -65849,12 +66007,15 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         else if(targetFolder.isShare()){
             this.onCommand(bfree.widget.Bfree.Commands.SHARE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
         }
+        else if(sourceItems[0].isDeleted()){
+            //DnD a deleted item is a restore to folder.
+            this.onCommand(bfree.widget.Bfree.Commands.RESTORE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
+        }
         else{
             this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems})
         }
 
     },
-
 
     checkItemAcceptance: function(target, source, position){
         var canDrop = false;
@@ -65925,21 +66086,13 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             if(!this.targetAnchor)
                 return;
 
-
             var targetItem = this.targetAnchor.item;
             var sourceItems = this._getSourceItems(source);
 
             if((!targetItem) || (sourceItems.length < 1))
                 return;
 
-            if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
-                this._onReferenceDrop(targetItem, sourceItems);
-            }
-            else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
-                this._onFolderDrop(targetItem, sourceItems);
-            }
-
-            //this.tree._onItemsDnd(targetItem, sourceItems);
+            setTimeout(bfree.widget.folder.DndSource._deferred(this, targetItem, sourceItems), 10);
         }
         finally{
             this.inherited('onDndCancel', arguments);
@@ -65964,7 +66117,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         //- Recycle Bin
         //- Search
         //- Shares
-        var canDnd = dojo.every(nodes, function(node, idx){
+        var canDnd = dojo.every(nodes, function(node){
             var treeNode = source.getItem(node.id).data;
             return !(treeNode.item.isRoot() || treeNode.item.isTrash() || treeNode.item.isShareRoot() || treeNode.item.isShare() );
         });
@@ -66018,6 +66171,19 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
 	}
 });
+
+bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
+
+    return function(){
+        if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
+            that._onReferenceDrop(targetItem, sourceItems);
+        }
+        else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
+            that._onFolderDrop(targetItem, sourceItems);
+        }
+    }
+
+};
 
 }
 
@@ -66199,6 +66365,12 @@ dojo.declare('bfree.widget.SortGrid', [bfree.widget._Grid], {
     constructor: function(args){
         this.canSort = this._canSort;
         this.sortInfo = (args.sortInfo) ? args.sortInfo : 1;
+    },
+
+    //disables the keybinds that  move around the selected cell, since we're no tusing that functionality
+    onKeyDown: function(e){
+        e.stopPropagation();
+        return true;
     },
 
     moveItem: function(item, move){
@@ -68059,7 +68231,7 @@ dojo.declare('bfree.widget.doctype.PropMapBar', [dijit.Toolbar], {
 
         this._btnRemove = new bfree.widget.Button({
                 id: 'btnRemoveValue',
-                label: 'Remove Value from Choice List',
+                label: 'Remove Value from Document Type',
                 showLabel: false,
                 disabled: false,
                 iconClass: 'sidebarIcon bfreeIconRemove',
@@ -68157,7 +68329,7 @@ dojo.declare('bfree.widget.propdef.FilterGrid', [bfree.widget._Grid], {
 
         this._store.comparatorMap={};
         this._store.comparatorMap["name"]=function(item1, item2){
-            return item1-item2;
+            return (item1.toLowerCase()>item2.toLowerCase())?1:-1;
         };
 
         this._store.save();
@@ -68415,7 +68587,9 @@ dojo.declare('bfree.widget.Calendar', [dijit._Widget, dijit._Templated, bfree.wi
 
     _onChange: function(date){
         this.onDateSelected(date);
-        this.dialog._onClose(bfree.widget.Dialog.dialogResult.ok);
+        if(this.dialog){
+            this.dialog._onClose(bfree.widget.Dialog.dialogResult.ok);
+        }
     },
 
     onDateSelected: function(date){
@@ -68534,6 +68708,7 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
                         is_required: false,
                         choice_list_id: null,
                         default_value: defaultValue,
+                        default_type: 0,
                         is_system: propertyDefinition.is_system,
                         is_name: propertyDefinition.is_name
                     });
@@ -71248,7 +71423,7 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
             onChange: dojo.hitch(this, this._cmbOperators_onChange)
         }, this.operatorsNode);
 
-        this._wdgValue = bfree.widget.ValidationTextBox({
+        this._wdgValue = new bfree.widget.ValidationTextBox({
             style: 'width:100%'
         }, this.valueNode);
 
@@ -71388,6 +71563,7 @@ dojo.declare('bfree.widget.search.Advanced', [dijit._Widget, dijit._Templated], 
     _onKeyUp: function(evt){
         if(evt.keyCode==13){
             this._onSubmit();
+            return false;
         }
     },
 
@@ -77177,7 +77353,6 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
     },
 
     checkAcceptance: function(source, nodes){
-
         if(this == source)
             return this.selfAccept;
 
@@ -77193,7 +77368,7 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
         return false;
     },
 
-    onDndStart: function(source, nodes, copy){
+    onDndStart: function(source, nodes, copy){;
 
         if(source !== this){
             this.inherited('onDndStart', arguments);
@@ -77202,11 +77377,10 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
 
         this.grid._deferSelect = false;
 
-        //Don't allow deleted items to be dragged (for now)
         //- Don't allow 'share' references to be DnD'd
         var canDnd = dojo.every(nodes, function(node, idx){
             var item = source.getItem(node.id).data;
-            return !(item.isDeleted() || item.isShare());
+            return !(item.isShare());
         });
 
         (canDnd) ?
@@ -77491,7 +77665,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
         this.addChild(this._buttons.DESTROY);
 
         this._buttons.UNSHARE = new dijit.MenuItem({
-            label: 'Remove Share',
+            label: 'Remove from Share',
             disabled: true,
             iconClass: 'menuIcon bfreeIconDeleteDocument',
             onClick: dojo.hitch(this, this._onCommand,
@@ -77736,6 +77910,7 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
     onRowContextMenu: function(evt){
         if(evt.rowIndex < 0){
+            this._mnuReference.rowHit = false;
             evt.cancelBubble = true;
             return;
         }
@@ -77754,10 +77929,10 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
             items = this.selection.getSelected();
         }
 
+        this._mnuReference.rowHit = true;
         this._mnuReference.set('activeItems', items);
 
     },
-
 
     //Attempt to make grid selection work with DnD (Based on Windows7 behaviour)
     onRowClick: function(evt){;
@@ -77932,6 +78107,8 @@ versa.widget.reference.Grid._delayedCellFocus = function(){
         catch(e){}
     }
 };
+
+
 
 }
 
@@ -88706,6 +88883,10 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                     this._onDocumentMove(params.items):
                     this._onDocumentQuickMove(params.folder, params.items);
                 break;
+            case bfree.widget.Bfree.ObjectTypes.FOLDER:
+                this._onFolderMove(params.parent, params.folder);
+                break;
+
         }
     },
 
@@ -88742,7 +88923,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onRestore: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                 this._onDocumentRestore(params.items);
+                 this._onDocumentRestore(params.folder, params.items);
                 break;
         }
     },
@@ -89221,10 +89402,10 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doAction(items, __action, __onComplete, __onError);
+        this.__doAction(items, __action, dojo.hitch(this, __onComplete), __onError);
     },
 
-     _onDocumentRestore: function(items){
+     _onDocumentRestore: function(folder, items){
 
         var accessor = new versa.widget.reference.Accessor({
             activeLibrary: this.activeLibrary,
@@ -89232,7 +89413,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         });
 
         function __action(item){
-            accessor.doRestore(item);
+            accessor.doRestore(folder, item);
         }
 
         function __onComplete(items){
@@ -89370,6 +89551,31 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     },
 
     _onFolderEdit: function(folder){
+
+    },
+
+    _onFolderMove: function(parent, folder){
+
+       try{
+
+            if(!parent || !folder)
+                return;
+
+            //make sure folder is loaded (not a reference) before creating a new sub-folder
+            this.activeLibrary.getFolders().loadItem({
+                item: parent,
+                callback: dojo.hitch(this, function(item){
+                    this._tvwFolders.moveFolder(item, folder);
+                })
+            });
+
+		}
+		catch(e){
+			var err = new bfree.api.Error('Failed to move folder', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+		}
 
     },
 

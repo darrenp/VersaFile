@@ -116,15 +116,17 @@ class Reference < ActiveRecord::Base
 
   }
 
+  scope :content, lambda {
+    where(:reference_type => VersaFile::ReferenceTypes.Content)
+  }
+
   #returns all (soft) deleted documents in the system
   scope :deleted, lambda {
     where("documents.state & #{Bfree::DocumentStates.Deleted} > 0")
   }
   scope :not_deleted, lambda {
-      where("documents.state & #{Bfree::DocumentStates.Deleted} = 0")
+    where("(documents.state & #{Bfree::DocumentStates.Deleted} = 0)")
   }
-
-
 
   scope :full, lambda{
     columns = REFERENCE_VERBOSE.clone
@@ -190,21 +192,28 @@ class Reference < ActiveRecord::Base
   end
 
   def soft_delete(user)
+
+    #destroy all shared references
+    shared_refs = self.document.references.where(:reference_type => VersaFile::ReferenceTypes.Share)
+    shared_refs.destroy_all
+
     self.document.soft_delete(user)
     self.update_attribute(:reference_type, VersaFile::ReferenceTypes.Trash)
   end
 
-  def soft_restore(user)
+  def soft_restore(to_folder, user)
 
+    #marke the document as undeleted.
     self.document.soft_restore(user)
-    unless self.folder.nil?
-      self.update_attribute(:reference_type, VersaFile::ReferenceTypes.Content)
-    else
-      #Restore to root if folder doesn't exist anymore
-      self.update_attributes(
-          :reference_type => VersaFile::ReferenceTypes.Content,
-          :folder_id => 0
-      )
+    self.update_attributes(:reference_type => VersaFile::ReferenceTypes.Content)
+
+    if !to_folder.nil?
+      #restore to folder if defined
+      self.file_in_folder(to_folder, user)
+    elsif self.folder.nil?
+      #restore to root if folder doesn't exist
+      root_folder = self.library.folders.root_folders.first
+      self.file_in_folder(root_folder, user)
     end
 
   end
