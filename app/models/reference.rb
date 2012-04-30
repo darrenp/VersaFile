@@ -185,6 +185,11 @@ class Reference < ActiveRecord::Base
 
   end
 
+
+  def get_active_role(user, group)
+    return self.acl.get_role(user, group)
+  end
+
   def get_securable_parent()
     self.folder.nil? ?
           self.library :

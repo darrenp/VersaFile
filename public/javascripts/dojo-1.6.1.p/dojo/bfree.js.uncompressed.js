@@ -5747,6 +5747,10 @@ dojo.declare('bfree.api._Securable', null,{
         return ((this.active_permissions & permissionFlag) == permissionFlag);
     },
 
+    hasRole: function(role){
+        return this.hasRights(role.permissions);
+    },
+
     getAcl: function(zone){
         var url = dojo.replace(bfree.api._Securable.GETACL_URL, [zone.subdomain, this.id, this.securable_type] );
         var getData = null;
@@ -7518,6 +7522,9 @@ dojo.provide('bfree.api.Folder');
 dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
 
     _activeQuery: null,
+    _searchFolder: null,
+    _shareRootFolder: null,
+    _trashFolder: null,
 
     constructor: function(args){
         dojo.safeMixin(this, ((!args) ? { } : args));
@@ -7546,13 +7553,57 @@ dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
         prmSet.setValue(versa.api.PermissionIndices.CREATE, this.hasRights(bfree.api._Securable.permissions.CREATE_FOLDERS) && (!(this.isTrash() || this.isSearch() || this.isShare())));
         prmSet.setValue(versa.api.PermissionIndices.FILE, this.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS) && (!this.isSpecial()));
         prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS) && (!this.isSpecial() && (!this.isRoot())));
-        prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL) && (!this.isSpecial() || this.isShare()));
+        prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL) && (!this.isSpecial() || this.isShareRoot() || this.isShare()));
 
         return prmSet;
     },
 
+    getSearchFolder: function(){
+
+        if(!this._searchFolder){
+            dojo.every(this.children, function(item, idx){
+                if(item.isSearch())
+                    this._searchFolder = item;
+                return (!this._searchFolder);
+            }, this);
+        }
+
+        return this._searchFolder;
+    },
+
+    getShareRootFolder: function(){
+
+        if(!this._shareRootFolder){
+            dojo.every(this.children, function(item, idx){
+                if(item.isShareRoot())
+                    this._shareRootFolder = item;
+                return (!this._shareRootFolder);
+            }, this);
+        }
+
+        return this._shareRootFolder;
+    },
+
+    getTrashFolder: function(){
+
+        if(!this._trashFolder){
+            dojo.every(this.children, function(item, idx){
+                if(item.isTrash())
+                    this._trashFolder = item;
+                return (!this._trashFolder);
+            }, this);
+        }
+
+        return this._trashFolder;
+
+    },
+
     isContent: function(){
         return (this.folder_type == bfree.api.Folder.FolderTypes.CONTENT);
+    },
+
+    isError: function(){
+        return (this.folder_type == bfree.api.Folder.FolderTypes.ERROR);
     },
 
     isRoot: function(){
@@ -7594,7 +7645,8 @@ bfree.api.Folder.FolderTypes = {
     'SHARE_ROOT':   0x0010,
     'SHARE':        0x0011,
     'SEARCH':       0x0020,
-    'TRASH':        0x0040
+    'TRASH':        0x0040,
+    'ERROR':        0xFFFF
 }
 
 bfree.api.Folder.getIconUrl = function(folder, size){
@@ -7766,10 +7818,6 @@ dojo.provide('bfree.api.Folders');
 dojo.declare('bfree.api.Folders', [bfree.api._Collection],{
     library: null,
 
-    _searchFolder: null,
-    _shareRootFolder: null,
-    _trashFolder: null,
-
     _getExistingNames: function(parentItem){
 
         var names = [];
@@ -7816,52 +7864,6 @@ dojo.declare('bfree.api.Folders', [bfree.api._Collection],{
 			base_name: baseName
 		});
 	},
-
-    getSearchFolder: function(){
-
-        if(!this._searchFolder){
-            this.forEach(function(item){
-                dojo.every(item.children, function(item, idx){
-                    if(item.isSearch())
-                        this._searchFolder = item;
-                    return (!this._searchFolder);
-                }, this);
-            }, this);
-        }
-
-        return this._searchFolder;
-    },
-
-    getShareRootFolder: function(){
-
-        if(!this._shareRootFolder){
-            this.forEach(function(item){
-                dojo.every(item.children, function(item, idx){
-                    if(item.isShareRoot())
-                        this._shareRootFolder = item;
-                    return (!this._shareRootFolder);
-                }, this);
-            }, this);
-        }
-
-        return this._shareRootFolder;
-    },
-
-    getTrashFolder: function(){
-
-        if(!this._trashFolder){
-            this.forEach(function(item){
-                dojo.every(item.children, function(item, idx){
-                    if(item.isTrash())
-                        this._trashFolder = item;
-                    return (!this._trashFolder);
-                }, this);
-            }, this);
-        }
-
-        return this._trashFolder;
-
-    },
 
     getTextPath: function(args){
         var item=args.item;
@@ -8601,7 +8603,7 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
 
     createShare: function(args){
 
-        var shareRoot = this.getFolders().getShareRootFolder();
+        var shareRoot = args.shareRoot;
         var parentInfo = { parent: shareRoot, attribute: 'children' };
 
         var share = this.getFolders().store.newItem({
@@ -8852,6 +8854,9 @@ bfree.api.Role.schema = {
  			type: 'string',
  			'default': ''
  		},
+        'permissions': {
+            type: 'integer'
+        },
         'created_at': {
             type: 'date',
             format: 'date-time'
@@ -8887,7 +8892,7 @@ dojo.provide('bfree.api.Roles');
 
 
 
-dojo.declare('bfree.api.Roles', [bfree.api._Collection],{
+dojo.declare('bfree.api.Roles', bfree.api._Collection,{
     zone: null,
 
     constructor: function(args){
@@ -51964,9 +51969,14 @@ dojo.declare('bfree.widget.acl.Grid', [bfree.widget._Grid], {
     _hndls: [],
 
     activeItem: null,
+    disabled: false,
     zone: null,
 
     _canEdit: function(cell, rowIndex){
+
+        if(this.disabled)
+            return false;
+
         var item = this.getItem(rowIndex);
         var name = this.store.getValue(item, 'grantee_name');
         return ((name != 'Administrators') && (name != 'Admin'));
@@ -52104,6 +52114,10 @@ dojo.declare('bfree.widget.acl.Grid', [bfree.widget._Grid], {
     _setActiveItemAttr: function(value){
         this.activeItem = value;
         this.setStore(this._generateStore());
+    },
+
+    _setDisabledAttr: function(value){
+        this.disabled = value;
     },
 
 	constructor: function(/* Object */args){
@@ -52713,7 +52727,6 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
             this._chkInherit.set('checked', this._acl.inherits);
             this._cmbEveryone.set('value', this._acl.getEveryone(this.zone).role_id);
             this._grdAcl.set('activeItem', this._acl);
-            this._grdAcl.resize();
 
         }
         finally{
@@ -52828,6 +52841,7 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
     _grdAcl_onChange: function(item, attr, oldValue, newValue){
         if(this._isLoaded) this.set('isDirty', true);
         this.onValueChange();
+        //this._grdAcl.resize();
     },
 
     _grdAcl_onSelectedItems: function(items){
@@ -52843,9 +52857,10 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
 
         var count = this._grdAcl.selection.getSelectedCount();
         this._cmbEveryone.set('disabled', this._chkInherit.checked);
-
         this._btnAdd.set('disabled', this._chkInherit.checked);
         this._btnRemove.set('disabled', (this._chkInherit.checked || (count < 1)));
+
+        this._grdAcl.set('disabled', this._chkInherit.checked);
 
     },
 
@@ -52913,7 +52928,7 @@ dojo.declare('bfree.widget.acl.Editor', [dijit._Widget, dijit._Templated, bfree.
         if(this.item.isInstanceOf(bfree.api.Folder)){
             this.type = 'Folder';
             this.lblInheritNode.innerHTML = 'Inherit from Parent';
-            if(this.item.isRoot() || this.item.isShare()){
+            if(this.item.isRoot() || this.item.isShareRoot()){
                 dojo.style(this.inheritNode.domNode, {display: 'none'});
             }
         }
@@ -60020,7 +60035,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         this.addChild( this._buttons.SHARE);
 
         this._buttons.UNSHARE = new dijit.MenuItem({
-            label: 'Delete',
+            label: 'Remove Share',
             disabled: false,
             iconClass: 'menuIcon bfreeIconDeleteFolder',
             onClick: dojo.hitch(this, this._onCommand,
@@ -63476,7 +63491,6 @@ dojo.provide('bfree.widget.folder.Tree')
 
 
 
-//
 
 
 dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
@@ -63592,12 +63606,8 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
                 }
             }
 
-            if(value==""){
-                this.set('label', this.item.name);
-                this.tree.folders.revert();
-                this.tree._afterSelected(this);
-                this.tree.setEditing(false);
-                this._destroyEditor();
+            if(value.trim()==""){
+                this._editor_onCancel();
                 return;
             }
 
@@ -63612,7 +63622,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
             var nodes = this.tree.getNodesByItem(parent);
             dojo.forEach(nodes, function(node, idx){
-//                node.item.children.sort(bfree.api.Folder.sort);
+                node.item.children.sort(bfree.api.Folder.sort);
                 node.setChildItems(node.item.children);
             }, this);
 
@@ -63676,7 +63686,9 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
     _nodeStyles: ['dijitTreeExpandoLoading', 'dijitTreeExpandoOpened', 'dijitTreeExpandoClosed', 'dijitTreeExpandoLeaf'],
+    _rootItem: null,
 
+    dndController: 'bfree.widget.folder.DndSource',
     folders: null,
     isSearchHidden: true,
     isShareRootHidden: false,
@@ -63684,6 +63696,7 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     openOnDblClick: true,
 
     library: null,
+    zone: null,
 
     _afterSelected: function(node){
         //Set node to original (not working image)
@@ -63756,6 +63769,20 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     _onCommand: function(cmdId, option, params)
     {
        this.onCommand(cmdId, option, params);
+    },
+
+    _onMouseDown: function(evt){
+        var node = dijit.getEnclosingWidget(evt.target);
+
+        if(this.tree._isEditing && node._editor){
+
+        }else{
+            this.dndController.startNode = node;
+            if(evt.button == 2){
+                this._mnuFolder.set('activeNode', node);
+            }
+        }
+
     },
 
     _onSelected: function(item, node){
@@ -63885,31 +63912,14 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         else if(item.isShare())
             iconClass = (!item || this.model.mayHaveChildren(item)) ?
                 (opened ? 'folderIcon bfreeShareFolderOpened' : 'folderIcon bfreeShareFolderClosed') : 'folderIcon bfreeShareFolderClosed';
+        else if(item.isError()){
+            iconClass = 'folderIcon bfreeIconError';
+        }
         else
             iconClass = (!item || this.model.mayHaveChildren(item)) ?
                 (opened ? 'dijitFolderOpened' : 'dijitFolderClosed') : 'dijitFolderClosed';
 
         return iconClass;
-    },
-
-    hideSearch: function(){
-        var search = this.library.getFolders().getSearchFolder();
-        this._hideNodesByItem(search);
-    },
-
-    hideShareRoot: function(){
-        var share = this.library.getFolders().getShareRootFolder();
-        this._hideNodesByItem(share);
-    },
-
-    hideTrash: function(){
-        var trash = this.library.getFolders().getTrashFolder();
-        this._hideNodesByItem(trash);
-    },
-
-    showSearch: function(){
-        var search = this.library.getFolders().getSearchFolder();
-        this._showNodesByItem(search);
     },
 
     getNodesByItem: function(/*dojo.data.Item or id*/ item){
@@ -63931,8 +63941,40 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
 	},
 
-    moveFolder: function(parent, folder){
+    getRoot: function(){
 
+        if(!this._rootItem){
+            this.model.getRoot(dojo.hitch(this, function(item){ this._rootItem = item; }))
+        }
+
+        return this._rootItem;
+    },
+
+    hideSearch: function(){
+
+        var searchItem = this.getRoot().getSearchFolder();
+        if(searchItem) this._hideNodesByItem(searchItem);
+
+    },
+
+    hideShareRoot: function(){
+
+        var shareItem = this.getRoot().getShareRootFolder();
+        if(shareItem) this._hideNodesByItem(shareItem);
+
+    },
+
+    hideTrash: function(){
+        var trashItem = this.getRoot().getTrashFolder();
+        if(trashItem) this._hideNodesByItem(trashItem)
+    },
+
+    showSearch: function(){
+        var search = this.library.getFolders().getSearchFolder();
+        this._showNodesByItem(search);
+    },
+
+    moveFolder: function(parent, folder){
 
         var folderNode = this.getNodesByItem(folder)[0];
         var newParentNode = this.getNodesByItem(parent)[0];
@@ -63946,32 +63988,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         this.library.getFolders().save();
 
         this.setSelectedPath(folder.path);
-
-        /*
-        var anchor=args.anchor;
-        var targetAnchor=args.targetAnchor;
-        var parentNode=anchor.getParent();
-
-        targetAnchor.expand();
-
-        var targetId=targetAnchor.item.id||targetAnchor.item.root?targetAnchor.item.id:targetAnchor.item.$ref;
-
-        this.tree.folders.loadItem({
-            item: targetAnchor.item,
-            callback: dojo.hitch(this, function(item){
-                this.tree.folders.setValue(anchor.item, 'parent_id', targetId);
-                this.tree.model.pasteItem(anchor.item, parentNode.item, item, false);
-            })
-        });
-
-        this.tree.folders.save();
-
-
-        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowSelected');
-        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowHover');
-
-        this.tree.setSelectedPath(anchor.item.path);
-            */
 
     },
 
@@ -63989,6 +64005,7 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         this._mnuFolder = new bfree.widget.folder.ContextMenu({
             tree: this,
             activeLibrary: this.library,
+            activeGroup: this.group,
             activeUser: this.user,
             onCommand: dojo.hitch(this, this._onCommand),
             onOpen: dojo.hitch(this, this._mnuFolder_onOpen),
@@ -64000,21 +64017,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         dojo.connect(this, 'onMouseDown', this, this._onMouseDown);
 
         this.dndController.onCommand = dojo.hitch(this, this.onCommand);
-    },
-
-    _onMouseDown: function(evt){
-        var node = dijit.getEnclosingWidget(evt.target);
-
-        if(this.tree._isEditing && node._editor){
-
-        }else{
-            //TODO: create a "new" node here...the tree node here is formatted with
-            //the tree's indentation, looks strange when dragging nested folders
-            this.dndController.startNode = node;
-            if(evt.button == 2){
-                this._mnuFolder.set('activeNode', node);
-            }
-        }
 
     },
 
@@ -64059,6 +64061,10 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     startup: function(){
         this.inherited('startup', arguments);
         this._mnuFolder.startup();
+
+        //Show Share Root only if user has 'Author' access to it
+        var shareItem = this.getRoot().getShareRootFolder();
+        this.isShareRootHidden = ((shareItem) && (!shareItem.hasRights(bfree.api._Securable.permissions.VIEW)));
 
         if(this.isSearchHidden)
             this.hideSearch();
@@ -65921,7 +65927,10 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             }
 
         }
-        else if(targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
+        else if (!targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
+            canDrop = false;
+        }
+        else{
             canDrop = dojo.every(sourceItems, function(item, idx){
                 return item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA);
             }, this);
@@ -65934,8 +65943,12 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         var canDrop = true;
 
         //We can drop a folder into:
+        // - Can only drop on folder with 'Author' permissions or above
         // - Never its current parent
         // - Never drop folder into search folder.
+        if(!targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_FOLDERS)){
+            canDrop = false;
+        }
         if(sourceItems[0].parent_id == targetFolder.getId()){
             canDrop = false;
         }
@@ -65994,7 +66007,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         else if(targetFolder.isShareRoot()){
             this.onCommand(bfree.widget.Bfree.Commands.NEW, bfree.widget.Bfree.ObjectTypes.SHARE, {folder: sourceItems[0]});
         }
-        else if(targetFolder.isContent()){
+        else if(targetFolder.isRoot() || targetFolder.isContent()){
             this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.FOLDER, {parent: targetFolder, folder: sourceItems[0]});
         }
     },
@@ -66022,7 +66035,6 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
         var targetItem = this._getTargetItem(target);
         var sourceItems = this._getSourceItems(source);
-
         if((!targetItem) || (sourceItems.length < 1))
             return canDrop;
 
@@ -66038,7 +66050,6 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
     },
 
     constructor: function(args){
-        //this._normalizedCreator = this._dndCreator;
         this._normalizedCreator = this.creator;
     },
 
@@ -66113,14 +66124,15 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
 
         //Can't dnd:
+        //- User must have 'Author' permissions or higher to DnD folder
         //- Root folder
         //- Recycle Bin
         //- Search
         //- Shares
         var canDnd = dojo.every(nodes, function(node){
             var treeNode = source.getItem(node.id).data;
-            return !(treeNode.item.isRoot() || treeNode.item.isTrash() || treeNode.item.isShareRoot() || treeNode.item.isShare() );
-        });
+            return treeNode.item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!(treeNode.item.isRoot() || treeNode.item.isSpecial()));
+        }, this);
 
         (canDnd) ?
             this.inherited('onDndStart', arguments) :
@@ -66128,6 +66140,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
     },
 
+    /*
     moveFolder: function(args){
         var anchor=args.anchor;
         var targetAnchor=args.targetAnchor;
@@ -66153,6 +66166,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
         this.tree.setSelectedPath(anchor.item.path);
     },
+    */
 
 
     onMouseDown: function(e){
@@ -68608,7 +68622,7 @@ bfree.widget.Calendar.show = function(args){
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgCalendar',
-        title: 'Choose A Date...',
+        title: 'Choose a Date...',
         widgetConstructor: bfree.widget.Calendar,
         widgetParams: {
             onDateSelected: args.onDateSelected
@@ -69346,6 +69360,7 @@ bfree.widget.doctype.Editor.generateDefaultWidget = function(default_value, rowI
             }else{
                 wdg = bfree.widget.propdef.Widget.getWidget(dataType, null, '', bfree.widget.propdef.Widget.formats.SHORT, default_value);
                 wdg.set('intermediateChanges', false);
+                wdg.set('trim', true);
                 wdg.onChange = dojo.hitch(this, this._wdgDefault_onChange, this._propMapStore.getIdentity(item));
             }
         }
@@ -77375,12 +77390,13 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
             return;
         }
 
-        this.grid._deferSelect = false;
+        this.grid._deferSelect = false
 
+        //- User must have 'Author' permissions or higher to DnD document
         //- Don't allow 'share' references to be DnD'd
         var canDnd = dojo.every(nodes, function(node, idx){
             var item = source.getItem(node.id).data;
-            return !(item.isShare());
+            return (item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!item.isShare()));
         });
 
         (canDnd) ?
@@ -77705,7 +77721,6 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
     _deferSelect: false,
 
     _dndSource: null,
-    _lastSelected: null,
     _mnuReference: null,
     _mnuViews: null,
 
@@ -77800,6 +77815,10 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 	},
 
     _setActiveFolderAttr: function(folder){
+
+        if(folder.isError()){
+            return;
+        }
 
         //Don't re-query if user clicks on active folder...unless it is the 'Search' folder.
         var doQuery = ((folder !== this.activeFolder) || folder.isSearch());
@@ -78284,51 +78303,16 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
 
     creation: false,
     item: null,
+    library: null,
+    rootFolder: null,
     seed: null,
     share: null,
-    library: null,
+    shareRoot: null,
     zone: null,
 
     __doCancel: function(){
         return true;
     },
-
-    /*
-    __doCreate: function(){
-        var canClose = false;
-
-        var expiryDate = null;
-
-        if(!this._txtExpiryDate.disabled){
-            //Set to end of day on selected day
-            expiryDate =  this._txtExpiryDate.get('value');
-            expiryDate = dojo.date.add(expiryDate, 'day', 1);
-            expiryDate = dojo.date.add(expiryDate, 'second', -1);
-        }
-
-        this.share = this.library.createShare({
-            name: this._txtName.value,
-            password: this._txtPassword.value,
-            expiry: expiryDate,
-            seed: this.seed
-        });
-        canClose = true;
-
-        return canClose;
-    },
-
-    __doEdit: function(){
-        var canClose = false;
-
-        if(this.library.getFolders().isDirty({item: this.share})){
-            this.library.getFolders().save();
-        }
-        canClose = true;
-
-        return canClose;
-    },
-
-    */
 
     __doSave: function(){
         var canClose = false;
@@ -78376,6 +78360,8 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
 
         try{
 
+            this.shareRoot = shareRoot;
+
             if(this.share){
                 //Shared folder was passed in for editing
                 this.share = this.library.getFolders().refreshItem(this.share.getId());
@@ -78390,7 +78376,8 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
                 this.share = this.library.createShare({
                     name: shareName,
                     seed: this.seed,
-                    expiry: null
+                    expiry: null,
+                    shareRoot: this.shareRoot
                 });
 
                 this._chkPassword.set('checked', true);
@@ -78501,7 +78488,7 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
 
         //Refresh ShareRoot if needed.
         this.library.getFolders().loadItem({
-            item: this.library.getFolders().getShareRootFolder(),
+            item: this.rootFolder.getShareRootFolder(),
             scope: this,
             onItem: this.__onItemLoaded,
             onError: this.__onItemError
@@ -78699,6 +78686,7 @@ versa.widget.share.Editor.show = function(args){
             mode: args.mode,
             share: args.share,
             seed: args.seed,
+            rootFolder: args.rootFolder,
             library: args.library,
             zone: args.zone
         },
@@ -88945,7 +88933,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 this._onDocumentShare(params.folder, params.items);
                 break;
             case bfree.widget.Bfree.ObjectTypes.FOLDER:
-                this._onFolderShare(params.folder);
+                //this._onFolderShare(params.folder);
                 break;
         }
     },
@@ -89807,6 +89795,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 share: folder,
                 seed: null,
                 library: this.activeLibrary,
+                rootFolder: this._tvwFolders.getRoot(),
                 zone: this.zone,
                 onClose: dojo.hitch(this, __onClose)
             });
@@ -89830,6 +89819,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             versa.widget.share.Editor.show({
                 share: null,
                 seed: folder,
+                rootFolder: this._tvwFolders.getRoot(),
                 library: this.activeLibrary,
                 zone: this.zone,
                 onClose: dojo.hitch(this, __onClose)
@@ -90154,6 +90144,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         //preloading
         bfree.api.Application.getDataTypes();
         bfree.api.Application.getOperators();
+        this.zone.getRoles().fetch();
 
         this.activeLibrary.getPropertyDefinitions().fetch();
         this.activeLibrary.getDocumentTypes().fetch();
@@ -90192,12 +90183,12 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 		},  this.searchBoxNode);
 
         this._tvwFolders = new bfree.widget.folder.Tree({
+            zone: this.zone,
             library: this.activeLibrary,
             group: this.activeGroup,
             user: this.activeUser,
             folders: this.activeLibrary.getFolders(),
             documents: this.activeLibrary.getDocuments(),
-            dndController: 'bfree.widget.folder.DndSource',
             onCommand: dojo.hitch(this, this.__onCommand),
             onSelected: dojo.hitch(this, this.__wdgFolders_onSelected),
             onNewNode: dojo.hitch(this, this.__wdgFolders_onNewNode),
@@ -90226,33 +90217,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         this.versionSpan.innerHTML = dojo.replace('v{version}', this);
 
-        //dojo.connect(this.folderPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.folderPane));
-        //dojo.connect(this.contentPane, 'onFocus', dojo.hitch(this, this.__wdgPane_onFocus, this.contentPane));
-
         this.onLoad(this);
-    },
-	showEditDocumentTypes: function(){
-
-        try{
-
-            function __onClose(dlgResult, retValue){
-
-                if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
-
-                }
-
-                return true;
-            }
-
-
-        }
-        catch(e){
-            var err = new bfree.api.Error('Failed to open \'Edit Property Definitions\' dialog', e);
-            bfree.widget.ErrorManager.handleError({
-                error: err
-            });
-        }
-
     },
 
     startup: function(){

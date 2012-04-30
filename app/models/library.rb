@@ -484,7 +484,7 @@ private
     )
 
     #create share folder
-    search = self.zone.folders.create(
+    share_root = self.zone.folders.create(
       :library => self,
       :name => 'Shares',
       :folder_type => VersaFile::FolderTypes.ShareRoot,
@@ -493,11 +493,19 @@ private
       :parent => root_folder
     )
 
-    #createdefault ACL
+    #create default ACLs
     trash.acl = self.zone.acls.create(
         :inherits => false,
         :acl_entries => [
-            AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup )
+            AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup)
+        ]
+    )
+
+    share_root.acl = self.zone.acls.create(
+        inherits = false,
+        :acl_entries => [
+          AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup),
+          AclEntry.create(:grantee => self.zone.groups.everyones.first, :role => self.zone.roles.none.first, :precedence => Bfree::Acl::PrecedenceTypes.Everyone)
         ]
     )
 

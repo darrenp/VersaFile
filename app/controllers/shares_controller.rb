@@ -36,31 +36,6 @@ class SharesController < ApplicationController
         :disposition => disposition
     )
 
-
-=begin
-    @reference = @library.references.viewable(@active_user, @active_group).full.find(params[:id])
-
-    #CHECK PERMISSIONS HERE
-    unless Acl.has_rights(@reference.active_permissions, Bfree::Acl::Permissions.View)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.View)
-    end
-
-    document = @reference.document
-    disposition = params[:disposition].nil? ? 'inline' : params[:disposition]
-    version = params[:version_id].nil? ? document.current_version : document.versions.find(params[:version_id])
-
-    type = version.content_type && disposition == 'inline' ?
-              version.content_type.open_as :
-              version.binary_content_type
-
-    send_file(
-        version.path,
-        :filename => version.binary_file_name,
-        :type => type,
-        :disposition => disposition
-    )
-=end
-
   end
 
   def shared_items

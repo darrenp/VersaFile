@@ -20,10 +20,15 @@ module VersaFile
     @@_share_root = 0x0010
     @@_share      = 0x0011
     @@_search     = 0x0020
-    @@_trash  = 0x0040
+    @@_trash      = 0x0040
+    @@_error      = 0xFFFF
 
     def self.Content
       @@_content
+    end
+
+    def self.Error
+      @@_error
     end
 
     def self.Root

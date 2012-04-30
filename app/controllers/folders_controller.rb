@@ -1,16 +1,33 @@
 class FoldersController < ApplicationController
   before_filter :library_required
   before_filter :authorization_required
-
+  rescue_from Exception, :with => :folder_error
 
   def root
 
-    @folders = @library.folders.viewable(@active_user, @active_group).root_folders
-    logger.debug("SIZE:> #{@folders.size}")
+    begin
 
-    respond_to do |format|
-      format.html # index.html.erb
-      format.json { render :json => @folders.to_json(:user => @active_user, :group => @active_group) }
+      @folders = @library.folders.viewable(@active_user, @active_group).root_folders
+      raise "Access Denied to library '#{@library.name}'" if @folders.size < 1
+
+      respond_to do |format|
+        format.html # index.html.erb
+        format.json { render :json => @folders.to_json(:user => @active_user, :group => @active_group) }
+      end
+    rescue => e
+      logger.error("Root Folder Error:> #{e.message}")
+      @folders = [{
+        :id => 0,
+        :name => e.message,
+        :folder_type => VersaFile::FolderTypes.Error,
+        :children => [],
+        :active_permissions => Bfree::Acl::Permissions.View
+      }]
+      respond_to do |format|
+        format.html
+        format.json { render :json => @folders }
+      end
+
     end
 
   end
@@ -92,8 +109,6 @@ class FoldersController < ApplicationController
 
         if(folder_type == VersaFile::FolderTypes.Share)
 
-          @folder.acl.update_attribute(:inherits, false);
-
           @share = @library.shares.create(
               :folder => @folder,
               :password => params[:password],
@@ -103,9 +118,16 @@ class FoldersController < ApplicationController
           unless params[:seed_id].nil?
             @seed = @library.folders.find(params[:seed_id])
             @seed.references.each do |reference|
+              active_role = reference.get_active_role(@active_user, @active_group)
+              next if !Acl.has_rights(active_role.permissions, Bfree::Acl::Permissions.WriteMetadata)
               shared_reference = reference.create_share(@folder, @active_user)
               shared_reference.save()
             end
+
+            #replicater seed's ACL
+            @folder.acl = @seed.acl.deep_clone
+            @folder.acl.update_attribute(:inherits, false);
+
           end
 
         end
@@ -187,8 +209,12 @@ class FoldersController < ApplicationController
     begin
 
       @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
-      unless Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.Delete)
-        raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Delete)
+      destroy_permissions = (@folder.folder_type == VersaFile::FolderTypes.Share) ?
+                                Bfree::Acl::Permissions.WriteMetadata :
+                                Bfree::Acl::Permissions.Delete
+
+      unless Acl.has_rights(@folder.active_permissions, destroy_permissions)
+        raise Exceptions::PermissionError.new(@active_user.name, destroy_permissions)
       end
 
       Folder.transaction do
@@ -217,4 +243,13 @@ class FoldersController < ApplicationController
       end
     end
   end
+
+
+:protected
+
+  def folder_error(e)
+    logger.error "Failed perform folder action => #{e.message}"
+
+  end
+
 end

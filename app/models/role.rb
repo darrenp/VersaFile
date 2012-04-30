@@ -25,5 +25,9 @@ class Role < ActiveRecord::Base
     Role.predefined('None')
   }
 
+  def self.none
+    return self.nones.first
+  end
+
 
 end
