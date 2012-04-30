@@ -63970,8 +63970,8 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     showSearch: function(){
-        var search = this.library.getFolders().getSearchFolder();
-        this._showNodesByItem(search);
+        var searchItem = this.getRoot().getSearchFolder();
+        if(searchItem) this._showNodesByItem(searchItem);
     },
 
     moveFolder: function(parent, folder){
@@ -71616,7 +71616,7 @@ dojo.declare('bfree.widget.search.Advanced', [dijit._Widget, dijit._Templated], 
         }, this.submitNode);
 
         this._btnReset = bfree.widget.Button({
-            iconClass: 'commandIcon bfreeIconCancel',
+            iconClass: 'commandIcon bfreeIconReset',
             label: 'Reset',
             showLabel: false,
             onClick: dojo.hitch(this, this._btnReset_onClick)
@@ -89030,7 +89030,10 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         if(queryItem.queryData==""){
             return;
         }
-        var searchFolder = this.activeLibrary.getFolders().getSearchFolder();
+
+        var rootFolder = this._tvwFolders.getRoot();
+        var searchFolder = rootFolder.getSearchFolder();
+
         if(searchFolder){
             searchFolder.setActiveQuery(queryItem);
             this._tvwFolders.showSearch();

@@ -112,6 +112,7 @@
 .bfreeIconSave,
 .bfreeIconNew,
 .bfreeIconAdmin,
+.bfreeIconReset,
 .bfreeIconSearch,
 .bfreeIconLock,
 .bfreeIconHelp,
@@ -125,7 +126,7 @@
 .bfreeIconCancel,
 .bfreeIconOk,
 .bfreeIcon{
-	background-image: url('images/icons.16.png');
+	background-image: url('images/alpha/icons.16.png');
 }
 
 .bfreeIcon              { background-position: 0px; }
@@ -141,46 +142,47 @@
 .bfreeIconHelp          { background-position: -160px; }
 .bfreeIconLock          { background-position: -176px; }
 .bfreeIconSearch        { background-position: -192px; }
-.bfreeIconAdmin         { background-position: -208px; }
-.bfreeIconNew           { background-position: -224px; }
-.bfreeIconSave          { background-position: -240px; }
-.bfreeIconUndo          { background-position: -256px; }
-.bfreeIconEdit          { background-position: -272px; }
-.bfreeIconDelete        { background-position: -288px; }
-.bfreeIconUser          { background-position: -304px; }
-.bfreeIconGroup         { background-position: -320px; }
-.bfreeIconPropDef       { background-position: -336px; }
-.bfreeIconChoiceList    { background-position: -352px; }
-.bfreeIconDocType       { background-position: -368px; }
-.bfreeIconViewDef       { background-position: -384px; }
-.bfreeIconPrint             { background-position: -400px; }
-.bfreeIconRemoveSharedItem  { background-position: -416px; }
-.bfreeIconRefreshDocument   { background-position: -432px; }
-.bfreeIconNewDocument       { background-position: -448px; }
-.bfreeIconViewDocument      { background-position: -464px; }
-.bfreeIconCopyDocument      { background-position: -480px; }
-.bfreeIconEditDocument      { background-position: -496px; }
-.bfreeIconMoveDocument      { background-position: -512px; }
-.bfreeIconCkoDocument       { background-position: -528px; }
-.bfreeIconCkiDocument       { background-position: -544px; }
-.bfreeIconCancelCkoDocument { background-position: -560px; }
-.bfreeIconDeleteDocument    { background-position: -576px; }
-.bfreeIconSecureDocument    { background-position: -592px; }
-.bfreeIconNewFolder         { background-position: -608px; }
-.bfreeIconEditFolder        { background-position: -624px; }
-.bfreeIconDeleteFolder      { background-position: -640px; }
-.bfreeIconSecureFolder      { background-position: -656px; }
-.bfreeIconNewSubFolder      { background-position: -672px; }
-.bfreeIconStateCko          { background-position: -688px; }
-.bfreeIconQuota             { background-position: -704px; }
-.bfreeIconDocument          { background-position: -720px; }
-.bfreeIconFolder            { background-position: -736px; }
-.bfreeIconExportCSV         { background-position: -752px; }
-.bfreeIconExportPDF         { background-position: -768px; }
-.bfreeIconExportXML         { background-position: -784px; }
-.bfreeIconErrorLeft         { background-position: -800px; }
-.bfreeIconErrorRight        { background-position: -816px; }
-.bfreeIconLogout            { background-position: -832px; }
+.bfreeIconReset         { background-position: -208px; }
+.bfreeIconAdmin         { background-position: -224px; }
+.bfreeIconNew           { background-position: -240px; }
+.bfreeIconSave          { background-position: -256px; }
+.bfreeIconUndo          { background-position: -272px; }
+.bfreeIconEdit          { background-position: -288px; }
+.bfreeIconDelete        { background-position: -304px; }
+.bfreeIconUser          { background-position: -320px; }
+.bfreeIconGroup         { background-position: -336px; }
+.bfreeIconPropDef       { background-position: -352px; }
+.bfreeIconChoiceList    { background-position: -368px; }
+.bfreeIconDocType       { background-position: -384px; }
+.bfreeIconViewDef       { background-position: -400px; }
+.bfreeIconPrint             { background-position: -416px; }
+.bfreeIconRemoveSharedItem  { background-position: -432px; }
+.bfreeIconRefreshDocument   { background-position: -448px; }
+.bfreeIconNewDocument       { background-position: -464px; }
+.bfreeIconViewDocument      { background-position: -480px; }
+.bfreeIconCopyDocument      { background-position: -496px; }
+.bfreeIconEditDocument      { background-position: -512px; }
+.bfreeIconMoveDocument      { background-position: -528px; }
+.bfreeIconCkoDocument       { background-position: -544px; }
+.bfreeIconCkiDocument       { background-position: -560px; }
+.bfreeIconCancelCkoDocument { background-position: -576px; }
+.bfreeIconDeleteDocument    { background-position: -592px; }
+.bfreeIconSecureDocument    { background-position: -608px; }
+.bfreeIconNewFolder         { background-position: -624px; }
+.bfreeIconEditFolder        { background-position: -640px; }
+.bfreeIconDeleteFolder      { background-position: -656px; }
+.bfreeIconSecureFolder      { background-position: -672px; }
+.bfreeIconNewSubFolder      { background-position: -688px; }
+.bfreeIconStateCko          { background-position: -704px; }
+.bfreeIconQuota             { background-position: -720px; }
+.bfreeIconDocument          { background-position: -736px; }
+.bfreeIconFolder            { background-position: -752px; }
+.bfreeIconExportCSV         { background-position: -768px; }
+.bfreeIconExportPDF         { background-position: -784px; }
+.bfreeIconExportXML         { background-position: -800px; }
+.bfreeIconErrorLeft         { background-position: -816px; }
+.bfreeIconErrorRight        { background-position: -832px; }
+.bfreeIconLogout            { background-position: -848px; }
 
 .bfreeIconLogoutD,
 .bfreeIconErrorRightD,
@@ -222,6 +224,7 @@
 .bfreeIconSaveD,
 .bfreeIconNewD,
 .bfreeIconAdminD,
+.bfreeIconResetD,
 .bfreeIconSearchD,
 .bfreeIconLockD,
 .bfreeIconHelpD,
@@ -235,7 +238,7 @@
 .bfreeIconCancelD,
 .bfreeIconOkD,
 .bfreeIconD{
-	background-image: url('images/icons.16.d.png');
+	background-image: url('images/alpha/icons.16.d.png');
 }
 
 .bfreeIconD              { background-position: 0px; }
@@ -251,46 +254,47 @@
 .bfreeIconHelpD          { background-position: -160px; }
 .bfreeIconLockD          { background-position: -176px; }
 .bfreeIconSearchD        { background-position: -192px; }
-.bfreeIconAdminD         { background-position: -208px; }
-.bfreeIconNewD           { background-position: -224px; }
-.bfreeIconSaveD          { background-position: -240px; }
-.bfreeIconUndoD          { background-position: -256px; }
-.bfreeIconEditD          { background-position: -272px; }
-.bfreeIconDeleteD        { background-position: -288px; }
-.bfreeIconUserD          { background-position: -304px; }
-.bfreeIconGroupD         { background-position: -320px; }
-.bfreeIconPropDefD       { background-position: -336px; }
-.bfreeIconChoiceListD    { background-position: -352px; }
-.bfreeIconDocTypeD       { background-position: -368px; }
-.bfreeIconViewDefD       { background-position: -384px; }
-.bfreeIconPrintD             { background-position: -400px; }
-.bfreeIconRemoveSharedItemD  { background-position: -416px; }
-.bfreeIconRefreshDocumentD   { background-position: -432px; }
-.bfreeIconNewDocumentD       { background-position: -448px; }
-.bfreeIconViewDocumentD      { background-position: -464px; }
-.bfreeIconCopyDocumentD      { background-position: -480px; }
-.bfreeIconEditDocumentD      { background-position: -496px; }
-.bfreeIconMoveDocumentD      { background-position: -512px; }
-.bfreeIconCkoDocumentD       { background-position: -528px; }
-.bfreeIconCkiDocumentD       { background-position: -544px; }
-.bfreeIconCancelCkoDocumentD { background-position: -560px; }
-.bfreeIconDeleteDocumentD    { background-position: -576px; }
-.bfreeIconSecureDocumentD    { background-position: -592px; }
-.bfreeIconNewFolderD         { background-position: -608px; }
-.bfreeIconEditFolderD        { background-position: -624px; }
-.bfreeIconDeleteFolderD      { background-position: -640px; }
-.bfreeIconSecureFolderD      { background-position: -656px; }
-.bfreeIconNewSubFolderD      { background-position: -672px; }
-.bfreeIconStateCkoD          { background-position: -688px; }
-.bfreeIconQuotaD             { background-position: -704px; }
-.bfreeIconDocumentD          { background-position: -720px; }
-.bfreeIconFolderD            { background-position: -736px; }
-.bfreeIconExportCSVD         { background-position: -752px; }
-.bfreeIconExportPDFD         { background-position: -768px; }
-.bfreeIconExportXMLD         { background-position: -784px; }
-.bfreeIconErrorLeftD         { background-position: -800px; }
-.bfreeIconErrorRightD        { background-position: -816px; }
-.bfreeIconLogoutD            { background-position: -832px; }
+.bfreeIconResetD         { background-position: -208px; }
+.bfreeIconAdminD         { background-position: -224px; }
+.bfreeIconNewD           { background-position: -240px; }
+.bfreeIconSaveD          { background-position: -256px; }
+.bfreeIconUndoD          { background-position: -272px; }
+.bfreeIconEditD          { background-position: -288px; }
+.bfreeIconDeleteD        { background-position: -304px; }
+.bfreeIconUserD          { background-position: -320px; }
+.bfreeIconGroupD         { background-position: -336px; }
+.bfreeIconPropDefD       { background-position: -352px; }
+.bfreeIconChoiceListD    { background-position: -368px; }
+.bfreeIconDocTypeD       { background-position: -384px; }
+.bfreeIconViewDefD       { background-position: -400px; }
+.bfreeIconPrintD             { background-position: -416px; }
+.bfreeIconRemoveSharedItemD  { background-position: -432px; }
+.bfreeIconRefreshDocumentD   { background-position: -448px; }
+.bfreeIconNewDocumentD       { background-position: -464px; }
+.bfreeIconViewDocumentD      { background-position: -480px; }
+.bfreeIconCopyDocumentD      { background-position: -496px; }
+.bfreeIconEditDocumentD      { background-position: -512px; }
+.bfreeIconMoveDocumentD      { background-position: -528px; }
+.bfreeIconCkoDocumentD       { background-position: -544px; }
+.bfreeIconCkiDocumentD       { background-position: -560px; }
+.bfreeIconCancelCkoDocumentD { background-position: -576px; }
+.bfreeIconDeleteDocumentD    { background-position: -592px; }
+.bfreeIconSecureDocumentD    { background-position: -608px; }
+.bfreeIconNewFolderD         { background-position: -624px; }
+.bfreeIconEditFolderD        { background-position: -640px; }
+.bfreeIconDeleteFolderD      { background-position: -656px; }
+.bfreeIconSecureFolderD      { background-position: -672px; }
+.bfreeIconNewSubFolderD      { background-position: -688px; }
+.bfreeIconStateCkoD          { background-position: -704px; }
+.bfreeIconQuotaD             { background-position: -720px; }
+.bfreeIconDocumentD          { background-position: -736px; }
+.bfreeIconFolderD            { background-position: -752px; }
+.bfreeIconExportCSVD         { background-position: -768px; }
+.bfreeIconExportPDFD         { background-position: -784px; }
+.bfreeIconExportXMLD         { background-position: -800px; }
+.bfreeIconErrorLeftD         { background-position: -816px; }
+.bfreeIconErrorRightD        { background-position: -832px; }
+.bfreeIconLogoutD            { background-position: -848px; }
 
 .bfreeIconLogout32,
 .bfreeIconErrorRight32,
@@ -332,6 +336,7 @@
 .bfreeIconSave32,
 .bfreeIconNew32,
 .bfreeIconAdmin32,
+.bfreeIconReset32,
 .bfreeIconSearch32,
 .bfreeIconLock32,
 .bfreeIconHelp32,
@@ -345,7 +350,7 @@
 .bfreeIconCancel32,
 .bfreeIconOk32,
 .bfreeIcon32{
-    background-image: url('images/icons.32.png');
+    background-image: url('images/alpha/icons.32.png');
 }
 
 .bfreeIcon32                { background-position: 0px; }
@@ -361,46 +366,47 @@
 .bfreeIconHelp32            { background-position: -320px; }
 .bfreeIconLock32            { background-position: -352px; }
 .bfreeIconSearch32          { background-position: -384px; }
-.bfreeIconAdmin32           { background-position: -416px; }
-.bfreeIconNew32             { background-position: -448px; }
-.bfreeIconSave32            { background-position: -480px; }
-.bfreeIconUndo32            { background-position: -512px; }
-.bfreeIconEdit32            { background-position: -544px; }
-.bfreeIconDelete32          { background-position: -576px; }
-.bfreeIconUser32            { background-position: -608px; }
-.bfreeIconGroup32           { background-position: -640px; }
-.bfreeIconPropDef32         { background-position: -672px; }
-.bfreeIconChoiceList32      { background-position: -704px; }
-.bfreeIconDocType32         { background-position: -736px; }
-.bfreeIconViewDef32         { background-position: -768px; }
-.bfreeIconPrint32               { background-position: -800px; }
-.bfreeIconRemoveSharedItem32    { background-position: -832px; }
-.bfreeIconRefreshDocument32     { background-position: -864px; }
-.bfreeIconNewDocument32         { background-position: -896px; }
-.bfreeIconViewDocument32        { background-position: -928px; }
-.bfreeIconCopyDocument32        { background-position: -960px; }
-.bfreeIconEditDocument32        { background-position: -992px; }
-.bfreeIconMoveDocument32        { background-position: -1024px; }
-.bfreeIconCkoDocument32         { background-position: -1056px; }
-.bfreeIconCkiDocument32         { background-position: -1088px; }
-.bfreeIconCancelCkoDocument32   { background-position: -1120px; }
-.bfreeIconDeleteDocument32      { background-position: -1152px; }
-.bfreeIconSecureDocument32      { background-position: -1184px; }
-.bfreeIconNewFolder32           { background-position: -1216px; }
-.bfreeIconEditFolder32          { background-position: -1248px; }
-.bfreeIconDeleteFolder32        { background-position: -1280px; }
-.bfreeIconSecureFolder32        { background-position: -1312px; }
-.bfreeIconNewSubFolder32        { background-position: -1344px; }
-.bfreeIconStateCko32            { background-position: -1376px; }
-.bfreeIconQuota32               { background-position: -1408px; }
-.bfreeIconDocument32            { background-position: -1440px; }
-.bfreeIconFolder32              { background-position: -1472px; }
-.bfreeIconExportCSV32           { background-position: -1504px; }
-.bfreeIconExportPDF32           { background-position: -1536px; }
-.bfreeIconExportXML32           { background-position: -1568px; }
-.bfreeIconErrorLeft32           { background-position: -1600px; }
-.bfreeIconErrorRight32          { background-position: -1632px; }
-.bfreeIconLogout32              { background-position: -1664px; }
+.bfreeIconReset32           { background-position: -416px; }
+.bfreeIconAdmin32           { background-position: -448px; }
+.bfreeIconNew32             { background-position: -480px; }
+.bfreeIconSave32            { background-position: -512px; }
+.bfreeIconUndo32            { background-position: -544px; }
+.bfreeIconEdit32            { background-position: -576px; }
+.bfreeIconDelete32          { background-position: -608px; }
+.bfreeIconUser32            { background-position: -640px; }
+.bfreeIconGroup32           { background-position: -672px; }
+.bfreeIconPropDef32         { background-position: -704px; }
+.bfreeIconChoiceList32      { background-position: -736px; }
+.bfreeIconDocType32         { background-position: -768px; }
+.bfreeIconViewDef32         { background-position: -800px; }
+.bfreeIconPrint32               { background-position: -832px; }
+.bfreeIconRemoveSharedItem32    { background-position: -864px; }
+.bfreeIconRefreshDocument32     { background-position: -896px; }
+.bfreeIconNewDocument32         { background-position: -928px; }
+.bfreeIconViewDocument32        { background-position: -960px; }
+.bfreeIconCopyDocument32        { background-position: -992px; }
+.bfreeIconEditDocument32        { background-position: -1024px; }
+.bfreeIconMoveDocument32        { background-position: -1056px; }
+.bfreeIconCkoDocument32         { background-position: -1088px; }
+.bfreeIconCkiDocument32         { background-position: -1120px; }
+.bfreeIconCancelCkoDocument32   { background-position: -1152px; }
+.bfreeIconDeleteDocument32      { background-position: -1184px; }
+.bfreeIconSecureDocument32      { background-position: -1216px; }
+.bfreeIconNewFolder32           { background-position: -1248px; }
+.bfreeIconEditFolder32          { background-position: -1280px; }
+.bfreeIconDeleteFolder32        { background-position: -1312px; }
+.bfreeIconSecureFolder32        { background-position: -1344px; }
+.bfreeIconNewSubFolder32        { background-position: -1376px; }
+.bfreeIconStateCko32            { background-position: -1408px; }
+.bfreeIconQuota32               { background-position: -1440px; }
+.bfreeIconDocument32            { background-position: -1472px; }
+.bfreeIconFolder32              { background-position: -1504px; }
+.bfreeIconExportCSV32           { background-position: -1536px; }
+.bfreeIconExportPDF32           { background-position: -1568px; }
+.bfreeIconExportXML32           { background-position: -1600px; }
+.bfreeIconErrorLeft32           { background-position: -1632px; }
+.bfreeIconErrorRight32          { background-position: -1664px; }
+.bfreeIconLogout32              { background-position: -1696px; }
 
 .bfreeIconLogout32D,
 .bfreeIconExportXML32D,
@@ -441,6 +447,7 @@
 .bfreeIconSave32D,
 .bfreeIconNew32D,
 .bfreeIconAdmin32D,
+.bfreeIconReset32D,
 .bfreeIconSearch32D,
 .bfreeIconLock32D,
 .bfreeIconHelp32D,
@@ -454,7 +461,7 @@
 .bfreeIconCancel32D,
 .bfreeIconOk32D,
 .bfreeIcon32D{
-    background-image: url('images/icons.32.d.png');
+    background-image: url('images/alpha/icons.32.d.png');
 }
 
 .bfreeIcon32D                { background-position: 0px; }
@@ -470,45 +477,46 @@
 .bfreeIconHelp32D            { background-position: -320px; }
 .bfreeIconLock32D            { background-position: -352px; }
 .bfreeIconSearch32D          { background-position: -384px; }
-.bfreeIconAdmin32D           { background-position: -416px; }
-.bfreeIconNew32D             { background-position: -448px; }
-.bfreeIconSave32D            { background-position: -480px; }
-.bfreeIconUndo32D            { background-position: -512px; }
-.bfreeIconEdit32D            { background-position: -544px; }
-.bfreeIconDelete32D          { background-position: -576px; }
-.bfreeIconUser32D            { background-position: -608px; }
-.bfreeIconGroup32D           { background-position: -640px; }
-.bfreeIconPropDef32D         { background-position: -672px; }
-.bfreeIconChoiceList32D      { background-position: -704px; }
-.bfreeIconDocType32D         { background-position: -736px; }
-.bfreeIconViewDef32D         { background-position: -768px; }
-.bfreeIconPrint32D               { background-position: -800px; }
-.bfreeIconRemoveSharedItem32D    { background-position: -832px; }
-.bfreeIconRefreshDocument32D     { background-position: -864px; }
-.bfreeIconNewDocument32D         { background-position: -896px; }
-.bfreeIconViewDocument32D        { background-position: -928px; }
-.bfreeIconCopyDocument32D        { background-position: -960px; }
-.bfreeIconEditDocument32D        { background-position: -992px; }
-.bfreeIconMoveDocument32D        { background-position: -1024px; }
-.bfreeIconCkoDocument32D         { background-position: -1056px; }
-.bfreeIconCkiDocument32D         { background-position: -1088px; }
-.bfreeIconCancelCkoDocument32D   { background-position: -1120px; }
-.bfreeIconDeleteDocument32D      { background-position: -1152px; }
-.bfreeIconSecureDocument32D      { background-position: -1184px; }
-.bfreeIconNewFolder32D           { background-position: -1216px; }
-.bfreeIconEditFolder32D          { background-position: -1248px; }
-.bfreeIconDeleteFolder32D        { background-position: -1312px; }
-.bfreeIconNewSubFolder32D        { background-position: -1344px; }
-.bfreeIconStateCko32D            { background-position: -1376px; }
-.bfreeIconQuota32D               { background-position: -1408px; }
-.bfreeIconDocument32D            { background-position: -1440px; }
-.bfreeIconFolder32D              { background-position: -1472px; }
-.bfreeIconExportCSV32D           { background-position: -1504px; }
-.bfreeIconExportPDF32D           { background-position: -1536px; }
-.bfreeIconExportXML32D           { background-position: -1568px; }
-.bfreeIconErrorLeft32D           { background-position: -1600px; }
-.bfreeIconErrorRight32D          { background-position: -1632px; }
-.bfreeIconLogout32D              { background-position: -1664px; }
+.bfreeIconReset32D           { background-position: -416px; }
+.bfreeIconAdmin32D           { background-position: -448px; }
+.bfreeIconNew32D             { background-position: -480px; }
+.bfreeIconSave32D            { background-position: -512px; }
+.bfreeIconUndo32D            { background-position: -544px; }
+.bfreeIconEdit32D            { background-position: -576px; }
+.bfreeIconDelete32D          { background-position: -608px; }
+.bfreeIconUser32D            { background-position: -640px; }
+.bfreeIconGroup32D           { background-position: -672px; }
+.bfreeIconPropDef32D         { background-position: -704px; }
+.bfreeIconChoiceList32D      { background-position: -736px; }
+.bfreeIconDocType32D         { background-position: -768px; }
+.bfreeIconViewDef32D         { background-position: -800px; }
+.bfreeIconPrint32D               { background-position: -832px; }
+.bfreeIconRemoveSharedItem32D    { background-position: -864px; }
+.bfreeIconRefreshDocument32D     { background-position: -896px; }
+.bfreeIconNewDocument32D         { background-position: -928px; }
+.bfreeIconViewDocument32D        { background-position: -960px; }
+.bfreeIconCopyDocument32D        { background-position: -992px; }
+.bfreeIconEditDocument32D        { background-position: -1024px; }
+.bfreeIconMoveDocument32D        { background-position: -1056px; }
+.bfreeIconCkoDocument32D         { background-position: -1088px; }
+.bfreeIconCkiDocument32D         { background-position: -1120px; }
+.bfreeIconCancelCkoDocument32D   { background-position: -1152px; }
+.bfreeIconDeleteDocument32D      { background-position: -1184px; }
+.bfreeIconSecureDocument32D      { background-position: -1216px; }
+.bfreeIconNewFolder32D           { background-position: -1248px; }
+.bfreeIconEditFolder32D          { background-position: -1312px; }
+.bfreeIconDeleteFolder32D        { background-position: -1344px; }
+.bfreeIconNewSubFolder32D        { background-position: -1376px; }
+.bfreeIconStateCko32D            { background-position: -1408px; }
+.bfreeIconQuota32D               { background-position: -1440px; }
+.bfreeIconDocument32D            { background-position: -1472px; }
+.bfreeIconFolder32D              { background-position: -1504px; }
+.bfreeIconExportCSV32D           { background-position: -1536px; }
+.bfreeIconExportPDF32D           { background-position: -1568px; }
+.bfreeIconExportXML32D           { background-position: -1600px; }
+.bfreeIconErrorLeft32D           { background-position: -1632px; }
+.bfreeIconErrorRight32D          { background-position: -1664px; }
+.bfreeIconLogout32D              { background-position: -1696px; }
 
 .bfreeShareFolderOpened,
 .bfreeShareFolderClosed,
