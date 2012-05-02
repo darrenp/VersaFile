@@ -57,7 +57,7 @@ class Library < ActiveRecord::Base
     choicelist_count = self.choice_lists.count
     propdef_count = self.property_definitions.count
     doctype_count = self.document_types.count
-    viewdef_count = self.view_definitions.count
+    viewdef_count = self.view_definitions.where(:is_template => true).count
 
     folder_count = self.folders.count - 2   #remove two for search/recycle bin folders
     document_count = self.documents.count

@@ -159,7 +159,9 @@ class DocumentsController < ApplicationController
       unique_id = params[:authenticity_token]
 
       @document_type = @library.document_types.find(params[:document_type_id]);
+
       @folder = (params[:folder_id].nil? || params[:folder_id] == 0) ? nil : @library.folders.viewable(@active_user, @active_group).find(params[:folder_id])
+      raise "Folder has not been specified" if @folder.nil?
 
       tmp_file = UploaderHelper.read_file(@zone, unique_id, params[:binary_file_name])
       @version = Version.supersede(@library, nil, tmp_file, isMinorVersion)

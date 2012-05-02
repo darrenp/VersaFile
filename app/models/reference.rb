@@ -171,9 +171,10 @@ class Reference < ActiveRecord::Base
 
   def file_in_folder(folder, user)
 
-    folder_id = folder.nil? ? 0 : folder.id
+    raise "Folder not defined" if folder.nil?
+
     self.update_attributes(
-        :folder_id => folder_id
+        :folder_id => folder.id
     )
 
     self.document.update_attribute(:updated_by, user.name)

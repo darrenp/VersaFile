@@ -116,7 +116,9 @@ class ReferencesController < ApplicationController
 
     folder_id = params[:folder_id].to_i
     @folder = (folder_id == 0) ? nil : @library.folders.viewable(@active_user, @active_group).find(folder_id)
-    if !@folder.nil? && !Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles)
+    raise "Folder has not been specified or is invalid" if @folder.nil?
+
+    if !Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles)
       raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.CreateFiles)
     end
 
@@ -277,6 +279,7 @@ class ReferencesController < ApplicationController
     end
 
     Document.transaction do
+
       @reference.document.update_properties(@active_user, params)
 
       unless @reference.document.save

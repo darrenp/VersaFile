@@ -369,10 +369,13 @@ protected
   end
 
   def on_after_save
-       self.update_attribute(:custom_metadata, self.generate_custom_metadata()) if self.custom_metadata.nil?
+    logger.debug('DOCUMENT SAVE')
+    self.update_attribute(:custom_metadata, self.generate_custom_metadata()) if self.custom_metadata.nil?
   end
 
   def clear_metadata
+
+    self.custom_metadata = nil
 
     #Strings
     Bfree::ColumnMaximum.StringMax.times do |n|

@@ -153,45 +153,49 @@ class FoldersController < ApplicationController
   def update
 
     @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
-    unless Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata)
+    unless Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata)||
+           Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View)
       raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
     end
 
-    Folder.transaction do
+    if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata))
+      Folder.transaction do
+        parent_id = params[:parent_id].to_i
+        @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(parent_id)
+        @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
 
-      parent_id = params[:parent_id].to_i
-      @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(parent_id)
-      @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
+        @folder.name = params[:name] unless params[:name].nil?
+        @folder.parent = @parent
 
-      @folder.name = params[:name] unless params[:name].nil?
-      @folder.parent = @parent
+        #update share properties
+        if(@folder.folder_type == VersaFile::FolderTypes.Share)
+          @folder.share.password = params[:password] unless params[:password].nil?
+          @folder.share.expiry = params[:expiry]
+        end
 
-      #update share properties
-      if(@folder.folder_type == VersaFile::FolderTypes.Share)
-        @folder.share.password = params[:password] unless params[:password].nil?
-        @folder.share.expiry = params[:expiry]
+        unless @folder.save
+          raise_errors(@folder.errors)
+        end
+
+        #can have only one custom view per folder/user, so...
+        @view_mapping = @library.view_mappings.find_by_folder_id_and_user_id(@folder.id, @active_user.id)
+        unless @view_mapping.nil? || @view_mapping.view_definition.is_template
+          #if view is a template don't delete it
+          #OR current view_definition has been updated, don't deleted it
+          @view_mapping.view_definition.destroy unless @view_mapping.view_definition.id == params[:view_definition_id]
+        end
       end
+    end
 
-      unless @folder.save
-        raise_errors(@folder.errors)
-      end
-
-      #can have only one custom view per folder/user, so...
-      @view_mapping = @library.view_mappings.find_by_folder_id_and_user_id(@folder.id, @active_user.id)
-      unless @view_mapping.nil? || @view_mapping.view_definition.is_template
-        #if view is a template don't delete it
-        #OR current view_definition has been updated, don't deleted it
-        @view_mapping.view_definition.destroy unless @view_mapping.view_definition.id == params[:view_definition_id]
-      end
-
+    if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View))
       #create new mapping
       @view_mapping = @library.view_mappings.find_or_initialize_by_folder_id_and_user_id(@folder.id, @active_user.id)
       @view_mapping.view_definition = @library.view_definitions.find(params[:view_definition_id])
       unless @view_mapping.save
         raise_errors(@view_mapping.errors)
       end
-
     end
+
 
     respond_to do |format|
       format.json  { render :json => @folder.as_json(
@@ -232,7 +236,7 @@ class FoldersController < ApplicationController
 
       respond_to do |format|
         format.html { redirect_to(folders_url) }
-        format.js { render :json => [], :status => :ok }
+        format.js { render :json => nil, :status => :no_content }
       end
 
     rescue => e

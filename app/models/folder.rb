@@ -95,9 +95,13 @@ class Folder < ActiveRecord::Base
   end
 
   def get_view_definition(user)
+    view=nil
 
-    view = self.view_definitions.first
+    view_mapping=self.view_mappings.where(:user_id=>user.id).first
 
+    if(!view_mapping.nil?)
+      view = self.view_definitions.where(:id=>view_mapping.view_definition_id).first
+    end
     if view.nil? && !self.parent.nil?
       view = self.parent.get_view_definition(user)
     end
@@ -112,7 +116,7 @@ class Folder < ActiveRecord::Base
 
       json_obj = super.as_json(options)
       json_obj[:path] = self.dojo_path
-      json_obj[:document_count] = self.document_count
+      #json_obj[:document_count] = self.document_count
       json_obj[:text_path] = self.text_path
       json_obj[:folder_type] = self.folder_type
       json_obj[:active_permissions] = self.acl.get_role(options[:user], options[:group]).permissions
