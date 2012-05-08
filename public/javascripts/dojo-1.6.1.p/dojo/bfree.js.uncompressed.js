@@ -2652,11 +2652,21 @@ bfree.api.Utilities.viewUrl = function(args){
 								'width=${0},height=${1},top=${2},left=${3},toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0,scrollbars=1',
 								[box.w, box.h, box.t, box.l])
 
-//    window.open(url, winName, winArgs).focus();
-    var win = parent.frames['zoneframe'].open('about:blank', winName, winArgs);
-    win.document.location.href = url;
-    win.focus();
-	//
+    if(!dojo.isIE){
+        //for non ie browsers
+        window.open(url, winName, winArgs).focus();
+    }else{
+        try{
+            window.open(url, winName, winArgs).focus();
+        }catch(e){
+//            console.log(e);
+            //in ie if the user is using adobe reader in the browser
+            //it errors when opening a second file, the file still opens
+            //fine though, I don't like to supress errors like this but
+            //it seems to be the best solution for this very small
+            //browser and plugin issue
+        }
+    }
 };
 
 bfree.api.Utilities.formatDate= function(date){
@@ -2830,7 +2840,7 @@ dojo.declare('bfree.api._Collection', null,{
                     onComplete: ((args) && (args.onComplete)) ? args.onComplete : function () { },
                     scope: ((args) && (args.scope)) ? args.scope : this
                 });
-                this.revert();
+                //this.revert();
             }
         }
         finally{
@@ -7809,13 +7819,15 @@ dojo.declare('bfree.api.Folders', [bfree.api._Collection],{
 		return names;
 	},
 
+    /*
     _isUpdateable: function(request){
-
+        return false;
         if(request.query.hasOwnProperty('parent_id'))
             return true;
 
         return typeof request.query == "object";
     },
+    */
 
     constructor: function(args){
 
@@ -7944,6 +7956,9 @@ bfree.api.Cardinality = {
 }
 
 bfree.api.PropertyDefinition.compare = function(item1, item2){
+    if(!item1.name||!item2.name){
+        return 0;
+    }
     return (item1.name.toLowerCase()>item2.name.toLowerCase())?1:-1;
 };
 
@@ -8593,6 +8608,7 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
             seed_id: (args.seed) ? args.seed.getId() : null,
             children: []
         }, parentInfo);
+        this.getFolders().store.changing(share);
 
        return share;
     },
@@ -29281,7 +29297,8 @@ dojo.provide("dojox.grid._Builder");
 		// event helpers
 		getCellX: function(e){
 			var n, x = e.layerX;
-			if(dojo.isMoz || dojo.isIE >= 9){
+//			if(dojo.isMoz || dojo.isIE >= 9){
+            if(dojo.isMoz){
 				n = ascendDom(e.target, makeNotTagName("th"));
 				x -= (n && n.offsetLeft) || 0;
 				var t = e.sourceView.getScrollbarWidth();
@@ -29380,7 +29397,7 @@ dojo.provide("dojox.grid._Builder");
 		},
 
 		domousemove: function(e){
-			//console.log(e.cellIndex, e.cellX, e.cellNode.offsetWidth);
+//			console.log("Cell Index="+e.cellIndex+ " Cell X="+ e.cellX +" Offset Width="+ e.cellNode.offsetWidth);
 			if(!this.moveable){
 				var c = (this.overRightResizeArea(e) ? 'dojoxGridColResize' : (this.overLeftResizeArea(e) ? 'dojoxGridColResize' : ''));
 				if(c && !this.canResize(e)){
@@ -54455,7 +54472,7 @@ bfree.widget.choiceList.values.Editor.show = function(args){
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgChoiceValues',
-        title: 'Choice List Value...',
+        title: 'Add Value to Choice List',
         widgetConstructor: bfree.widget.choiceList.values.Editor,
         widgetParams: {
             choiceList: args.choiceList,
@@ -54976,9 +54993,11 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
 });
 
 bfree.widget.choiceList.Editor.valueFormatter=function(value){
-    console.log(value);
+    if(this.activeItem.data_type_id==bfree.api.DataTypes.types.DATETIME){
+        value=new Date(value);
+    }
     if(value instanceof Date){
-        return bfree.api.Utilities.formatDate(value);
+        return versa.api.Formatter.formatDateTime(value);
     }
     return value;
 };
@@ -56067,6 +56086,8 @@ dojo.declare('bfree.widget.doctype.properties.Editor', [dijit._Widget, dijit._Te
         if(wdg){
             if(wdg.declaredClass=="bfree.widget.NumberSpinner"){
                 wdg.set('value', value?value:0);
+            }else if(value instanceof Date&&wdg.declaredClass=="bfree.widget.FilteringSelect"){
+                wdg.set('value', bfree.api.Utilities.formatDate(value));
             }else{
                 wdg.set('value', value);
             }
@@ -59863,7 +59884,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
 
     _openMyself: function(evt){
 
-        if(this.activeNode.item.isSearch())
+        if((!this.activeNode.item) || (this.activeNode.item.isSearch()))
             return;
 
         this._setState();
@@ -59876,6 +59897,10 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
     },
 
     _setState: function(){
+
+        if(!this.activeNode.item)
+            return;
+
         var hiddenItems = new Object()
         var hideDivs = this.activeNode.item.isSpecial();
         var folder = this.activeNode.item;
@@ -60061,6 +60086,1321 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
     }
 
 });
+
+}
+
+if(!dojo._hasResource["dijit.tree._dndContainer"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dijit.tree._dndContainer"] = true;
+dojo.provide("dijit.tree._dndContainer");
+
+
+
+
+dojo.getObject("tree", true, dojo);
+
+dijit.tree._compareNodes = function(n1, n2){
+	if(n1 === n2){
+		return 0;
+	}
+	
+	if('sourceIndex' in document.documentElement){ //IE
+		//TODO: does not yet work if n1 and/or n2 is a text node
+		return n1.sourceIndex - n2.sourceIndex;
+	}else if('compareDocumentPosition' in document.documentElement){ //FF, Opera
+		return n1.compareDocumentPosition(n2) & 2 ? 1: -1;
+	}else if(document.createRange){ //Webkit
+		var r1 = doc.createRange();
+		r1.setStartBefore(n1);
+
+		var r2 = doc.createRange();
+		r2.setStartBefore(n2);
+
+		return r1.compareBoundaryPoints(r1.END_TO_END, r2);
+	}else{
+		throw Error("dijit.tree._compareNodes don't know how to compare two different nodes in this browser");
+	}
+};
+
+dojo.declare("dijit.tree._dndContainer",
+	null,
+	{
+
+		// summary:
+		//		This is a base class for `dijit.tree._dndSelector`, and isn't meant to be used directly.
+		//		It's modeled after `dojo.dnd.Container`.
+		// tags:
+		//		protected
+
+		/*=====
+		// current: DomNode
+		//		The currently hovered TreeNode.rowNode (which is the DOM node
+		//		associated w/a given node in the tree, excluding it's descendants)
+		current: null,
+		=====*/
+
+		constructor: function(tree, params){
+			// summary:
+			//		A constructor of the Container
+			// tree: Node
+			//		Node or node's id to build the container on
+			// params: dijit.tree.__SourceArgs
+			//		A dict of parameters, which gets mixed into the object
+			// tags:
+			//		private
+			this.tree = tree;
+			this.node = tree.domNode;	// TODO: rename; it's not a TreeNode but the whole Tree
+			dojo.mixin(this, params);
+
+			// class-specific variables
+			this.map = {};
+			this.current = null;	// current TreeNode's DOM node
+
+			// states
+			this.containerState = "";
+			dojo.addClass(this.node, "dojoDndContainer");
+
+			// set up events
+			this.events = [
+				// container level events
+				dojo.connect(this.node, "onmouseenter", this, "onOverEvent"),
+				dojo.connect(this.node, "onmouseleave",	this, "onOutEvent"),
+
+				// switching between TreeNodes
+				dojo.connect(this.tree, "_onNodeMouseEnter", this, "onMouseOver"),
+				dojo.connect(this.tree, "_onNodeMouseLeave", this, "onMouseOut"),
+
+				// cancel text selection and text dragging
+				dojo.connect(this.node, "ondragstart", dojo, "stopEvent"),
+				dojo.connect(this.node, "onselectstart", dojo, "stopEvent")
+			];
+		},
+
+		getItem: function(/*String*/ key){
+			// summary:
+			//		Returns the dojo.dnd.Item (representing a dragged node) by it's key (id).
+			//		Called by dojo.dnd.Source.checkAcceptance().
+			// tags:
+			//		protected
+
+			var widget = this.selection[key],
+				ret = {
+					data: widget,
+					type: ["treeNode"]
+				};
+
+			return ret;	// dojo.dnd.Item
+		},
+
+		destroy: function(){
+			// summary:
+			//		Prepares this object to be garbage-collected
+
+			dojo.forEach(this.events, dojo.disconnect);
+			// this.clearItems();
+			this.node = this.parent = null;
+		},
+
+		// mouse events
+		onMouseOver: function(/*TreeNode*/ widget, /*Event*/ evt){
+			// summary:
+			//		Called when mouse is moved over a TreeNode
+			// tags:
+			//		protected
+			this.current = widget;
+		},
+
+		onMouseOut: function(/*TreeNode*/ widget, /*Event*/ evt){
+			// summary:
+			//		Called when mouse is moved away from a TreeNode
+			// tags:
+			//		protected
+			this.current = null;
+		},
+
+		_changeState: function(type, newState){
+			// summary:
+			//		Changes a named state to new state value
+			// type: String
+			//		A name of the state to change
+			// newState: String
+			//		new state
+			var prefix = "dojoDnd" + type;
+			var state = type.toLowerCase() + "State";
+			//dojo.replaceClass(this.node, prefix + newState, prefix + this[state]);
+			dojo.replaceClass(this.node, prefix + newState, prefix + this[state]);
+			this[state] = newState;
+		},
+
+		_addItemClass: function(node, type){
+			// summary:
+			//		Adds a class with prefix "dojoDndItem"
+			// node: Node
+			//		A node
+			// type: String
+			//		A variable suffix for a class name
+			dojo.addClass(node, "dojoDndItem" + type);
+		},
+
+		_removeItemClass: function(node, type){
+			// summary:
+			//		Removes a class with prefix "dojoDndItem"
+			// node: Node
+			//		A node
+			// type: String
+			//		A variable suffix for a class name
+			dojo.removeClass(node, "dojoDndItem" + type);
+		},
+
+		onOverEvent: function(){
+			// summary:
+			//		This function is called once, when mouse is over our container
+			// tags:
+			//		protected
+			this._changeState("Container", "Over");
+		},
+
+		onOutEvent: function(){
+			// summary:
+			//		This function is called once, when mouse is out of our container
+			// tags:
+			//		protected
+			this._changeState("Container", "");
+		}
+});
+
+}
+
+if(!dojo._hasResource["dijit.tree._dndSelector"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dijit.tree._dndSelector"] = true;
+dojo.provide("dijit.tree._dndSelector");
+
+
+
+
+dojo.declare("dijit.tree._dndSelector",
+	dijit.tree._dndContainer,
+	{
+		// summary:
+		//		This is a base class for `dijit.tree.dndSource` , and isn't meant to be used directly.
+		//		It's based on `dojo.dnd.Selector`.
+		// tags:
+		//		protected
+
+		/*=====
+		// selection: Hash<String, DomNode>
+		//		(id, DomNode) map for every TreeNode that's currently selected.
+		//		The DOMNode is the TreeNode.rowNode.
+		selection: {},
+		=====*/
+
+		constructor: function(tree, params){
+			// summary:
+			//		Initialization
+			// tags:
+			//		private
+
+			this.selection={};
+			this.anchor = null;
+
+			dijit.setWaiState(this.tree.domNode, "multiselect", !this.singular);
+
+			this.events.push(
+				dojo.connect(this.tree.domNode, "onmousedown", this,"onMouseDown"),
+				dojo.connect(this.tree.domNode, "onmouseup", this,"onMouseUp"),
+				dojo.connect(this.tree.domNode, "onmousemove", this,"onMouseMove")
+			);
+		},
+
+		//	singular: Boolean
+		//		Allows selection of only one element, if true.
+		//		Tree hasn't been tested in singular=true mode, unclear if it works.
+		singular: false,
+
+		// methods
+		getSelectedTreeNodes: function(){
+			// summary:
+			//		Returns a list of selected node(s).
+			//		Used by dndSource on the start of a drag.
+			// tags:
+			//		protected
+			var nodes=[], sel = this.selection;
+			for(var i in sel){
+				nodes.push(sel[i]);
+			}
+			return nodes;
+		},
+
+		selectNone: function(){
+			// summary:
+			//		Unselects all items
+			// tags:
+			//		private
+
+			this.setSelection([]);
+			return this;	// self
+		},
+
+		destroy: function(){
+			// summary:
+			//		Prepares the object to be garbage-collected
+			this.inherited(arguments);
+			this.selection = this.anchor = null;
+		},
+		addTreeNode: function(/*dijit._TreeNode*/node, /*Boolean?*/isAnchor){
+			// summary
+			//		add node to current selection
+			// node: Node
+			//		node to add
+			// isAnchor: Boolean
+			//		Whether the node should become anchor.
+
+			this.setSelection(this.getSelectedTreeNodes().concat( [node] ));
+			if(isAnchor){ this.anchor = node; }
+			return node;
+		},
+		removeTreeNode: function(/*dijit._TreeNode*/node){
+			// summary
+			//		remove node from current selection
+			// node: Node
+			//		node to remove
+			this.setSelection(this._setDifference(this.getSelectedTreeNodes(), [node]))
+			return node;
+		},
+		isTreeNodeSelected: function(/*dijit._TreeNode*/node){
+			// summary
+			//		return true if node is currently selected
+			// node: Node
+			//		the node to check whether it's in the current selection
+
+			return node.id && !!this.selection[node.id];
+		},
+		setSelection: function(/*dijit._treeNode[]*/ newSelection){
+			// summary
+			//      set the list of selected nodes to be exactly newSelection. All changes to the
+			//      selection should be passed through this function, which ensures that derived
+			//      attributes are kept up to date. Anchor will be deleted if it has been removed
+			//      from the selection, but no new anchor will be added by this function.
+			// newSelection: Node[]
+			//      list of tree nodes to make selected
+			var oldSelection = this.getSelectedTreeNodes();
+			dojo.forEach(this._setDifference(oldSelection, newSelection), dojo.hitch(this, function(node){
+				node.setSelected(false);
+				if(this.anchor == node){
+					delete this.anchor;
+				}
+				delete this.selection[node.id];
+			}));
+			dojo.forEach(this._setDifference(newSelection, oldSelection), dojo.hitch(this, function(node){
+				node.setSelected(true);
+				this.selection[node.id] = node;
+			}));
+			this._updateSelectionProperties();
+		},
+		_setDifference: function(xs,ys){
+			// summary
+			//      Returns a copy of xs which lacks any objects
+			//      occurring in ys. Checks for membership by
+			//      modifying and then reading the object, so it will
+			//      not properly handle sets of numbers or strings.
+			
+			dojo.forEach(ys, function(y){ y.__exclude__ = true; });
+			var ret = dojo.filter(xs, function(x){ return !x.__exclude__; });
+
+			// clean up after ourselves.
+			dojo.forEach(ys, function(y){ delete y['__exclude__'] });
+			return ret;
+		},
+		_updateSelectionProperties: function() {
+			// summary
+			//      Update the following tree properties from the current selection:
+			//      path[s], selectedItem[s], selectedNode[s]
+			
+			var selected = this.getSelectedTreeNodes();
+			var paths = [], nodes = [];
+			dojo.forEach(selected, function(node) {
+				nodes.push(node);
+				paths.push(node.getTreePath());
+			});
+			var items = dojo.map(nodes,function(node) { return node.item; });
+			this.tree._set("paths", paths);
+			this.tree._set("path", paths[0] || []);
+			this.tree._set("selectedNodes", nodes);
+			this.tree._set("selectedNode", nodes[0] || null);
+			this.tree._set("selectedItems", items);
+			this.tree._set("selectedItem", items[0] || null);
+		},
+		// mouse events
+		onMouseDown: function(e){
+			// summary:
+			//		Event processor for onmousedown
+			// e: Event
+			//		mouse event
+			// tags:
+			//		protected
+
+			// ignore click on expando node
+			if(!this.current || this.tree.isExpandoNode( e.target, this.current)){ return; }
+
+			if(e.button == dojo.mouseButtons.RIGHT){ return; }	// ignore right-click
+
+			dojo.stopEvent(e);
+
+			var treeNode = this.current,
+			  copy = dojo.isCopyKey(e), id = treeNode.id;
+
+			// if shift key is not pressed, and the node is already in the selection,
+			// delay deselection until onmouseup so in the case of DND, deselection
+			// will be canceled by onmousemove.
+			if(!this.singular && !e.shiftKey && this.selection[id]){
+				this._doDeselect = true;
+				return;
+			}else{
+				this._doDeselect = false;
+			}
+			this.userSelect(treeNode, copy, e.shiftKey);
+		},
+
+		onMouseUp: function(e){
+			// summary:
+			//		Event processor for onmouseup
+			// e: Event
+			//		mouse event
+			// tags:
+			//		protected
+
+			// _doDeselect is the flag to indicate that the user wants to either ctrl+click on
+			// a already selected item (to deselect the item), or click on a not-yet selected item
+			// (which should remove all current selection, and add the clicked item). This can not
+			// be done in onMouseDown, because the user may start a drag after mousedown. By moving
+			// the deselection logic here, the user can drags an already selected item.
+			if(!this._doDeselect){ return; }
+			this._doDeselect = false;
+			this.userSelect(this.current, dojo.isCopyKey( e ), e.shiftKey);
+		},
+		onMouseMove: function(e){
+			// summary
+			//		event processor for onmousemove
+			// e: Event
+			//		mouse event
+			this._doDeselect = false;
+		},
+
+		userSelect: function(node, multi, range){
+			// summary:
+			//		Add or remove the given node from selection, responding
+			//      to a user action such as a click or keypress.
+			// multi: Boolean
+			//		Indicates whether this is meant to be a multi-select action (e.g. ctrl-click)
+			// range: Boolean
+			//		Indicates whether this is meant to be a ranged action (e.g. shift-click)
+			// tags:
+			//		protected
+
+			if(this.singular){
+				if(this.anchor == node && multi){
+					this.selectNone();
+				}else{
+					this.setSelection([node]);
+					this.anchor = node;
+				}
+			}else{
+				if(range && this.anchor){
+					var cr = dijit.tree._compareNodes(this.anchor.rowNode, node.rowNode),
+					begin, end, anchor = this.anchor;
+					
+					if(cr < 0){ //current is after anchor
+						begin = anchor;
+						end = node;
+					}else{ //current is before anchor
+						begin = node;
+						end = anchor;
+					}
+					nodes = [];
+					//add everything betweeen begin and end inclusively
+					while(begin != end) {
+						nodes.push(begin)
+						begin = this.tree._getNextNode(begin);
+					}
+					nodes.push(end)
+
+					this.setSelection(nodes);
+				}else{
+				    if( this.selection[ node.id ] && multi ) {
+						this.removeTreeNode( node );
+				    } else if(multi) {
+						this.addTreeNode(node, true);
+					} else {
+						this.setSelection([node]);
+						this.anchor = node;
+				    }
+				}
+			}
+		},
+
+		forInSelectedItems: function(/*Function*/ f, /*Object?*/ o){
+			// summary:
+			//		Iterates over selected items;
+			//		see `dojo.dnd.Container.forInItems()` for details
+			o = o || dojo.global;
+			for(var id in this.selection){
+				// console.log("selected item id: " + id);
+				f.call(o, this.getItem(id), id, this);
+			}
+		}
+});
+
+}
+
+if(!dojo._hasResource["dijit.tree.dndSource"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource["dijit.tree.dndSource"] = true;
+dojo.provide("dijit.tree.dndSource");
+
+
+
+
+/*=====
+dijit.tree.__SourceArgs = function(){
+	// summary:
+	//		A dict of parameters for Tree source configuration.
+	// isSource: Boolean?
+	//		Can be used as a DnD source. Defaults to true.
+	// accept: String[]
+	//		List of accepted types (text strings) for a target; defaults to
+	//		["text", "treeNode"]
+	// copyOnly: Boolean?
+	//		Copy items, if true, use a state of Ctrl key otherwise,
+	// dragThreshold: Number
+	//		The move delay in pixels before detecting a drag; 0 by default
+	// betweenThreshold: Integer
+	//		Distance from upper/lower edge of node to allow drop to reorder nodes
+	this.isSource = isSource;
+	this.accept = accept;
+	this.autoSync = autoSync;
+	this.copyOnly = copyOnly;
+	this.dragThreshold = dragThreshold;
+	this.betweenThreshold = betweenThreshold;
+}
+=====*/
+
+dojo.declare("dijit.tree.dndSource", dijit.tree._dndSelector, {
+	// summary:
+	//		Handles drag and drop operations (as a source or a target) for `dijit.Tree`
+
+	// isSource: [private] Boolean
+	//		Can be used as a DnD source.
+	isSource: true,
+
+	// accept: String[]
+	//		List of accepted types (text strings) for the Tree; defaults to
+	//		["text"]
+	accept: ["text", "treeNode"],
+
+	// copyOnly: [private] Boolean
+	//		Copy items, if true, use a state of Ctrl key otherwise
+	copyOnly: false,
+
+	// dragThreshold: Number
+	//		The move delay in pixels before detecting a drag; 5 by default
+	dragThreshold: 5,
+
+	// betweenThreshold: Integer
+	//		Distance from upper/lower edge of node to allow drop to reorder nodes
+	betweenThreshold: 0,
+
+	constructor: function(/*dijit.Tree*/ tree, /*dijit.tree.__SourceArgs*/ params){
+		// summary:
+		//		a constructor of the Tree DnD Source
+		// tags:
+		//		private
+		if(!params){ params = {}; }
+		dojo.mixin(this, params);
+		this.isSource = typeof params.isSource == "undefined" ? true : params.isSource;
+		var type = params.accept instanceof Array ? params.accept : ["text", "treeNode"];
+		this.accept = null;
+		if(type.length){
+			this.accept = {};
+			for(var i = 0; i < type.length; ++i){
+				this.accept[type[i]] = 1;
+			}
+		}
+
+		// class-specific variables
+		this.isDragging = false;
+		this.mouseDown = false;
+		this.targetAnchor = null;	// DOMNode corresponding to the currently moused over TreeNode
+		this.targetBox = null;	// coordinates of this.targetAnchor
+		this.dropPosition = "";	// whether mouse is over/after/before this.targetAnchor
+		this._lastX = 0;
+		this._lastY = 0;
+
+		// states
+		this.sourceState = "";
+		if(this.isSource){
+			dojo.addClass(this.node, "dojoDndSource");
+		}
+		this.targetState = "";
+		if(this.accept){
+			dojo.addClass(this.node, "dojoDndTarget");
+		}
+
+		// set up events
+		this.topics = [
+			dojo.subscribe("/dnd/source/over", this, "onDndSourceOver"),
+			dojo.subscribe("/dnd/start", this, "onDndStart"),
+			dojo.subscribe("/dnd/drop", this, "onDndDrop"),
+			dojo.subscribe("/dnd/cancel", this, "onDndCancel")
+		];
+	},
+
+	// methods
+	checkAcceptance: function(source, nodes){
+		// summary:
+		//		Checks if the target can accept nodes from this source
+		// source: dijit.tree.dndSource
+		//		The source which provides items
+		// nodes: DOMNode[]
+		//		Array of DOM nodes corresponding to nodes being dropped, dijitTreeRow nodes if
+		//		source is a dijit.Tree.
+		// tags:
+		//		extension
+		return true;	// Boolean
+	},
+
+	copyState: function(keyPressed){
+		// summary:
+		//		Returns true, if we need to copy items, false to move.
+		//		It is separated to be overwritten dynamically, if needed.
+		// keyPressed: Boolean
+		//		The "copy" control key was pressed
+		// tags:
+		//		protected
+		return this.copyOnly || keyPressed;	// Boolean
+	},
+	destroy: function(){
+		// summary:
+		//		Prepares the object to be garbage-collected.
+		this.inherited("destroy",arguments);
+		dojo.forEach(this.topics, dojo.unsubscribe);
+		this.targetAnchor = null;
+	},
+
+	_onDragMouse: function(e){
+		// summary:
+		//		Helper method for processing onmousemove/onmouseover events while drag is in progress.
+		//		Keeps track of current drop target.
+
+		var m = dojo.dnd.manager(),
+			oldTarget = this.targetAnchor,			// the TreeNode corresponding to TreeNode mouse was previously over
+			newTarget = this.current,				// TreeNode corresponding to TreeNode mouse is currently over
+			oldDropPosition = this.dropPosition;	// the previous drop position (over/before/after)
+
+		// calculate if user is indicating to drop the dragged node before, after, or over
+		// (i.e., to become a child of) the target node
+		var newDropPosition = "Over";
+		if(newTarget && this.betweenThreshold > 0){
+			// If mouse is over a new TreeNode, then get new TreeNode's position and size
+			if(!this.targetBox || oldTarget != newTarget){
+				this.targetBox = dojo.position(newTarget.rowNode, true);
+			}
+			if((e.pageY - this.targetBox.y) <= this.betweenThreshold){
+				newDropPosition = "Before";
+			}else if((e.pageY - this.targetBox.y) >= (this.targetBox.h - this.betweenThreshold)){
+				newDropPosition = "After";
+			}
+		}
+
+		if(newTarget != oldTarget || newDropPosition != oldDropPosition){
+			if(oldTarget){
+				this._removeItemClass(oldTarget.rowNode, oldDropPosition);
+			}
+			if(newTarget){
+				this._addItemClass(newTarget.rowNode, newDropPosition);
+			}
+
+			// Check if it's ok to drop the dragged node on/before/after the target node.
+			if(!newTarget){
+				m.canDrop(false);
+			}else if(newTarget == this.tree.rootNode && newDropPosition != "Over"){
+				// Can't drop before or after tree's root node; the dropped node would just disappear (at least visually)
+				m.canDrop(false);
+			}else if(m.source == this && (newTarget.id in this.selection)){
+				// Guard against dropping onto yourself (TODO: guard against dropping onto your descendant, #7140)
+				m.canDrop(false);
+			}else if(this.checkItemAcceptance(newTarget.rowNode, m.source, newDropPosition.toLowerCase())
+					&& !this._isParentChildDrop(m.source, newTarget.rowNode)){
+				m.canDrop(true);
+			}else{
+				m.canDrop(false);
+			}
+
+			this.targetAnchor = newTarget;
+			this.dropPosition = newDropPosition;
+		}
+	},
+
+	onMouseMove: function(e){
+		// summary:
+		//		Called for any onmousemove events over the Tree
+		// e: Event
+		//		onmousemouse event
+		// tags:
+		//		private
+		if(this.isDragging && this.targetState == "Disabled"){ return; }
+		this.inherited(arguments);
+		var m = dojo.dnd.manager();
+		if(this.isDragging){
+			this._onDragMouse(e);
+		}else{
+			if(this.mouseDown && this.isSource &&
+				 (Math.abs(e.pageX-this._lastX)>=this.dragThreshold || Math.abs(e.pageY-this._lastY)>=this.dragThreshold)){
+				var nodes = this.getSelectedTreeNodes();
+				if(nodes.length){
+					if(nodes.length > 1){
+						//filter out all selected items which has one of their ancestor selected as well
+						var seen = this.selection, i = 0, r = [], n, p;
+						nextitem: while((n = nodes[i++])){
+							for(p = n.getParent(); p && p !== this.tree; p = p.getParent()){
+								if(seen[p.id]){ //parent is already selected, skip this node
+									continue nextitem;
+								}
+							}
+							//this node does not have any ancestors selected, add it
+							r.push(n);
+						}
+						nodes = r;
+					}
+					nodes = dojo.map(nodes, function(n){return n.domNode});
+					m.startDrag(this, nodes, this.copyState(dojo.isCopyKey(e)));
+				}
+			}
+		}
+	},
+
+	onMouseDown: function(e){
+		// summary:
+		//		Event processor for onmousedown
+		// e: Event
+		//		onmousedown event
+		// tags:
+		//		private
+		this.mouseDown = true;
+		this.mouseButton = e.button;
+		this._lastX = e.pageX;
+		this._lastY = e.pageY;
+		this.inherited(arguments);
+	},
+
+	onMouseUp: function(e){
+		// summary:
+		//		Event processor for onmouseup
+		// e: Event
+		//		onmouseup event
+		// tags:
+		//		private
+		if(this.mouseDown){
+			this.mouseDown = false;
+			this.inherited(arguments);
+		}
+	},
+
+	onMouseOut: function(){
+		// summary:
+		//		Event processor for when mouse is moved away from a TreeNode
+		// tags:
+		//		private
+		this.inherited(arguments);
+		this._unmarkTargetAnchor();
+	},
+
+	checkItemAcceptance: function(target, source, position){
+		// summary:
+		//		Stub function to be overridden if one wants to check for the ability to drop at the node/item level
+		// description:
+		//		In the base case, this is called to check if target can become a child of source.
+		//		When betweenThreshold is set, position="before" or "after" means that we
+		//		are asking if the source node can be dropped before/after the target node.
+		// target: DOMNode
+		//		The dijitTreeRoot DOM node inside of the TreeNode that we are dropping on to
+		//		Use dijit.getEnclosingWidget(target) to get the TreeNode.
+		// source: dijit.tree.dndSource
+		//		The (set of) nodes we are dropping
+		// position: String
+		//		"over", "before", or "after"
+		// tags:
+		//		extension
+		return true;
+	},
+
+	// topic event processors
+	onDndSourceOver: function(source){
+		// summary:
+		//		Topic event processor for /dnd/source/over, called when detected a current source.
+		// source: Object
+		//		The dijit.tree.dndSource / dojo.dnd.Source which has the mouse over it
+		// tags:
+		//		private
+		if(this != source){
+			this.mouseDown = false;
+			this._unmarkTargetAnchor();
+		}else if(this.isDragging){
+			var m = dojo.dnd.manager();
+			m.canDrop(false);
+		}
+	},
+	onDndStart: function(source, nodes, copy){
+		// summary:
+		//		Topic event processor for /dnd/start, called to initiate the DnD operation
+		// source: Object
+		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
+		// nodes: DomNode[]
+		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
+		// copy: Boolean
+		//		Copy items, if true, move items otherwise
+		// tags:
+		//		private
+
+		if(this.isSource){
+			this._changeState("Source", this == source ? (copy ? "Copied" : "Moved") : "");
+		}
+		var accepted = this.checkAcceptance(source, nodes);
+
+		this._changeState("Target", accepted ? "" : "Disabled");
+
+		if(this == source){
+			dojo.dnd.manager().overSource(this);
+		}
+
+		this.isDragging = true;
+	},
+
+	itemCreator: function(/*DomNode[]*/ nodes, target, /*dojo.dnd.Source*/ source){
+		// summary:
+		//		Returns objects passed to `Tree.model.newItem()` based on DnD nodes
+		//		dropped onto the tree.   Developer must override this method to enable
+		// 		dropping from external sources onto this Tree, unless the Tree.model's items
+		//		happen to look like {id: 123, name: "Apple" } with no other attributes.
+		// description:
+		//		For each node in nodes[], which came from source, create a hash of name/value
+		//		pairs to be passed to Tree.model.newItem().  Returns array of those hashes.
+		// returns: Object[]
+		//		Array of name/value hashes for each new item to be added to the Tree, like:
+		// |	[
+		// |		{ id: 123, label: "apple", foo: "bar" },
+		// |		{ id: 456, label: "pear", zaz: "bam" }
+		// |	]
+		// tags:
+		//		extension
+
+		// TODO: for 2.0 refactor so itemCreator() is called once per drag node, and
+		// make signature itemCreator(sourceItem, node, target) (or similar).
+
+		return dojo.map(nodes, function(node){
+			return {
+				"id": node.id,
+				"name": node.textContent || node.innerText || ""
+			};
+		}); // Object[]
+	},
+
+	onDndDrop: function(source, nodes, copy){
+		// summary:
+		//		Topic event processor for /dnd/drop, called to finish the DnD operation.
+		// description:
+		//		Updates data store items according to where node was dragged from and dropped
+		//		to.   The tree will then respond to those data store updates and redraw itself.
+		// source: Object
+		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
+		// nodes: DomNode[]
+		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
+		// copy: Boolean
+		//		Copy items, if true, move items otherwise
+		// tags:
+		//		protected
+		if(this.containerState == "Over"){
+			var tree = this.tree,
+				model = tree.model,
+				target = this.targetAnchor,
+				requeryRoot = false;	// set to true iff top level items change
+
+			this.isDragging = false;
+
+			// Compute the new parent item
+			var targetWidget = target;
+			var newParentItem;
+			var insertIndex;
+			newParentItem = (targetWidget && targetWidget.item) || tree.item;
+			if(this.dropPosition == "Before" || this.dropPosition == "After"){
+				// TODO: if there is no parent item then disallow the drop.
+				// Actually this should be checked during onMouseMove too, to make the drag icon red.
+				newParentItem = (targetWidget.getParent() && targetWidget.getParent().item) || tree.item;
+				// Compute the insert index for reordering
+				insertIndex = targetWidget.getIndexInParent();
+				if(this.dropPosition == "After"){
+					insertIndex = targetWidget.getIndexInParent() + 1;
+				}
+			}else{
+				newParentItem = (targetWidget && targetWidget.item) || tree.item;
+			}
+
+			// If necessary, use this variable to hold array of hashes to pass to model.newItem()
+			// (one entry in the array for each dragged node).
+			var newItemsParams;
+
+			dojo.forEach(nodes, function(node, idx){
+				// dojo.dnd.Item representing the thing being dropped.
+				// Don't confuse the use of item here (meaning a DnD item) with the
+				// uses below where item means dojo.data item.
+				var sourceItem = source.getItem(node.id);
+
+				// Information that's available if the source is another Tree
+				// (possibly but not necessarily this tree, possibly but not
+				// necessarily the same model as this Tree)
+				if(dojo.indexOf(sourceItem.type, "treeNode") != -1){
+					var childTreeNode = sourceItem.data,
+						childItem = childTreeNode.item,
+						oldParentItem = childTreeNode.getParent().item;
+				}
+
+				if(source == this){
+					// This is a node from my own tree, and we are moving it, not copying.
+					// Remove item from old parent's children attribute.
+					// TODO: dijit.tree.dndSelector should implement deleteSelectedNodes()
+					// and this code should go there.
+
+					if(typeof insertIndex == "number"){
+						if(newParentItem == oldParentItem && childTreeNode.getIndexInParent() < insertIndex){
+							insertIndex -= 1;
+						}
+					}
+					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
+				}else if(model.isItem(childItem)){
+					// Item from same model
+					// (maybe we should only do this branch if the source is a tree?)
+					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
+				}else{
+					// Get the hash to pass to model.newItem().  A single call to
+					// itemCreator() returns an array of hashes, one for each drag source node.
+					if(!newItemsParams){
+						newItemsParams = this.itemCreator(nodes, target.rowNode, source);
+					}
+
+					// Create new item in the tree, based on the drag source.
+					model.newItem(newItemsParams[idx], newParentItem, insertIndex);
+				}
+			}, this);
+
+			// Expand the target node (if it's currently collapsed) so the user can see
+			// where their node was dropped.   In particular since that node is still selected.
+			this.tree._expandNode(targetWidget);
+		}
+		this.onDndCancel();
+	},
+
+	onDndCancel: function(){
+		// summary:
+		//		Topic event processor for /dnd/cancel, called to cancel the DnD operation
+		// tags:
+		//		private
+		this._unmarkTargetAnchor();
+		this.isDragging = false;
+		this.mouseDown = false;
+		delete this.mouseButton;
+		this._changeState("Source", "");
+		this._changeState("Target", "");
+	},
+
+	// When focus moves in/out of the entire Tree
+	onOverEvent: function(){
+		// summary:
+		//		This method is called when mouse is moved over our container (like onmouseenter)
+		// tags:
+		//		private
+		this.inherited(arguments);
+		dojo.dnd.manager().overSource(this);
+	},
+	onOutEvent: function(){
+		// summary:
+		//		This method is called when mouse is moved out of our container (like onmouseleave)
+		// tags:
+		//		private
+		this._unmarkTargetAnchor();
+		var m = dojo.dnd.manager();
+		if(this.isDragging){
+			m.canDrop(false);
+		}
+		m.outSource(this);
+
+		this.inherited(arguments);
+	},
+
+	_isParentChildDrop: function(source, targetRow){
+		// summary:
+		//		Checks whether the dragged items are parent rows in the tree which are being
+		//		dragged into their own children.
+		//
+		// source:
+		//		The DragSource object.
+		//
+		// targetRow:
+		//		The tree row onto which the dragged nodes are being dropped.
+		//
+		// tags:
+		//		private
+
+		// If the dragged object is not coming from the tree this widget belongs to,
+		// it cannot be invalid.
+		if(!source.tree || source.tree != this.tree){
+			return false;
+		}
+
+
+		var root = source.tree.domNode;
+		var ids = source.selection;
+
+		var node = targetRow.parentNode;
+
+		// Iterate up the DOM hierarchy from the target drop row,
+		// checking of any of the dragged nodes have the same ID.
+		while(node != root && !ids[node.id]){
+			node = node.parentNode;
+		}
+
+		return node.id && ids[node.id];
+	},
+
+	_unmarkTargetAnchor: function(){
+		// summary:
+		//		Removes hover class of the current target anchor
+		// tags:
+		//		private
+		if(!this.targetAnchor){ return; }
+		this._removeItemClass(this.targetAnchor.rowNode, this.dropPosition);
+		this.targetAnchor = null;
+		this.targetBox = null;
+		this.dropPosition = null;
+	},
+
+	_markDndStatus: function(copy){
+		// summary:
+		//		Changes source's state based on "copy" status
+		this._changeState("Source", copy ? "Copied" : "Moved");
+	}
+});
+
+}
+
+if(!dojo._hasResource['bfree.widget.folder.DndSource']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.widget.folder.DndSource'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: aaron
+ * Date: 28/11/11
+ * Time: 12:42 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('bfree.widget.folder.DndSource');
+
+
+
+dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
+    singular: true,
+
+    _normalizedCreator: null,
+
+    _checkDocumentDrag: function(sourceItems){
+        var canDrag = true;
+        //Place holder for start of document drag
+        return canDrag;
+    },
+
+    _checkReferenceAcceptance: function(targetFolder, sourceItems){
+        var canDrop = true;
+
+        //We can drop a reference into:
+        //- Never its current folder (unless it is in the trash bin (current folder is original folder)
+        //- Trash Folder (with delete permissions)
+        //- "Share" folder (Not the share root)
+        //- Another content folder (with move permissions)
+        //- Can't 'move' deleted items (yet)
+        if((sourceItems[0].folder_id == targetFolder.getId()) && (!sourceItems[0].isDeleted())){
+            canDrop = false;
+        }
+
+        else if(targetFolder.isSpecial()){
+            if(targetFolder.isTrash()){
+                //don't allow for items already deleted.
+                canDrop = dojo.every(sourceItems, function(item, idx){
+                    return (!item.isDeleted()) && item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
+                }, this);
+            }
+            else if(targetFolder.isSearch()){
+                canDrop = false;
+            }
+            else if(targetFolder.isShareRoot()){
+                canDrop = false;
+            }
+            else if(targetFolder.isShare()){
+                //Can't share deleted items.
+                canDrop = !sourceItems[0].isDeleted();
+            }
+
+        }
+        else if (!targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
+            canDrop = false;
+        }
+        else{
+            canDrop = dojo.every(sourceItems, function(item, idx){
+                return item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA);
+            }, this);
+        }
+
+        return canDrop;
+    },
+
+    _checkFolderAcceptance: function(targetFolder, sourceItems){
+        var canDrop = true;
+
+        //We can drop a folder into:
+        // - Can only drop on folder with 'Author' permissions or above
+        // - Never its current parent
+        // - Never drop folder into search folder.
+        if(!targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_FOLDERS)){
+            canDrop = false;
+        }
+        if(sourceItems[0].parent_id == targetFolder.getId()){
+            canDrop = false;
+        }
+        else if(targetFolder.isSearch() || targetFolder.isShare()){
+            canDrop = false;
+        }
+
+        return canDrop;
+
+    },
+
+    _checkFolderDrag: function(sourceItems){
+        var canDrag = true;
+
+        dojo.every(sourceItems, function(sourceItem, idx){
+
+            if(sourceItem.isSpecial()){
+                canDrag = false;
+            }
+
+            return canDrag;
+        }, this);
+
+        return canDrag;
+    },
+
+    _getSourceItems: function(source){
+        var items = [];
+
+        if(!source)
+            return items;
+
+        if(source.isInstanceOf(bfree.widget.folder.DndSource)){
+            items.push(source.anchor.item);
+        }
+        else if(source.isInstanceOf(versa.widget.reference.dnd.Source)){
+            var nodes = source.getSelectedNodes();
+            dojo.forEach(nodes, function(node, idx){
+                items.push(source.getItem(node.id).data);
+            });
+        }
+
+        return items;
+    },
+
+    _getTargetItem: function(target){
+        var targetNode = dijit.getEnclosingWidget(target);
+        return targetNode.item;
+    },
+
+    _onFolderDrop: function(targetFolder, sourceItems){
+
+        if(targetFolder.isTrash()){
+             this.onCommand(bfree.widget.Bfree.Commands.DESTROY, bfree.widget.Bfree.ObjectTypes.FOLDER, {folder: sourceItems[0]});
+        }
+        else if(targetFolder.isShareRoot()){
+            this.onCommand(bfree.widget.Bfree.Commands.NEW, bfree.widget.Bfree.ObjectTypes.SHARE, {folder: sourceItems[0]});
+        }
+        else if(targetFolder.isRoot() || targetFolder.isContent()){
+            this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.FOLDER, {parent: targetFolder, folder: sourceItems[0]});
+        }
+    },
+
+    _onReferenceDrop: function(targetFolder, sourceItems){
+
+        if(targetFolder.isTrash()){
+            this.onCommand(bfree.widget.Bfree.Commands.DELETE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {items: sourceItems});
+        }
+        else if(targetFolder.isShare()){
+            this.onCommand(bfree.widget.Bfree.Commands.SHARE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
+        }
+        else if(sourceItems[0].isDeleted()){
+            //DnD a deleted item is a restore to folder.
+            this.onCommand(bfree.widget.Bfree.Commands.RESTORE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
+        }
+        else{
+            this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems})
+        }
+
+    },
+
+    //used to override 'onseslectstart' event to correct bug where user can't select text within an editable tree node in IE
+    _onSelectStart: function(evt){
+        if(!this.tree._isEditing)
+            dojo.stopEvent(evt);
+    },
+
+    checkItemAcceptance: function(target, source, position){
+        var canDrop = false;
+
+        var targetItem = this._getTargetItem(target);
+        var sourceItems = this._getSourceItems(source);
+        if((!targetItem) || (sourceItems.length < 1))
+            return canDrop;
+
+        if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
+            canDrop = this._checkReferenceAcceptance(targetItem, sourceItems);
+        }
+        else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
+            canDrop = this._checkFolderAcceptance(targetItem, sourceItems);
+        }
+
+        return canDrop;
+    },
+
+    constructor: function(args){
+        this._normalizedCreator = this.creator;
+
+        //used to override 'onseslectstart' event to correct bug where user can't select text within an editable tree node in IE
+        dojo.forEach(this.events, function(evt, idx){
+            if(evt[1] == 'onselectstart'){
+                dojo.disconnect(evt);
+                this.events[idx] = dojo.connect(this.node, "onselectstart", this, '_onSelectStart');
+            }
+        }, this);
+    },
+
+    creator: function(treeNode, hint){
+        var node = null;
+
+        if(hint == 'avatar'){
+
+            var imgSrc = bfree.api.Folder.getIconUrl(treeNode.item, 16);
+
+            node = dojo.create('div',{
+                'class': 'dijitDarkLabel',
+                innerHTML: treeNode.item.name,
+                style: {
+                    paddingLeft: '18px',
+                    height: '16px',
+                    position: 'relative'
+                }
+            });
+            dojo.create('img', {
+                src: imgSrc,
+                style: {
+                    left: '0',
+                    position: 'absolute',
+                    top: '0'
+                }
+            }, node);
+
+        }
+        else{
+            //create a 'dummy' node...will never be used for selection
+            node = dojo.create('div', {innerHTML: treeNode.item.name});
+        }
+
+        return {node: node, data: treeNode, type: 'folder'};
+    },
+
+    onCommand: function(cmdId, option, params){
+    },
+
+    onDndDrop: function(source, nodes, copy){
+
+        try{
+
+            if(!this.targetAnchor)
+                return;
+
+            var targetItem = this.targetAnchor.item;
+            var sourceItems = this._getSourceItems(source);
+
+            if((!targetItem) || (sourceItems.length < 1))
+                return;
+
+            setTimeout(bfree.widget.folder.DndSource._deferred(this, targetItem, sourceItems), 10);
+        }
+        finally{
+            this.inherited('onDndCancel', arguments);
+        }
+    },
+
+    onDndStart: function(source, nodes, copy){
+
+        if(source !== this){
+            this.inherited('onDndStart', arguments);
+            return;
+        }
+
+        //only drag tree nodes.
+        if(!this.startNode.isInstanceOf(bfree.widget._TreeNode)){
+            dojo.dnd.manager().stopDrag();
+            return;
+        }
+
+        //Can't dnd:
+        //- User must have 'Author' permissions or higher to DnD folder
+        //- Root folder
+        //- Recycle Bin
+        //- Search
+        //- Shares
+        var canDnd = dojo.every(nodes, function(node){
+            var treeNode = source.getItem(node.id).data;
+            return treeNode.item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!(treeNode.item.isRoot() || treeNode.item.isSpecial()));
+        }, this);
+
+        (canDnd) ?
+            this.inherited('onDndStart', arguments) :
+            dojo.dnd.manager().stopDrag();
+
+    },
+
+
+    onMouseDown: function(e){
+		// summary:
+		//		Event processor for onmousedown
+		// e: Event
+		//		onmousedown event
+		// tags:
+		//		private
+        if(!(e.target.type&&e.target.type=='text')){
+            this.mouseDown = true;
+            this.mouseButton = e.button;
+            this._lastX = e.pageX;
+            this._lastY = e.pageY;
+            this.inherited(arguments);
+        }
+	}
+});
+
+bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
+
+    return function(){
+        if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
+            that._onReferenceDrop(targetItem, sourceItems);
+        }
+        else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
+            that._onFolderDrop(targetItem, sourceItems);
+        }
+    }
+
+};
 
 }
 
@@ -61372,468 +62712,6 @@ dojo.declare("dijit.tree.ForestStoreModel", dijit.tree.TreeStoreModel, {
 		this.inherited(arguments);
 	}
 
-});
-
-}
-
-if(!dojo._hasResource["dijit.tree._dndContainer"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dijit.tree._dndContainer"] = true;
-dojo.provide("dijit.tree._dndContainer");
-
-
-
-
-dojo.getObject("tree", true, dojo);
-
-dijit.tree._compareNodes = function(n1, n2){
-	if(n1 === n2){
-		return 0;
-	}
-	
-	if('sourceIndex' in document.documentElement){ //IE
-		//TODO: does not yet work if n1 and/or n2 is a text node
-		return n1.sourceIndex - n2.sourceIndex;
-	}else if('compareDocumentPosition' in document.documentElement){ //FF, Opera
-		return n1.compareDocumentPosition(n2) & 2 ? 1: -1;
-	}else if(document.createRange){ //Webkit
-		var r1 = doc.createRange();
-		r1.setStartBefore(n1);
-
-		var r2 = doc.createRange();
-		r2.setStartBefore(n2);
-
-		return r1.compareBoundaryPoints(r1.END_TO_END, r2);
-	}else{
-		throw Error("dijit.tree._compareNodes don't know how to compare two different nodes in this browser");
-	}
-};
-
-dojo.declare("dijit.tree._dndContainer",
-	null,
-	{
-
-		// summary:
-		//		This is a base class for `dijit.tree._dndSelector`, and isn't meant to be used directly.
-		//		It's modeled after `dojo.dnd.Container`.
-		// tags:
-		//		protected
-
-		/*=====
-		// current: DomNode
-		//		The currently hovered TreeNode.rowNode (which is the DOM node
-		//		associated w/a given node in the tree, excluding it's descendants)
-		current: null,
-		=====*/
-
-		constructor: function(tree, params){
-			// summary:
-			//		A constructor of the Container
-			// tree: Node
-			//		Node or node's id to build the container on
-			// params: dijit.tree.__SourceArgs
-			//		A dict of parameters, which gets mixed into the object
-			// tags:
-			//		private
-			this.tree = tree;
-			this.node = tree.domNode;	// TODO: rename; it's not a TreeNode but the whole Tree
-			dojo.mixin(this, params);
-
-			// class-specific variables
-			this.map = {};
-			this.current = null;	// current TreeNode's DOM node
-
-			// states
-			this.containerState = "";
-			dojo.addClass(this.node, "dojoDndContainer");
-
-			// set up events
-			this.events = [
-				// container level events
-				dojo.connect(this.node, "onmouseenter", this, "onOverEvent"),
-				dojo.connect(this.node, "onmouseleave",	this, "onOutEvent"),
-
-				// switching between TreeNodes
-				dojo.connect(this.tree, "_onNodeMouseEnter", this, "onMouseOver"),
-				dojo.connect(this.tree, "_onNodeMouseLeave", this, "onMouseOut"),
-
-				// cancel text selection and text dragging
-				dojo.connect(this.node, "ondragstart", dojo, "stopEvent"),
-				dojo.connect(this.node, "onselectstart", dojo, "stopEvent")
-			];
-		},
-
-		getItem: function(/*String*/ key){
-			// summary:
-			//		Returns the dojo.dnd.Item (representing a dragged node) by it's key (id).
-			//		Called by dojo.dnd.Source.checkAcceptance().
-			// tags:
-			//		protected
-
-			var widget = this.selection[key],
-				ret = {
-					data: widget,
-					type: ["treeNode"]
-				};
-
-			return ret;	// dojo.dnd.Item
-		},
-
-		destroy: function(){
-			// summary:
-			//		Prepares this object to be garbage-collected
-
-			dojo.forEach(this.events, dojo.disconnect);
-			// this.clearItems();
-			this.node = this.parent = null;
-		},
-
-		// mouse events
-		onMouseOver: function(/*TreeNode*/ widget, /*Event*/ evt){
-			// summary:
-			//		Called when mouse is moved over a TreeNode
-			// tags:
-			//		protected
-			this.current = widget;
-		},
-
-		onMouseOut: function(/*TreeNode*/ widget, /*Event*/ evt){
-			// summary:
-			//		Called when mouse is moved away from a TreeNode
-			// tags:
-			//		protected
-			this.current = null;
-		},
-
-		_changeState: function(type, newState){
-			// summary:
-			//		Changes a named state to new state value
-			// type: String
-			//		A name of the state to change
-			// newState: String
-			//		new state
-			var prefix = "dojoDnd" + type;
-			var state = type.toLowerCase() + "State";
-			//dojo.replaceClass(this.node, prefix + newState, prefix + this[state]);
-			dojo.replaceClass(this.node, prefix + newState, prefix + this[state]);
-			this[state] = newState;
-		},
-
-		_addItemClass: function(node, type){
-			// summary:
-			//		Adds a class with prefix "dojoDndItem"
-			// node: Node
-			//		A node
-			// type: String
-			//		A variable suffix for a class name
-			dojo.addClass(node, "dojoDndItem" + type);
-		},
-
-		_removeItemClass: function(node, type){
-			// summary:
-			//		Removes a class with prefix "dojoDndItem"
-			// node: Node
-			//		A node
-			// type: String
-			//		A variable suffix for a class name
-			dojo.removeClass(node, "dojoDndItem" + type);
-		},
-
-		onOverEvent: function(){
-			// summary:
-			//		This function is called once, when mouse is over our container
-			// tags:
-			//		protected
-			this._changeState("Container", "Over");
-		},
-
-		onOutEvent: function(){
-			// summary:
-			//		This function is called once, when mouse is out of our container
-			// tags:
-			//		protected
-			this._changeState("Container", "");
-		}
-});
-
-}
-
-if(!dojo._hasResource["dijit.tree._dndSelector"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dijit.tree._dndSelector"] = true;
-dojo.provide("dijit.tree._dndSelector");
-
-
-
-
-dojo.declare("dijit.tree._dndSelector",
-	dijit.tree._dndContainer,
-	{
-		// summary:
-		//		This is a base class for `dijit.tree.dndSource` , and isn't meant to be used directly.
-		//		It's based on `dojo.dnd.Selector`.
-		// tags:
-		//		protected
-
-		/*=====
-		// selection: Hash<String, DomNode>
-		//		(id, DomNode) map for every TreeNode that's currently selected.
-		//		The DOMNode is the TreeNode.rowNode.
-		selection: {},
-		=====*/
-
-		constructor: function(tree, params){
-			// summary:
-			//		Initialization
-			// tags:
-			//		private
-
-			this.selection={};
-			this.anchor = null;
-
-			dijit.setWaiState(this.tree.domNode, "multiselect", !this.singular);
-
-			this.events.push(
-				dojo.connect(this.tree.domNode, "onmousedown", this,"onMouseDown"),
-				dojo.connect(this.tree.domNode, "onmouseup", this,"onMouseUp"),
-				dojo.connect(this.tree.domNode, "onmousemove", this,"onMouseMove")
-			);
-		},
-
-		//	singular: Boolean
-		//		Allows selection of only one element, if true.
-		//		Tree hasn't been tested in singular=true mode, unclear if it works.
-		singular: false,
-
-		// methods
-		getSelectedTreeNodes: function(){
-			// summary:
-			//		Returns a list of selected node(s).
-			//		Used by dndSource on the start of a drag.
-			// tags:
-			//		protected
-			var nodes=[], sel = this.selection;
-			for(var i in sel){
-				nodes.push(sel[i]);
-			}
-			return nodes;
-		},
-
-		selectNone: function(){
-			// summary:
-			//		Unselects all items
-			// tags:
-			//		private
-
-			this.setSelection([]);
-			return this;	// self
-		},
-
-		destroy: function(){
-			// summary:
-			//		Prepares the object to be garbage-collected
-			this.inherited(arguments);
-			this.selection = this.anchor = null;
-		},
-		addTreeNode: function(/*dijit._TreeNode*/node, /*Boolean?*/isAnchor){
-			// summary
-			//		add node to current selection
-			// node: Node
-			//		node to add
-			// isAnchor: Boolean
-			//		Whether the node should become anchor.
-
-			this.setSelection(this.getSelectedTreeNodes().concat( [node] ));
-			if(isAnchor){ this.anchor = node; }
-			return node;
-		},
-		removeTreeNode: function(/*dijit._TreeNode*/node){
-			// summary
-			//		remove node from current selection
-			// node: Node
-			//		node to remove
-			this.setSelection(this._setDifference(this.getSelectedTreeNodes(), [node]))
-			return node;
-		},
-		isTreeNodeSelected: function(/*dijit._TreeNode*/node){
-			// summary
-			//		return true if node is currently selected
-			// node: Node
-			//		the node to check whether it's in the current selection
-
-			return node.id && !!this.selection[node.id];
-		},
-		setSelection: function(/*dijit._treeNode[]*/ newSelection){
-			// summary
-			//      set the list of selected nodes to be exactly newSelection. All changes to the
-			//      selection should be passed through this function, which ensures that derived
-			//      attributes are kept up to date. Anchor will be deleted if it has been removed
-			//      from the selection, but no new anchor will be added by this function.
-			// newSelection: Node[]
-			//      list of tree nodes to make selected
-			var oldSelection = this.getSelectedTreeNodes();
-			dojo.forEach(this._setDifference(oldSelection, newSelection), dojo.hitch(this, function(node){
-				node.setSelected(false);
-				if(this.anchor == node){
-					delete this.anchor;
-				}
-				delete this.selection[node.id];
-			}));
-			dojo.forEach(this._setDifference(newSelection, oldSelection), dojo.hitch(this, function(node){
-				node.setSelected(true);
-				this.selection[node.id] = node;
-			}));
-			this._updateSelectionProperties();
-		},
-		_setDifference: function(xs,ys){
-			// summary
-			//      Returns a copy of xs which lacks any objects
-			//      occurring in ys. Checks for membership by
-			//      modifying and then reading the object, so it will
-			//      not properly handle sets of numbers or strings.
-			
-			dojo.forEach(ys, function(y){ y.__exclude__ = true; });
-			var ret = dojo.filter(xs, function(x){ return !x.__exclude__; });
-
-			// clean up after ourselves.
-			dojo.forEach(ys, function(y){ delete y['__exclude__'] });
-			return ret;
-		},
-		_updateSelectionProperties: function() {
-			// summary
-			//      Update the following tree properties from the current selection:
-			//      path[s], selectedItem[s], selectedNode[s]
-			
-			var selected = this.getSelectedTreeNodes();
-			var paths = [], nodes = [];
-			dojo.forEach(selected, function(node) {
-				nodes.push(node);
-				paths.push(node.getTreePath());
-			});
-			var items = dojo.map(nodes,function(node) { return node.item; });
-			this.tree._set("paths", paths);
-			this.tree._set("path", paths[0] || []);
-			this.tree._set("selectedNodes", nodes);
-			this.tree._set("selectedNode", nodes[0] || null);
-			this.tree._set("selectedItems", items);
-			this.tree._set("selectedItem", items[0] || null);
-		},
-		// mouse events
-		onMouseDown: function(e){
-			// summary:
-			//		Event processor for onmousedown
-			// e: Event
-			//		mouse event
-			// tags:
-			//		protected
-
-			// ignore click on expando node
-			if(!this.current || this.tree.isExpandoNode( e.target, this.current)){ return; }
-
-			if(e.button == dojo.mouseButtons.RIGHT){ return; }	// ignore right-click
-
-			dojo.stopEvent(e);
-
-			var treeNode = this.current,
-			  copy = dojo.isCopyKey(e), id = treeNode.id;
-
-			// if shift key is not pressed, and the node is already in the selection,
-			// delay deselection until onmouseup so in the case of DND, deselection
-			// will be canceled by onmousemove.
-			if(!this.singular && !e.shiftKey && this.selection[id]){
-				this._doDeselect = true;
-				return;
-			}else{
-				this._doDeselect = false;
-			}
-			this.userSelect(treeNode, copy, e.shiftKey);
-		},
-
-		onMouseUp: function(e){
-			// summary:
-			//		Event processor for onmouseup
-			// e: Event
-			//		mouse event
-			// tags:
-			//		protected
-
-			// _doDeselect is the flag to indicate that the user wants to either ctrl+click on
-			// a already selected item (to deselect the item), or click on a not-yet selected item
-			// (which should remove all current selection, and add the clicked item). This can not
-			// be done in onMouseDown, because the user may start a drag after mousedown. By moving
-			// the deselection logic here, the user can drags an already selected item.
-			if(!this._doDeselect){ return; }
-			this._doDeselect = false;
-			this.userSelect(this.current, dojo.isCopyKey( e ), e.shiftKey);
-		},
-		onMouseMove: function(e){
-			// summary
-			//		event processor for onmousemove
-			// e: Event
-			//		mouse event
-			this._doDeselect = false;
-		},
-
-		userSelect: function(node, multi, range){
-			// summary:
-			//		Add or remove the given node from selection, responding
-			//      to a user action such as a click or keypress.
-			// multi: Boolean
-			//		Indicates whether this is meant to be a multi-select action (e.g. ctrl-click)
-			// range: Boolean
-			//		Indicates whether this is meant to be a ranged action (e.g. shift-click)
-			// tags:
-			//		protected
-
-			if(this.singular){
-				if(this.anchor == node && multi){
-					this.selectNone();
-				}else{
-					this.setSelection([node]);
-					this.anchor = node;
-				}
-			}else{
-				if(range && this.anchor){
-					var cr = dijit.tree._compareNodes(this.anchor.rowNode, node.rowNode),
-					begin, end, anchor = this.anchor;
-					
-					if(cr < 0){ //current is after anchor
-						begin = anchor;
-						end = node;
-					}else{ //current is before anchor
-						begin = node;
-						end = anchor;
-					}
-					nodes = [];
-					//add everything betweeen begin and end inclusively
-					while(begin != end) {
-						nodes.push(begin)
-						begin = this.tree._getNextNode(begin);
-					}
-					nodes.push(end)
-
-					this.setSelection(nodes);
-				}else{
-				    if( this.selection[ node.id ] && multi ) {
-						this.removeTreeNode( node );
-				    } else if(multi) {
-						this.addTreeNode(node, true);
-					} else {
-						this.setSelection([node]);
-						this.anchor = node;
-				    }
-				}
-			}
-		},
-
-		forInSelectedItems: function(/*Function*/ f, /*Object?*/ o){
-			// summary:
-			//		Iterates over selected items;
-			//		see `dojo.dnd.Container.forInItems()` for details
-			o = o || dojo.global;
-			for(var id in this.selection){
-				// console.log("selected item id: " + id);
-				f.call(o, this.getItem(id), id, this);
-			}
-		}
 });
 
 }
@@ -63475,7 +64353,9 @@ dojo._hasResource['bfree.widget.folder.Tree'] = true;
  * Time: 8:10 PM
  * To change this template use File | Settings | File Templates.
  */
-dojo.provide('bfree.widget.folder.Tree')
+dojo.provide('bfree.widget.folder.Tree');
+
+
 
 
 
@@ -63504,6 +64384,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
         this._editor = new dijit.InlineEditBox({
             id: 'wdgEditor',
+            editor: 'bfree.widget.ValidationTextBox',
             intermediateChanges:false,
 			tree: this.tree,
             node: this,
@@ -63544,7 +64425,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
             if(this.item.isNew()){
                 var nodes=this.tree.getNodesByItem(parent);
-                dojo.forEach(nodes, function(node, idx){
+                dojo.forEach(nodes, function(node){
                     var children=node.getChildren();
                     children.removeByValue(this);
                     for(var i in children){
@@ -63571,7 +64452,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
         }
     },
 
-    _editor_onChange: function(value, index){
+    _editor_onChange: function(value){
         var isNew = false;
 
         try{
@@ -63612,7 +64493,7 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
             this.tree.folders.save();
 
             var nodes = this.tree.getNodesByItem(parent);
-            dojo.forEach(nodes, function(node, idx){
+            dojo.forEach(nodes, function(node){
                 node.item.children.sort(bfree.api.Folder.sort);
                 node.setChildItems(node.item.children);
             }, this);
@@ -63640,14 +64521,10 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
     },
 
     edit: function(){
+
+        this.tree.setEditing(true);
         this._createEditor();
 	    this._editor.edit();
-        this.tree.setEditing(true);
-
-        //this was causing issues in IE, will discuss later
-//        setTimeout(dojo.hitch(this, function(){
-//            this._editor.wrapperWidget.editWidget.domNode.focus();
-//        }), 100);
 
         this._editor.wrapperWidget.editWidget.domNode.focus();
     },
@@ -63663,8 +64540,6 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
     postCreate: function(){
 		this.inherited('postCreate', arguments);
 
-
-
 	},
 
     startup: function(){
@@ -63676,10 +64551,13 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
 dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
+    _isEditing: false,
     _nodeStyles: ['dijitTreeExpandoLoading', 'dijitTreeExpandoOpened', 'dijitTreeExpandoClosed', 'dijitTreeExpandoLeaf'],
     _rootItem: null,
 
+    //dndController: bfree.widget.folder.dnd.Source,
     dndController: 'bfree.widget.folder.DndSource',
+
     folders: null,
     isSearchHidden: true,
     isShareRootHidden: false,
@@ -63701,11 +64579,13 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     _mnuFolder_onClose: function(evt){
-        dojo.removeClass(this._mnuFolder.activeNode.rowNode, 'dijitTreeMenuRow')
+        if(this._mnuFolder.activeNode.rowNode)
+            dojo.removeClass(this._mnuFolder.activeNode.rowNode, 'dijitTreeMenuRow')
     },
 
     _mnuFolder_onOpen: function(evt){
-        dojo.addClass(this._mnuFolder.activeNode.rowNode, 'dijitTreeMenuRow');
+        if(this._mnuFolder.activeNode.rowNode)
+            dojo.addClass(this._mnuFolder.activeNode.rowNode, 'dijitTreeMenuRow');
     },
 
     _createTreeNode: function(args){
@@ -63768,7 +64648,8 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         if(this.tree._isEditing && node._editor){
 
         }else{
-            this.dndController.startNode = node;
+            if(this.dndController)
+                this.dndController.startNode = node;
             if(evt.button == 2){
                 this._mnuFolder.set('activeNode', node);
             }
@@ -64064,8 +64945,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             this.hideShareRoot();
 
     },
-
-
 
     _onClick: function(/*TreeNode*/ nodeWidget, /*Event*/ e){
 		// summary:
@@ -64624,15 +65503,9 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
     _onItemLoaded: function(item){
 
         try{
-
             this._document = item;
-            this.library.getDocuments().clone({item: this._document});
-
-            var documentType =  this.library.getDocumentTypes().fetchById({id: this._document.document_type_id});
-
             this._wdgHeader.set('activeItem', this._document);
             this._editor.set('activeItem', this._document);
-//            this._editor.setValues(this._document);
             this._wdgInfo.set('activeItem', this._document);
         }
         finally{
@@ -65320,874 +66193,6 @@ bfree.widget.document.version.Versions.show = function(args){
     dlg.show();
 
 }
-
-}
-
-if(!dojo._hasResource["dijit.tree.dndSource"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource["dijit.tree.dndSource"] = true;
-dojo.provide("dijit.tree.dndSource");
-
-
-
-
-/*=====
-dijit.tree.__SourceArgs = function(){
-	// summary:
-	//		A dict of parameters for Tree source configuration.
-	// isSource: Boolean?
-	//		Can be used as a DnD source. Defaults to true.
-	// accept: String[]
-	//		List of accepted types (text strings) for a target; defaults to
-	//		["text", "treeNode"]
-	// copyOnly: Boolean?
-	//		Copy items, if true, use a state of Ctrl key otherwise,
-	// dragThreshold: Number
-	//		The move delay in pixels before detecting a drag; 0 by default
-	// betweenThreshold: Integer
-	//		Distance from upper/lower edge of node to allow drop to reorder nodes
-	this.isSource = isSource;
-	this.accept = accept;
-	this.autoSync = autoSync;
-	this.copyOnly = copyOnly;
-	this.dragThreshold = dragThreshold;
-	this.betweenThreshold = betweenThreshold;
-}
-=====*/
-
-dojo.declare("dijit.tree.dndSource", dijit.tree._dndSelector, {
-	// summary:
-	//		Handles drag and drop operations (as a source or a target) for `dijit.Tree`
-
-	// isSource: [private] Boolean
-	//		Can be used as a DnD source.
-	isSource: true,
-
-	// accept: String[]
-	//		List of accepted types (text strings) for the Tree; defaults to
-	//		["text"]
-	accept: ["text", "treeNode"],
-
-	// copyOnly: [private] Boolean
-	//		Copy items, if true, use a state of Ctrl key otherwise
-	copyOnly: false,
-
-	// dragThreshold: Number
-	//		The move delay in pixels before detecting a drag; 5 by default
-	dragThreshold: 5,
-
-	// betweenThreshold: Integer
-	//		Distance from upper/lower edge of node to allow drop to reorder nodes
-	betweenThreshold: 0,
-
-	constructor: function(/*dijit.Tree*/ tree, /*dijit.tree.__SourceArgs*/ params){
-		// summary:
-		//		a constructor of the Tree DnD Source
-		// tags:
-		//		private
-		if(!params){ params = {}; }
-		dojo.mixin(this, params);
-		this.isSource = typeof params.isSource == "undefined" ? true : params.isSource;
-		var type = params.accept instanceof Array ? params.accept : ["text", "treeNode"];
-		this.accept = null;
-		if(type.length){
-			this.accept = {};
-			for(var i = 0; i < type.length; ++i){
-				this.accept[type[i]] = 1;
-			}
-		}
-
-		// class-specific variables
-		this.isDragging = false;
-		this.mouseDown = false;
-		this.targetAnchor = null;	// DOMNode corresponding to the currently moused over TreeNode
-		this.targetBox = null;	// coordinates of this.targetAnchor
-		this.dropPosition = "";	// whether mouse is over/after/before this.targetAnchor
-		this._lastX = 0;
-		this._lastY = 0;
-
-		// states
-		this.sourceState = "";
-		if(this.isSource){
-			dojo.addClass(this.node, "dojoDndSource");
-		}
-		this.targetState = "";
-		if(this.accept){
-			dojo.addClass(this.node, "dojoDndTarget");
-		}
-
-		// set up events
-		this.topics = [
-			dojo.subscribe("/dnd/source/over", this, "onDndSourceOver"),
-			dojo.subscribe("/dnd/start", this, "onDndStart"),
-			dojo.subscribe("/dnd/drop", this, "onDndDrop"),
-			dojo.subscribe("/dnd/cancel", this, "onDndCancel")
-		];
-	},
-
-	// methods
-	checkAcceptance: function(source, nodes){
-		// summary:
-		//		Checks if the target can accept nodes from this source
-		// source: dijit.tree.dndSource
-		//		The source which provides items
-		// nodes: DOMNode[]
-		//		Array of DOM nodes corresponding to nodes being dropped, dijitTreeRow nodes if
-		//		source is a dijit.Tree.
-		// tags:
-		//		extension
-		return true;	// Boolean
-	},
-
-	copyState: function(keyPressed){
-		// summary:
-		//		Returns true, if we need to copy items, false to move.
-		//		It is separated to be overwritten dynamically, if needed.
-		// keyPressed: Boolean
-		//		The "copy" control key was pressed
-		// tags:
-		//		protected
-		return this.copyOnly || keyPressed;	// Boolean
-	},
-	destroy: function(){
-		// summary:
-		//		Prepares the object to be garbage-collected.
-		this.inherited("destroy",arguments);
-		dojo.forEach(this.topics, dojo.unsubscribe);
-		this.targetAnchor = null;
-	},
-
-	_onDragMouse: function(e){
-		// summary:
-		//		Helper method for processing onmousemove/onmouseover events while drag is in progress.
-		//		Keeps track of current drop target.
-
-		var m = dojo.dnd.manager(),
-			oldTarget = this.targetAnchor,			// the TreeNode corresponding to TreeNode mouse was previously over
-			newTarget = this.current,				// TreeNode corresponding to TreeNode mouse is currently over
-			oldDropPosition = this.dropPosition;	// the previous drop position (over/before/after)
-
-		// calculate if user is indicating to drop the dragged node before, after, or over
-		// (i.e., to become a child of) the target node
-		var newDropPosition = "Over";
-		if(newTarget && this.betweenThreshold > 0){
-			// If mouse is over a new TreeNode, then get new TreeNode's position and size
-			if(!this.targetBox || oldTarget != newTarget){
-				this.targetBox = dojo.position(newTarget.rowNode, true);
-			}
-			if((e.pageY - this.targetBox.y) <= this.betweenThreshold){
-				newDropPosition = "Before";
-			}else if((e.pageY - this.targetBox.y) >= (this.targetBox.h - this.betweenThreshold)){
-				newDropPosition = "After";
-			}
-		}
-
-		if(newTarget != oldTarget || newDropPosition != oldDropPosition){
-			if(oldTarget){
-				this._removeItemClass(oldTarget.rowNode, oldDropPosition);
-			}
-			if(newTarget){
-				this._addItemClass(newTarget.rowNode, newDropPosition);
-			}
-
-			// Check if it's ok to drop the dragged node on/before/after the target node.
-			if(!newTarget){
-				m.canDrop(false);
-			}else if(newTarget == this.tree.rootNode && newDropPosition != "Over"){
-				// Can't drop before or after tree's root node; the dropped node would just disappear (at least visually)
-				m.canDrop(false);
-			}else if(m.source == this && (newTarget.id in this.selection)){
-				// Guard against dropping onto yourself (TODO: guard against dropping onto your descendant, #7140)
-				m.canDrop(false);
-			}else if(this.checkItemAcceptance(newTarget.rowNode, m.source, newDropPosition.toLowerCase())
-					&& !this._isParentChildDrop(m.source, newTarget.rowNode)){
-				m.canDrop(true);
-			}else{
-				m.canDrop(false);
-			}
-
-			this.targetAnchor = newTarget;
-			this.dropPosition = newDropPosition;
-		}
-	},
-
-	onMouseMove: function(e){
-		// summary:
-		//		Called for any onmousemove events over the Tree
-		// e: Event
-		//		onmousemouse event
-		// tags:
-		//		private
-		if(this.isDragging && this.targetState == "Disabled"){ return; }
-		this.inherited(arguments);
-		var m = dojo.dnd.manager();
-		if(this.isDragging){
-			this._onDragMouse(e);
-		}else{
-			if(this.mouseDown && this.isSource &&
-				 (Math.abs(e.pageX-this._lastX)>=this.dragThreshold || Math.abs(e.pageY-this._lastY)>=this.dragThreshold)){
-				var nodes = this.getSelectedTreeNodes();
-				if(nodes.length){
-					if(nodes.length > 1){
-						//filter out all selected items which has one of their ancestor selected as well
-						var seen = this.selection, i = 0, r = [], n, p;
-						nextitem: while((n = nodes[i++])){
-							for(p = n.getParent(); p && p !== this.tree; p = p.getParent()){
-								if(seen[p.id]){ //parent is already selected, skip this node
-									continue nextitem;
-								}
-							}
-							//this node does not have any ancestors selected, add it
-							r.push(n);
-						}
-						nodes = r;
-					}
-					nodes = dojo.map(nodes, function(n){return n.domNode});
-					m.startDrag(this, nodes, this.copyState(dojo.isCopyKey(e)));
-				}
-			}
-		}
-	},
-
-	onMouseDown: function(e){
-		// summary:
-		//		Event processor for onmousedown
-		// e: Event
-		//		onmousedown event
-		// tags:
-		//		private
-		this.mouseDown = true;
-		this.mouseButton = e.button;
-		this._lastX = e.pageX;
-		this._lastY = e.pageY;
-		this.inherited(arguments);
-	},
-
-	onMouseUp: function(e){
-		// summary:
-		//		Event processor for onmouseup
-		// e: Event
-		//		onmouseup event
-		// tags:
-		//		private
-		if(this.mouseDown){
-			this.mouseDown = false;
-			this.inherited(arguments);
-		}
-	},
-
-	onMouseOut: function(){
-		// summary:
-		//		Event processor for when mouse is moved away from a TreeNode
-		// tags:
-		//		private
-		this.inherited(arguments);
-		this._unmarkTargetAnchor();
-	},
-
-	checkItemAcceptance: function(target, source, position){
-		// summary:
-		//		Stub function to be overridden if one wants to check for the ability to drop at the node/item level
-		// description:
-		//		In the base case, this is called to check if target can become a child of source.
-		//		When betweenThreshold is set, position="before" or "after" means that we
-		//		are asking if the source node can be dropped before/after the target node.
-		// target: DOMNode
-		//		The dijitTreeRoot DOM node inside of the TreeNode that we are dropping on to
-		//		Use dijit.getEnclosingWidget(target) to get the TreeNode.
-		// source: dijit.tree.dndSource
-		//		The (set of) nodes we are dropping
-		// position: String
-		//		"over", "before", or "after"
-		// tags:
-		//		extension
-		return true;
-	},
-
-	// topic event processors
-	onDndSourceOver: function(source){
-		// summary:
-		//		Topic event processor for /dnd/source/over, called when detected a current source.
-		// source: Object
-		//		The dijit.tree.dndSource / dojo.dnd.Source which has the mouse over it
-		// tags:
-		//		private
-		if(this != source){
-			this.mouseDown = false;
-			this._unmarkTargetAnchor();
-		}else if(this.isDragging){
-			var m = dojo.dnd.manager();
-			m.canDrop(false);
-		}
-	},
-	onDndStart: function(source, nodes, copy){
-		// summary:
-		//		Topic event processor for /dnd/start, called to initiate the DnD operation
-		// source: Object
-		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
-		// nodes: DomNode[]
-		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
-		// copy: Boolean
-		//		Copy items, if true, move items otherwise
-		// tags:
-		//		private
-
-		if(this.isSource){
-			this._changeState("Source", this == source ? (copy ? "Copied" : "Moved") : "");
-		}
-		var accepted = this.checkAcceptance(source, nodes);
-
-		this._changeState("Target", accepted ? "" : "Disabled");
-
-		if(this == source){
-			dojo.dnd.manager().overSource(this);
-		}
-
-		this.isDragging = true;
-	},
-
-	itemCreator: function(/*DomNode[]*/ nodes, target, /*dojo.dnd.Source*/ source){
-		// summary:
-		//		Returns objects passed to `Tree.model.newItem()` based on DnD nodes
-		//		dropped onto the tree.   Developer must override this method to enable
-		// 		dropping from external sources onto this Tree, unless the Tree.model's items
-		//		happen to look like {id: 123, name: "Apple" } with no other attributes.
-		// description:
-		//		For each node in nodes[], which came from source, create a hash of name/value
-		//		pairs to be passed to Tree.model.newItem().  Returns array of those hashes.
-		// returns: Object[]
-		//		Array of name/value hashes for each new item to be added to the Tree, like:
-		// |	[
-		// |		{ id: 123, label: "apple", foo: "bar" },
-		// |		{ id: 456, label: "pear", zaz: "bam" }
-		// |	]
-		// tags:
-		//		extension
-
-		// TODO: for 2.0 refactor so itemCreator() is called once per drag node, and
-		// make signature itemCreator(sourceItem, node, target) (or similar).
-
-		return dojo.map(nodes, function(node){
-			return {
-				"id": node.id,
-				"name": node.textContent || node.innerText || ""
-			};
-		}); // Object[]
-	},
-
-	onDndDrop: function(source, nodes, copy){
-		// summary:
-		//		Topic event processor for /dnd/drop, called to finish the DnD operation.
-		// description:
-		//		Updates data store items according to where node was dragged from and dropped
-		//		to.   The tree will then respond to those data store updates and redraw itself.
-		// source: Object
-		//		The dijit.tree.dndSource / dojo.dnd.Source which is providing the items
-		// nodes: DomNode[]
-		//		The list of transferred items, dndTreeNode nodes if dragging from a Tree
-		// copy: Boolean
-		//		Copy items, if true, move items otherwise
-		// tags:
-		//		protected
-		if(this.containerState == "Over"){
-			var tree = this.tree,
-				model = tree.model,
-				target = this.targetAnchor,
-				requeryRoot = false;	// set to true iff top level items change
-
-			this.isDragging = false;
-
-			// Compute the new parent item
-			var targetWidget = target;
-			var newParentItem;
-			var insertIndex;
-			newParentItem = (targetWidget && targetWidget.item) || tree.item;
-			if(this.dropPosition == "Before" || this.dropPosition == "After"){
-				// TODO: if there is no parent item then disallow the drop.
-				// Actually this should be checked during onMouseMove too, to make the drag icon red.
-				newParentItem = (targetWidget.getParent() && targetWidget.getParent().item) || tree.item;
-				// Compute the insert index for reordering
-				insertIndex = targetWidget.getIndexInParent();
-				if(this.dropPosition == "After"){
-					insertIndex = targetWidget.getIndexInParent() + 1;
-				}
-			}else{
-				newParentItem = (targetWidget && targetWidget.item) || tree.item;
-			}
-
-			// If necessary, use this variable to hold array of hashes to pass to model.newItem()
-			// (one entry in the array for each dragged node).
-			var newItemsParams;
-
-			dojo.forEach(nodes, function(node, idx){
-				// dojo.dnd.Item representing the thing being dropped.
-				// Don't confuse the use of item here (meaning a DnD item) with the
-				// uses below where item means dojo.data item.
-				var sourceItem = source.getItem(node.id);
-
-				// Information that's available if the source is another Tree
-				// (possibly but not necessarily this tree, possibly but not
-				// necessarily the same model as this Tree)
-				if(dojo.indexOf(sourceItem.type, "treeNode") != -1){
-					var childTreeNode = sourceItem.data,
-						childItem = childTreeNode.item,
-						oldParentItem = childTreeNode.getParent().item;
-				}
-
-				if(source == this){
-					// This is a node from my own tree, and we are moving it, not copying.
-					// Remove item from old parent's children attribute.
-					// TODO: dijit.tree.dndSelector should implement deleteSelectedNodes()
-					// and this code should go there.
-
-					if(typeof insertIndex == "number"){
-						if(newParentItem == oldParentItem && childTreeNode.getIndexInParent() < insertIndex){
-							insertIndex -= 1;
-						}
-					}
-					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
-				}else if(model.isItem(childItem)){
-					// Item from same model
-					// (maybe we should only do this branch if the source is a tree?)
-					model.pasteItem(childItem, oldParentItem, newParentItem, copy, insertIndex);
-				}else{
-					// Get the hash to pass to model.newItem().  A single call to
-					// itemCreator() returns an array of hashes, one for each drag source node.
-					if(!newItemsParams){
-						newItemsParams = this.itemCreator(nodes, target.rowNode, source);
-					}
-
-					// Create new item in the tree, based on the drag source.
-					model.newItem(newItemsParams[idx], newParentItem, insertIndex);
-				}
-			}, this);
-
-			// Expand the target node (if it's currently collapsed) so the user can see
-			// where their node was dropped.   In particular since that node is still selected.
-			this.tree._expandNode(targetWidget);
-		}
-		this.onDndCancel();
-	},
-
-	onDndCancel: function(){
-		// summary:
-		//		Topic event processor for /dnd/cancel, called to cancel the DnD operation
-		// tags:
-		//		private
-		this._unmarkTargetAnchor();
-		this.isDragging = false;
-		this.mouseDown = false;
-		delete this.mouseButton;
-		this._changeState("Source", "");
-		this._changeState("Target", "");
-	},
-
-	// When focus moves in/out of the entire Tree
-	onOverEvent: function(){
-		// summary:
-		//		This method is called when mouse is moved over our container (like onmouseenter)
-		// tags:
-		//		private
-		this.inherited(arguments);
-		dojo.dnd.manager().overSource(this);
-	},
-	onOutEvent: function(){
-		// summary:
-		//		This method is called when mouse is moved out of our container (like onmouseleave)
-		// tags:
-		//		private
-		this._unmarkTargetAnchor();
-		var m = dojo.dnd.manager();
-		if(this.isDragging){
-			m.canDrop(false);
-		}
-		m.outSource(this);
-
-		this.inherited(arguments);
-	},
-
-	_isParentChildDrop: function(source, targetRow){
-		// summary:
-		//		Checks whether the dragged items are parent rows in the tree which are being
-		//		dragged into their own children.
-		//
-		// source:
-		//		The DragSource object.
-		//
-		// targetRow:
-		//		The tree row onto which the dragged nodes are being dropped.
-		//
-		// tags:
-		//		private
-
-		// If the dragged object is not coming from the tree this widget belongs to,
-		// it cannot be invalid.
-		if(!source.tree || source.tree != this.tree){
-			return false;
-		}
-
-
-		var root = source.tree.domNode;
-		var ids = source.selection;
-
-		var node = targetRow.parentNode;
-
-		// Iterate up the DOM hierarchy from the target drop row,
-		// checking of any of the dragged nodes have the same ID.
-		while(node != root && !ids[node.id]){
-			node = node.parentNode;
-		}
-
-		return node.id && ids[node.id];
-	},
-
-	_unmarkTargetAnchor: function(){
-		// summary:
-		//		Removes hover class of the current target anchor
-		// tags:
-		//		private
-		if(!this.targetAnchor){ return; }
-		this._removeItemClass(this.targetAnchor.rowNode, this.dropPosition);
-		this.targetAnchor = null;
-		this.targetBox = null;
-		this.dropPosition = null;
-	},
-
-	_markDndStatus: function(copy){
-		// summary:
-		//		Changes source's state based on "copy" status
-		this._changeState("Source", copy ? "Copied" : "Moved");
-	}
-});
-
-}
-
-if(!dojo._hasResource['bfree.widget.folder.DndSource']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['bfree.widget.folder.DndSource'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: aaron
- * Date: 28/11/11
- * Time: 12:42 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('bfree.widget.folder.DndSource');
-
-
-
-dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
-    singular: true,
-
-    _normalizedCreator: null,
-
-    _checkDocumentDrag: function(sourceItems){
-        var canDrag = true;
-        //Place holder for start of document drag
-        return canDrag;
-    },
-
-    _checkReferenceAcceptance: function(targetFolder, sourceItems){
-        var canDrop = true;
-
-        //We can drop a reference into:
-        //- Never its current folder (unless it is in the trash bin (current folder is original folder)
-        //- Trash Folder (with delete permissions)
-        //- "Share" folder (Not the share root)
-        //- Another content folder (with move permissions)
-        //- Can't 'move' deleted items (yet)
-        if((sourceItems[0].folder_id == targetFolder.getId()) && (!sourceItems[0].isDeleted())){
-            canDrop = false;
-        }
-
-        else if(targetFolder.isSpecial()){
-            if(targetFolder.isTrash()){
-                //don't allow for items already deleted.
-                canDrop = dojo.every(sourceItems, function(item, idx){
-                    return (!item.isDeleted()) && item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
-                }, this);
-            }
-            else if(targetFolder.isSearch()){
-                canDrop = false;
-            }
-            else if(targetFolder.isShareRoot()){
-                canDrop = false;
-            }
-            else if(targetFolder.isShare()){
-                //Can't share deleted items.
-                canDrop = !sourceItems[0].isDeleted();
-            }
-
-        }
-        else if (!targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
-            canDrop = false;
-        }
-        else{
-            canDrop = dojo.every(sourceItems, function(item, idx){
-                return item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA);
-            }, this);
-        }
-
-        return canDrop;
-    },
-
-    _checkFolderAcceptance: function(targetFolder, sourceItems){
-        var canDrop = true;
-
-        //We can drop a folder into:
-        // - Can only drop on folder with 'Author' permissions or above
-        // - Never its current parent
-        // - Never drop folder into search folder.
-        if(!targetFolder.hasRights(bfree.api._Securable.permissions.CREATE_FOLDERS)){
-            canDrop = false;
-        }
-        if(sourceItems[0].parent_id == targetFolder.getId()){
-            canDrop = false;
-        }
-        else if(targetFolder.isSearch() || targetFolder.isShare()){
-            canDrop = false;
-        }
-
-        return canDrop;
-
-    },
-
-    _checkFolderDrag: function(sourceItems){
-        var canDrag = true;
-
-        dojo.every(sourceItems, function(sourceItem, idx){
-
-            if(sourceItem.isSpecial()){
-                canDrag = false;
-            }
-
-            return canDrag;
-        }, this);
-
-        return canDrag;
-    },
-
-    _getSourceItems: function(source){
-        var items = [];
-
-        if(!source)
-            return items;
-
-        if(source.isInstanceOf(bfree.widget.folder.DndSource)){
-            items.push(source.anchor.item);
-        }
-        else if(source.isInstanceOf(versa.widget.reference.dnd.Source)){
-            var nodes = source.getSelectedNodes();
-            dojo.forEach(nodes, function(node, idx){
-                items.push(source.getItem(node.id).data);
-            });
-        }
-
-        return items;
-    },
-
-    _getTargetItem: function(target){
-        var targetNode = dijit.getEnclosingWidget(target);
-        return targetNode.item;
-    },
-
-    _onFolderDrop: function(targetFolder, sourceItems){
-
-        if(targetFolder.isTrash()){
-             this.onCommand(bfree.widget.Bfree.Commands.DESTROY, bfree.widget.Bfree.ObjectTypes.FOLDER, {folder: sourceItems[0]});
-        }
-        else if(targetFolder.isShareRoot()){
-            this.onCommand(bfree.widget.Bfree.Commands.NEW, bfree.widget.Bfree.ObjectTypes.SHARE, {folder: sourceItems[0]});
-        }
-        else if(targetFolder.isRoot() || targetFolder.isContent()){
-            this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.FOLDER, {parent: targetFolder, folder: sourceItems[0]});
-        }
-    },
-
-    _onReferenceDrop: function(targetFolder, sourceItems){
-
-        if(targetFolder.isTrash()){
-            this.onCommand(bfree.widget.Bfree.Commands.DELETE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {items: sourceItems});
-        }
-        else if(targetFolder.isShare()){
-            this.onCommand(bfree.widget.Bfree.Commands.SHARE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
-        }
-        else if(sourceItems[0].isDeleted()){
-            //DnD a deleted item is a restore to folder.
-            this.onCommand(bfree.widget.Bfree.Commands.RESTORE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems});
-        }
-        else{
-            this.onCommand(bfree.widget.Bfree.Commands.MOVE, bfree.widget.Bfree.ObjectTypes.DOCUMENT, {folder: targetFolder, items: sourceItems})
-        }
-
-    },
-
-    checkItemAcceptance: function(target, source, position){
-        var canDrop = false;
-
-        var targetItem = this._getTargetItem(target);
-        var sourceItems = this._getSourceItems(source);
-        if((!targetItem) || (sourceItems.length < 1))
-            return canDrop;
-
-        if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
-            canDrop = this._checkReferenceAcceptance(targetItem, sourceItems);
-        }
-        else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
-            canDrop = this._checkFolderAcceptance(targetItem, sourceItems);
-        }
-
-        return canDrop;
-
-    },
-
-    constructor: function(args){
-        this._normalizedCreator = this.creator;
-    },
-
-    creator: function(treeNode, hint){
-        var node = null;
-
-        if(hint == 'avatar'){
-
-            var imgSrc = bfree.api.Folder.getIconUrl(treeNode.item, 16);
-
-            node = dojo.create('div',{
-                'class': 'dijitDarkLabel',
-                innerHTML: treeNode.item.name,
-                style: {
-                    paddingLeft: '18px',
-                    height: '16px',
-                    position: 'relative'
-                }
-            });
-            dojo.create('img', {
-                src: imgSrc,
-                style: {
-                    left: '0',
-                    position: 'absolute',
-                    top: '0'
-                }
-            }, node);
-
-        }
-        else{
-            //create a 'dummy' node...will never be used for selection
-            node = dojo.create('div', {innerHTML: treeNode.item.name});
-        }
-
-        return {node: node, data: treeNode, type: 'folder'};
-    },
-
-    onCommand: function(cmdId, option, params){
-    },
-
-    onDndDrop: function(source, nodes, copy){
-
-        try{
-
-            if(!this.targetAnchor)
-                return;
-
-            var targetItem = this.targetAnchor.item;
-            var sourceItems = this._getSourceItems(source);
-
-            if((!targetItem) || (sourceItems.length < 1))
-                return;
-
-            setTimeout(bfree.widget.folder.DndSource._deferred(this, targetItem, sourceItems), 10);
-        }
-        finally{
-            this.inherited('onDndCancel', arguments);
-        }
-    },
-
-    onDndStart: function(source, nodes, copy){
-
-        if(source !== this){
-            this.inherited('onDndStart', arguments);
-            return;
-        }
-
-        //only drag tree nodes.
-        if(!this.startNode.isInstanceOf(bfree.widget._TreeNode)){
-            dojo.dnd.manager().stopDrag();
-            return;
-        }
-
-        //Can't dnd:
-        //- User must have 'Author' permissions or higher to DnD folder
-        //- Root folder
-        //- Recycle Bin
-        //- Search
-        //- Shares
-        var canDnd = dojo.every(nodes, function(node){
-            var treeNode = source.getItem(node.id).data;
-            return treeNode.item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!(treeNode.item.isRoot() || treeNode.item.isSpecial()));
-        }, this);
-
-        (canDnd) ?
-            this.inherited('onDndStart', arguments) :
-            dojo.dnd.manager().stopDrag();
-
-    },
-
-    /*
-    moveFolder: function(args){
-        var anchor=args.anchor;
-        var targetAnchor=args.targetAnchor;
-        var parentNode=anchor.getParent();
-
-        targetAnchor.expand();
-
-        var targetId=targetAnchor.item.id||targetAnchor.item.root?targetAnchor.item.id:targetAnchor.item.$ref;
-
-        this.tree.folders.loadItem({
-            item: targetAnchor.item,
-            callback: dojo.hitch(this, function(item){
-                this.tree.folders.setValue(anchor.item, 'parent_id', targetId);
-                this.tree.model.pasteItem(anchor.item, parentNode.item, item, false);
-            })
-        });
-
-        this.tree.folders.save();
-
-
-        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowSelected');
-        dojo.removeClass(targetAnchor.domNode, 'dijitTreeRowHover');
-
-        this.tree.setSelectedPath(anchor.item.path);
-    },
-    */
-
-
-    onMouseDown: function(e){
-		// summary:
-		//		Event processor for onmousedown
-		// e: Event
-		//		onmousedown event
-		// tags:
-		//		private
-        if(!(e.target.type&&e.target.type=='text')){
-            this.mouseDown = true;
-            this.mouseButton = e.button;
-            this._lastX = e.pageX;
-            this._lastY = e.pageY;
-            this.inherited(arguments);
-        }
-	}
-});
-
-bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
-
-    return function(){
-        if(sourceItems[0].isInstanceOf(bfree.api.Reference)){
-            that._onReferenceDrop(targetItem, sourceItems);
-        }
-        else if(sourceItems[0].isInstanceOf(bfree.api.Folder)){
-            that._onFolderDrop(targetItem, sourceItems);
-        }
-    }
-
-};
 
 }
 
@@ -68505,7 +68510,7 @@ bfree.widget.propdef.List.show = function(args){
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgPropDefList',
-        title: 'Select Property(s)...',
+        title: 'Select Property',
         widgetConstructor: bfree.widget.propdef.List,
         widgetParams: {
             propertyDefinitions: args.propertyDefinitions,
@@ -68612,7 +68617,7 @@ bfree.widget.Calendar.show = function(args){
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgCalendar',
-        title: 'Choose a Date...',
+        title: 'Choose a Date',
         widgetConstructor: bfree.widget.Calendar,
         widgetParams: {
             onDateSelected: args.onDateSelected
@@ -69076,6 +69081,15 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
     _wdgDefault_onChange: function(id, newValue){
 
         var item = null;
+
+        this._propMapStore.fetchItemByIdentity({
+            identity: id,
+            onItem: dojo.hitch(this,
+                function(item){
+                    this._propMapStore.setValue(item, 'default_value', newValue);
+                })
+        });
+
         for(var i in this.activeItem.property_mappings){
             if(this.activeItem.property_mappings[i].property_definition_id==id){
                 if(this.activeItem.property_mappings[i].default_value!=newValue){
@@ -69364,9 +69378,10 @@ bfree.widget.doctype.Editor.generateDefaultWidget = function(default_value, rowI
             if(defaultType==bfree.api.PropertyMapping.types.date.floating){
                 wdg = "Current Date";
             }else{
+                default_value=new Date(default_value);
                 wdg = versa.api.Formatter.formatDateTime(default_value);
             }
-        }if(dataType.isBoolean()){
+        }else if(dataType.isBoolean()){
             wdg=bfree.widget.propdef.Widget.getWidget(dataType, null, '', bfree.widget.propdef.Widget.formats.SHORT, default_value);
             wdg.set('disabled', true);
         }else{
@@ -71200,7 +71215,7 @@ dojo.declare('bfree.widget.search.ConjunctionBar', [dijit.Toolbar], {
         this.inherited('postCreate', arguments);
 
         this._btnAdd = new bfree.widget.Button({
-            label: 'Add Row...',
+            label: 'Add Row',
             showLabel: false,
             disabled: false,
             iconClass: 'commandIcon bfreeIconAdd',
@@ -71210,7 +71225,7 @@ dojo.declare('bfree.widget.search.ConjunctionBar', [dijit.Toolbar], {
         this.addChild(this._btnAdd);
 
         this._btnRemove = new bfree.widget.Button({
-                label: 'Remove Row...',
+                label: 'Remove Row',
                 showLabel: false,
                 disabled: false,
                 iconClass: 'sidebarIcon bfreeIconRemove',
@@ -71337,7 +71352,6 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
 
     _onChange: function(newValue){
         this.onValueChange(newValue);
-        this.onKeyUp(newValue);
     },
 
     _onCommand: function(cmdId){
@@ -71442,10 +71456,6 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
             'class': 'versaSidebar',
             onCommand: dojo.hitch(this, this._onCommand)
         }, this.cmdBarNode);
-
-    },
-
-    onKeyUp: function(evt){
 
     },
 
@@ -71561,8 +71571,7 @@ dojo.declare('bfree.widget.search.Advanced', [dijit._Widget, dijit._Templated], 
             onNewRow: dojo.hitch(this, this.addRow),
             onDeleteRow: dojo.hitch(this, this.deleteRow),
             onStateChange: dojo.hitch(this, this._onStateChange),
-            onValueChange: dojo.hitch(this, this._onValueChange),
-            onKeyUp: dojo.hitch(this, this._onKeyUp)
+            onValueChange: dojo.hitch(this, this._onValueChange)
         });
         wdg.startup();
 
@@ -71571,9 +71580,11 @@ dojo.declare('bfree.widget.search.Advanced', [dijit._Widget, dijit._Templated], 
         this._form.connectChildren(false);
     },
 
-    _onKeyUp: function(evt){
+    _onKeyPress: function(evt){
         if(evt.keyCode==13){
+            evt.preventDefault();
             this._onSubmit();
+            return false;
         }
     },
 
@@ -71600,7 +71611,8 @@ dojo.declare('bfree.widget.search.Advanced', [dijit._Widget, dijit._Templated], 
         this._operators = bfree.api.Application.getOperators();
 
         this._form = new dijit.form.Form({
-            onSubmit: dojo.hitch(this, this._onSubmit)
+            onSubmit: dojo.hitch(this, this._onSubmit),
+            onKeyPress: dojo.hitch(this, this._onKeyPress)
         }, this.formNode);
 
         this._btnSubmit = bfree.widget.Button({
@@ -74536,7 +74548,7 @@ bfree.widget.view.cell.Editor.show = function(args){
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgCells',
-        title: 'View Columns...',
+        title: 'Add Column to View',
         widgetConstructor: bfree.widget.view.cell.Editor,
         widgetParams: {
             propertyDefinitions: args.propertyDefinitions,
@@ -77222,7 +77234,6 @@ dojo.declare('bfree.widget.document.ViewMenu', bfree.widget.HeaderMenu,
 
             this.addChild(mniProp);
         }, this);
-
     },
 
     _onColumnToggle: function(property_definition){
@@ -77235,6 +77246,23 @@ dojo.declare('bfree.widget.document.ViewMenu', bfree.widget.HeaderMenu,
 
     _onCommand: function(cmdId, options, params){
         this.onCommand(cmdId, options, params);
+    },
+
+    _openMyself: function(){
+        this.inherited('_openMyself', arguments);
+
+        var table=this.domNode.children[0];
+
+        //expand the menu to prevent the scrollbar from cutting off the menu
+        if(this.domNode.offsetHeight<table.offsetHeight){
+            this.domNode.style.width=(table.offsetWidth+15)+'px';
+            this.domNode.style.height='400px';
+        }else{
+            this.domNode.style.width='';
+            this.domNode.style.height=(table.offsetHeight-1)+'px';
+        }
+
+        console.log(this.domNode);
     },
 
     clear: function(){
@@ -77968,6 +77996,10 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
     onCommand: function(cmdId, option, params){
     },
 
+    onMouseDown: function(){
+        this.onFocus();
+    },
+
     onMoveColumn: function(){
         var view_definition = this.__reWriteView({});
         this.set('activeView', view_definition.getView(this.activeLibrary));
@@ -78020,7 +78052,6 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
     },
 
     onRowMouseDown: function(evt){
-
         this._deferSelect = this.selection.isSelected(evt.rowIndex);
         if(!this._deferSelect)
             this.selection.clickSelect(evt.rowIndex, evt.ctrlKey, evt.shiftKey);
@@ -78074,7 +78105,11 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         var header=dojo.query(".dojoxGridMasterHeader");
 
         dojo.forEach(elems, function(elem, idx){
-            elem.style.height=(header[0].offsetHeight-8)+'px';
+            var h=(dojo.contentBox(header[0]).h-8);
+            if(h<=0){
+                h=1;
+            }
+            elem.style.height=h+'px';
             elem.parentNode.style.verticalAlign='top';
         })
     },
@@ -78360,6 +78395,8 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
     templateString: dojo.cache("versa/widget/share", "template/Editor.html", "<div style=\"height:100%;width:100%\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        design=\"headline\"\n        gutters=\"false\"\n        style=\"padding:8px 8px 4px 8px;height:100%;width:100%;\">\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            splitter=\"false\"\n            region=\"center\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                splitter=\"false\"\n                region=\"center\"\n                splitter=\"true\"\n                class=\"highlightPane\"\n                style=\"padding:8px;overflow:hidden;\">\n\n            <div dojoAttachPoint=\"formNode\">\n                <div dojoAttachPoint=\"tableNode\"></div>\n            </div>\n\n        </div>\n\n    </div>\n\n</div>\n\n</div>\n"),
     widgetsInTemplate: true,
 
+    _currentValues: {name: '', password: '', expiry: null},
+    _isDirty: false,
     _chkExpires: null,
     _form: null,
     _tblProperties: null,
@@ -78386,9 +78423,23 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
         var canClose = false;
 
         try{
-            if(this.library.getFolders().isDirty({item: this.share})){
-                this.library.getFolders().save();
+
+            if(this.share){
+                this.library.getFolders().clone({item: this.share});
+                this.library.getFolders().setValue(this.share, 'name', this._currentValues.name);
+                this.library.getFolders().setValue(this.share, 'password', this._currentValues.password);
+                this.library.getFolders().setValue(this.share, 'expiry', this._currentValues.expiry);
             }
+            else{
+                this.share = this.library.createShare({
+                    name: this._currentValues.name,
+                    seed: this.seed,
+                    expiry: this._currentValues.expiry,
+                    password: this._currentValues.password,
+                    shareRoot: this.shareRoot
+                });
+            }
+            this.library.getFolders().save();
             canClose = true;
         }
         catch(e){
@@ -78425,6 +78476,7 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
     },
 
     __onItemLoaded: function(shareRoot){
+        var shareName = '';
 
         try{
 
@@ -78433,29 +78485,27 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
             if(this.share){
                 //Shared folder was passed in for editing
                 this.share = this.library.getFolders().refreshItem(this.share.getId());
-                this.library.getFolders().clone({item: this.share});
 
-                this._txtExpiryDate.set('value', this.share.expiry);
-                this._chkExpires.set('checked', (this.share.expiry));
+                this._currentValues.name = this.share.name;
+                this._currentValues.expiry = this.share.expiry;
+
+                this._txtExpiryDate.set('value', this._currentValues.expiry);
+                this._chkExpires.set('checked', (this._currentValues.expiry));
 
             }
             else{
-                var shareName = (this.seed) ? this.seed.name : '';
-                this.share = this.library.createShare({
-                    name: shareName,
-                    seed: this.seed,
-                    expiry: null,
-                    shareRoot: this.shareRoot
-                });
-
-                this._chkPassword.set('checked', true);
+                this._currentValues.name = (this.seed) ?
+                    this.library.getFolders().generateUniqueName({parent: this.shareRoot, base_name: this.seed.name}) :
+                    '';
+                this._chkPassword.set('checked', true)
             }
 
-            this._txtName.set('value', this.share.name);
+            this._txtName.set('value', this._currentValues.name);
             this._txtName.setFocus(true);
 
         }
         finally{
+            this._isDirty = false;
             this.onWidgetLoaded();
         }
     },
@@ -78581,13 +78631,12 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
     },
 
     _onValueChange: function(id, value){
-
-
         var doUpdate = (id == 'expiry') ?
-                            (dojo.date.compare(value, this.share.expiry, 'date') != 0) :
-                            !this.share.valueEquals(id, value);
+                            (dojo.date.compare(value, this._currentValues.expiry, 'date') != 0) :
+                            (this._currentValues[id] != value);
         if(doUpdate){
-            this.library.getFolders().setValue(this.share, id, value);
+            this._currentValues[id] = value;
+            this._isDirty = true;
             this.onValueChange();
         }
 
@@ -78602,17 +78651,13 @@ dojo.declare('versa.widget.share.Editor', [dijit._Widget, dijit._Templated, bfre
     },
 
     isValid: function(){
-        var isValid = false;
-
-        var isDirty = this.library.getFolders().isDirty({item: this.share});
-        var isValid = (!isDirty) ?
+        var isValid = (!this._isDirty) ?
                         false :
                         ((this._txtName.isValid()) &&
                             (this._txtPassword.disabled || this._txtPassword.isValid()) &&
                             (this._txtRepeat.disabled || this._txtRepeat.isValid()) &&
-                            (this._txtExpiryDate.disabled || this._txtExpiryDate.isValid()))
-
-        return isValid && isDirty;
+                            (this._txtExpiryDate.disabled || this._txtExpiryDate.isValid()));
+        return isValid;
     },
 
     onDialogClosing: function(dlgResult){
@@ -88474,6 +88519,268 @@ versa.widget.zone.metrics.Info.show = function(args){
 
 }
 
+if(!dojo._hasResource['versa.widget.dialog.MessageBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.dialog.MessageBox'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 02/05/12
+ * Time: 3:56 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.dialog.MessageBox');
+
+
+
+
+versa.DialogResults = {
+    'None':     0x0000,
+    'OK':       0x0001,
+    'Cancel':   0x0002,
+    'Abort':    0x0003,
+    'Retry':    0x0004,
+    'Ignore':   0x0005,
+    'Yes':      0x0006,
+    'No':       0x0007
+};
+
+versa.MessageBoxButtons = {
+    'None':                 0x0000,
+    'OK':                   0x0001,
+    'Cancel':               0x0002,
+    'OKCancel':             0x0003,
+    'Abort':                0x0004,
+    'Retry':                0x0008,
+    'Ignore':               0x0010,
+    'RetryCancel':          0x000A,
+    'AbortRetryIgnore':     0x001C,
+    'Yes':                  0x0020,
+    'No':                   0x0040,
+    'YesNo':                0x0060,
+    'YesNoCancel':          0x0062
+};
+
+versa.MessageBoxIcons = {
+    'None':         0x0000,
+    'Question':     0x0001,
+    'Exclamation':  0x0002,
+    'Asterisk':     0x0003,
+    'Stop':         0x0004,
+    'Error':        0x0005,
+    'Warning':      0x0006,
+    'Information':  0x0007
+};
+
+dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
+    _activeButtons: {},
+    _buttonPaneNode: null,
+    _closing: false,
+    _contentNode: null,
+    _dialogResult: versa.DialogResults.Cancel,
+    _displayNode: null,
+
+    buttons: versa.MessageBoxButtons.None,
+    icon: versa.MessageBoxIcons.None,
+    message: '',
+
+    _initializeButtons: function(){
+
+        if((this.buttons & versa.MessageBoxButtons.OK) == versa.MessageBoxButtons.OK){
+            this._activeButtons.OK = new bfree.widget.Button({
+                id: 'btnOk',
+                'class': 'versaButton',
+                label: 'OK',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.OK)
+            });
+            this._activeButtons.OK.placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Yes) == versa.MessageBoxButtons.Yes){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Yes',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Yes)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.No) == versa.MessageBoxButtons.No){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'No',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.No)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Retry) == versa.MessageBoxButtons.Retry){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Retry',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Retry)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Cancel) == versa.MessageBoxButtons.Cancel){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Cancel',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Cancel)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Abort) == versa.MessageBoxButtons.Abort){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Abort',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Abort)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Ignore) == versa.MessageBoxButtons.Ignore){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Ignore',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Ignore)
+            }).placeAt(this._buttonPaneNode);
+        }
+
+    },
+
+    _initializeIcon: function(){
+
+        if(this.icon == versa.MessageBoxIcons.None)
+            return;
+
+        dojo.style(this._displayNode, {paddingLeft: '48px'});
+
+        var icon = 'error';
+
+        switch(this.icon){
+            case versa.MessageBoxIcons.Question:
+                icon = 'question';
+                break;
+            case versa.MessageBoxIcons.Exclamation:
+                icon = 'exclamation';
+                break;
+            case versa.MessageBoxIcons.Asterisk:
+                icon = 'asterisk';
+                break;
+            case versa.MessageBoxIcons.Stop:
+                icon = 'stop';
+                break;
+            case versa.MessageBoxIcons.Error:
+                icon = 'error';
+                break;
+            case versa.MessageBoxIcons.Warning:
+                icon = 'warning';
+                break;
+            case versa.MessageBoxIcons.Information:
+                icon = 'information';
+                break;
+        }
+
+        var imgSrc = dojo.replace('/images/icons/32/{0}.png', [icon]);
+        dojo.create('img', {
+            src: imgSrc,
+            style: { position:'absolute',left:'8px',top:'8px' }
+        }, this._displayNode);
+
+    },
+
+    _onHide: function(dialogResult){
+        this._dialogResult = dialogResult;
+        for(var b in this._activeButtons){
+            this._activeButtons[b].set('disabled', true);
+        }
+        this.hide();
+    },
+
+    constructor: function(){
+    },
+
+    destroy: function(){
+        this.destroyDescendants();
+        this.inherited('destroy', arguments);
+    },
+
+    hide: function(dialog){
+        if(this._closing)
+            return;
+        this._closing = true;
+        this.inherited('hide', arguments);
+    },
+
+    onClose: function(dialogResult){
+    },
+
+    onHide: function(){
+        setTimeout(versa.widget.dialog.MessageBox._closeFnRef(this), this.duration);
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        dojo.create('img', {
+            src: '/images/icons/16/logo.png',
+            style: { position:'absolute',left:'2px',top:'5px' }
+        }, this.titleBar);
+
+        dojo.style(this.titleNode, {marginLeft: '12px'});
+        dojo.style(this.containerNode, {padding: '0'});
+
+        this._contentNode = dojo.create('div');
+
+        this._displayNode = dojo.create(
+            'div',
+            {
+                style: {
+                    display: 'table-cell',
+                    maxWidth: '480px',
+                    height: '48px',
+                    minWidth: '164px',
+                    padding: '0 8px 0 8px',
+                    verticalAlign: 'middle'
+                }
+            },
+            this._contentNode
+        );
+
+        this._initializeIcon();
+
+        dojo.create(
+            'p',
+            {   'class': 'dijitDarkLabel',
+                innerHTML: this.message
+            },
+            this._displayNode
+        );
+
+        //Create button node and buttons
+        this._buttonPaneNode = dojo.create(
+            'div',
+            {
+                'class': 'versaDialogButtonPane',
+                style: {height: '32px',padding:'4px 4px 0 0',textAlign:'right'}
+            },
+            this._contentNode
+        );
+        this._initializeButtons();
+
+        this.set('content', this._contentNode);
+
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+    }
+
+});
+
+versa.widget.dialog.MessageBox._closeFnRef= function(that){
+    return ( function(){
+        that.onClose(that._dialogResult);
+        that.destroy();
+    });
+};
+
+
+
+
+}
+
 if(!dojo._hasResource['versa.VersaFile']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['versa.VersaFile'] = true;
 /**
@@ -88485,8 +88792,26 @@ dojo._hasResource['versa.VersaFile'] = true;
  */
 dojo.provide('versa.VersaFile');
 
+
+
 dojo.declare('versa.VersaFile', null,{
 });
+
+versa.alert = function(msg){
+    new versa.widget.dialog.MessageBox({
+        id: 'versaAlert',
+        title: 'VersaFile Message',
+        message: msg,
+        buttons: versa.MessageBoxButtons.OK,
+        icon: versa.MessageBoxIcons.Warning,
+        onClose: function(dialogResult){ console.log(dialogResult); }
+    }).show();
+}
+
+versa.confirm = function(msg){
+
+
+}
 
 versa.VersaFile.messages = {
     'TRIAL_REMAINING': 'You have <strong>{days_left}</strong> days remaining on your free trial.',
@@ -88734,12 +89059,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         this.activeFolder = folder;
         this._grdDocuments.set('activeFolder', this.activeFolder);
 
-        //only load item in preview if folder pane has focus
-        //if(this.activeType == bfree.widget.Bfree.ObjectTypes.FOLDER){
-            //this._wdgItemInfo.loadItem({
-            //    item: folder
-            //});
-       // }
     },
 
     __onFolderLoadError: function(item, e){
@@ -89110,6 +89429,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         var searchFolder = rootFolder.getSearchFolder();
 
         if(searchFolder){
+            this.set('activeType', bfree.widget.Bfree.ObjectTypes.FOLDER);
             searchFolder.setActiveQuery(queryItem);
             this._tvwFolders.showSearch();
             this._tvwFolders.setSelectedItem(searchFolder);

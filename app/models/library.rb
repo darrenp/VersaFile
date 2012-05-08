@@ -505,7 +505,7 @@ private
         inherits = false,
         :acl_entries => [
           AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup),
-          AclEntry.create(:grantee => self.zone.groups.everyones.first, :role => self.zone.roles.none.first, :precedence => Bfree::Acl::PrecedenceTypes.Everyone)
+          AclEntry.create(:grantee => self.zone.groups.everyones.first, :role => self.zone.roles.nones.first, :precedence => Bfree::Acl::PrecedenceTypes.Everyone)
         ]
     )
 

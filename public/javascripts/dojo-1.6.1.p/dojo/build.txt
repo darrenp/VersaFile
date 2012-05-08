@@ -286,12 +286,14 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/document/Creator.js
 ./../../../dojo-1.6.1.p/bfree/widget/HeaderMenu.js
 ./../../../dojo-1.6.1.p/bfree/widget/folder/ContextMenu.js
+./../../../dojo-1.6.1.p/dijit/tree/_dndContainer.js
+./../../../dojo-1.6.1.p/dijit/tree/_dndSelector.js
+./../../../dojo-1.6.1.p/dijit/tree/dndSource.js
+./../../../dojo-1.6.1.p/bfree/widget/folder/DndSource.js
 ./../../../dojo-1.6.1.p/dijit/InlineEditBox.js
 ./../../../dojo-1.6.1.p/dojo/DeferredList.js
 ./../../../dojo-1.6.1.p/dijit/tree/TreeStoreModel.js
 ./../../../dojo-1.6.1.p/dijit/tree/ForestStoreModel.js
-./../../../dojo-1.6.1.p/dijit/tree/_dndContainer.js
-./../../../dojo-1.6.1.p/dijit/tree/_dndSelector.js
 ./../../../dojo-1.6.1.p/dijit/Tree.js
 ./../../../dojo-1.6.1.p/bfree/widget/folder/Tree.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/Header.js
@@ -302,8 +304,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/document/version/Grid.js
 ./../../../dojo-1.6.1.p/versa/widget/reference/Accessor.js
 ./../../../dojo-1.6.1.p/bfree/widget/document/version/Versions.js
-./../../../dojo-1.6.1.p/dijit/tree/dndSource.js
-./../../../dojo-1.6.1.p/bfree/widget/folder/DndSource.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/CommandBar.js
 ./../../../dojo-1.6.1.p/bfree/widget/SortGrid.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Info.js
@@ -418,5 +418,6 @@ bfree.js:
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Statistics.js
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Zone.js
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Info.js
+./../../../dojo-1.6.1.p/versa/widget/dialog/MessageBox.js
 ./../../../dojo-1.6.1.p/versa/VersaFile.js
 ./../../../dojo-1.6.1.p/bfree/widget/zone/Show.js

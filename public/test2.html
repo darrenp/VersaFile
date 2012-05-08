@@ -15,26 +15,27 @@
 <script type="text/javascript" src="/javascripts/dojo-1.6.1.d/dojo/dojo.js" djConfig="parseOnLoad: true"></script>
 <script type="text/javascript" src="/javascripts/dojo-1.6.1.d/bfree/_proto.js"></script>
 <script type="text/javascript">
-
+dojo.require('dijit.InlineEditBox');
 dojo.require('bfree.widget.Button');
-dojo.require('versa.widget.Dialog');
-dojo.require('versa.VersaFile');
 
 function __onClick(e){
+    var labelNode = dojo.byId('labelNode');
 
-    var s = 'Washington was 1-2 on home ice in the first round against Boston, but the Capitals had a solid 26-11-4 record as the host during the regular season. New York had a 24-12-5 record away from MSG this season and was 2-1 at Ottawa in this year\'s Eastern Conference quarterfinal series, which the Rangers won in seven games.';
+    dojo.attr(labelNode, 'innerHTML', '');
+    var editSpan = dojo.create('span', {innerHTML: this.label}, labelNode, 'first');
 
-    /*
-    var dlg = new versa.widget.Dialog({
-        title: 'This  is a really long title that should be cut off',
-        message: 'short'
-    });
-    dlg.show();
-    */
+    var editor = new dijit.InlineEditBox({
+            id: 'wdgEditor',
+            intermediateChanges:false,
+			tree: this.tree,
+            node: this,
+            autoSave: true,
+			width: '256px',
+            scrollIntoView: false,
+            value: 'My Test Folder Name'
+        }, editSpan);
 
-    //alert(s);
-    versa.alert(s);
-    //confirm(s);
+		editor.startup();
 }
 
 dojo.addOnLoad(function(){
@@ -58,6 +59,8 @@ dojo.addOnUnload(function(){
 </head>
 
 <body class="versafile claro" oncontextmenu="return true;" style="padding: 32px !important">
-    <div id="buttonNode"></div>
+    <div id="buttonNode"></div><br><br>
+    <div id="labelNode">Replace Me!</div>
 </body>
+
 </html>

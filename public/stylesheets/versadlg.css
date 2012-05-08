@@ -3,6 +3,10 @@
     white-space: nowrap;
 }
 
+.versafile .versaDialogButtonPane{
+    background-color: #D9D9D6;
+}
+
 /*
 #dlgEditDocument_underlay { background-color: black; }
 #dlgCkiDocument_underlay { background-color: black; }

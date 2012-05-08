@@ -41,9 +41,10 @@ class SharesController < ApplicationController
   def shared_items
 
     @share = Share.find_by_fingerprint(params[:id])
+    @items = @share.folder.references.not_deleted.full.order('name ASC')
 
     respond_to do |format|
-      format.json { render json: @share.folder.references.not_deleted.full }
+      format.json { render json: @items }
     end
 
   end
