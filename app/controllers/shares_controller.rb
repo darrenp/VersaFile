@@ -5,14 +5,23 @@ class SharesController < ApplicationController
 
   def authorize
 
-    @share = Share.find_by_fingerprint(params[:id])
-    @share.authorize(params[:password])
+    begin
 
-    session[:guest_user_id] = "guest@%s" % request.remote_ip
+      @share = Share.find_by_fingerprint(params[:id])
+      @share.authorize(params[:password])
 
-    respond_to do |format|
-      format.html { render :layout => false } # master.html.erb
-      format.json { render json: @share.to_json(:except => [:password, :library_id, :folder_id]) }
+      session[:guest_user_id] = "guest@%s" % request.remote_ip
+
+      respond_to do |format|
+        format.html { render :layout => false } # master.html.erb
+        format.json { render json: @share.to_json(:except => [:password, :library_id, :folder_id]) }
+      end
+
+    rescue => e
+      logger.debug 'ERROR: ' + e.message
+      respond_to do |format|
+        format.json  { render :json => e.message, :status => :unprocessable_entity }
+      end
     end
 
   end

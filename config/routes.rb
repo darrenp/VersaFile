@@ -54,6 +54,7 @@ VersaFile::Application.routes.draw do
       member do
         post 'authorize'
         post 'download'
+        get 'download'
         get 'shared_items'
       end
     end

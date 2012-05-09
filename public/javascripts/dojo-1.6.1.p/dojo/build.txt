@@ -312,6 +312,8 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/user/List.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Editor.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Grid.js
+./../../../dojo-1.6.1.p/versa/widget/dialog/MessageBox.js
+./../../../dojo-1.6.1.p/versa/VersaFile.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Administration.js
 ./../../../dojo-1.6.1.p/bfree/widget/doctype/CommandBar.js
 ./../../../dojo-1.6.1.p/bfree/widget/doctype/Info.js
@@ -418,6 +420,4 @@ bfree.js:
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Statistics.js
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Zone.js
 ./../../../dojo-1.6.1.p/versa/widget/zone/metrics/Info.js
-./../../../dojo-1.6.1.p/versa/widget/dialog/MessageBox.js
-./../../../dojo-1.6.1.p/versa/VersaFile.js
 ./../../../dojo-1.6.1.p/bfree/widget/zone/Show.js

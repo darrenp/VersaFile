@@ -2647,27 +2647,44 @@ bfree.api.Utilities.viewUrl = function(args){
     var box = args.windowBox;
 	var url = args.url;
 	var winName = args.window_name;
-				
+
 	var winArgs = dojo.string.substitute(
 								'width=${0},height=${1},top=${2},left=${3},toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0,scrollbars=1',
 								[box.w, box.h, box.t, box.l])
 
     if(!dojo.isIE){
         //for non ie browsers
-        window.open(url, winName, winArgs).focus();
+        var win = window.open(url, winName, winArgs);
+        win.focus();
     }else{
-        try{
-            window.open(url, winName, winArgs).focus();
-        }catch(e){
-//            console.log(e);
-            //in ie if the user is using adobe reader in the browser
-            //it errors when opening a second file, the file still opens
-            //fine though, I don't like to supress errors like this but
-            //it seems to be the best solution for this very small
-            //browser and plugin issue
-        }
+        var win = window.open(url, '_blank', winArgs);
+        win.focus();
     }
 };
+
+bfree.api.Utilities.iePdfPluginInstalled=function(){
+    if (window.ActiveXObject) {
+        var control = null;
+        try {
+            // AcroPDF.PDF is used by version 7 and later
+            control = new ActiveXObject('AcroPDF.PDF');
+        } catch (e) {
+            // Do nothing
+        }
+        if (!control) {
+            try {
+              // PDF.PdfCtrl is used by version 6 and earlier
+              control = new ActiveXObject('PDF.PdfCtrl');
+            } catch (e) {
+                //do nothing again
+            }
+        }
+        if (control) {
+            return true;
+        }
+    }
+    return false;
+}
 
 bfree.api.Utilities.formatDate= function(date){
     //UTC month is 0 based?
@@ -39168,6 +39185,7 @@ dojo.declare('bfree.widget.admin.zone.Administration', [dijit._Widget, dijit._Te
     },
 
     save: function(){
+
         if(!this._validateItems()){
             var msg = 'Cannot save Zone changes: One or more Zones contain invalid data';
             alert(msg);
@@ -54994,9 +55012,10 @@ dojo.declare('bfree.widget.choiceList.Editor', [dijit._Widget, dijit._Templated]
 
 bfree.widget.choiceList.Editor.valueFormatter=function(value){
     if(this.activeItem.data_type_id==bfree.api.DataTypes.types.DATETIME){
-        value=new Date(value);
-    }
-    if(value instanceof Date){
+        if(!(value instanceof Date)){
+            value=value.split("T");
+            value=dojo.date.locale.parse(value[0], {datePattern: "yyyy-MM-dd", selector: "date"});
+        }
         return versa.api.Formatter.formatDateTime(value);
     }
     return value;
@@ -64643,6 +64662,8 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     _onMouseDown: function(evt){
+
+        this.onFocus();
         var node = dijit.getEnclosingWidget(evt.target);
 
         if(this.tree._isEditing && node._editor){
@@ -64650,7 +64671,7 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         }else{
             if(this.dndController)
                 this.dndController.startNode = node;
-            if(evt.button == 2){
+            if(dojo.mouseButtons.isRight(evt)){
                 this._mnuFolder.set('activeNode', node);
             }
         }
@@ -64840,11 +64861,6 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         if(trashItem) this._hideNodesByItem(trashItem)
     },
 
-    showSearch: function(){
-        var searchItem = this.getRoot().getSearchFolder();
-        if(searchItem) this._showNodesByItem(searchItem);
-    },
-
     moveFolder: function(parent, folder){
 
         var folderNode = this.getNodesByItem(folder)[0];
@@ -64912,11 +64928,9 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 	},
 
     setSelectedItem: function(item){
-
         var nodes = this.getNodesByItem(item);
         this.set('selectedNode', nodes[0]);
         this._onSelected(item, nodes[0]);
-
     },
 
     setSelectedNode: function(node){
@@ -64929,13 +64943,18 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         this.setSelectedNode(this.selectedNode);
     },
 
+    showSearch: function(){
+        var searchItem = this.getRoot().getSearchFolder();
+        if(searchItem) this._showNodesByItem(searchItem);
+    },
+
     startup: function(){
         this.inherited('startup', arguments);
         this._mnuFolder.startup();
 
         //Show Share Root only if user has 'Author' access to it
-        var shareItem = this.getRoot().getShareRootFolder();
-        this.isShareRootHidden = ((shareItem) && (!shareItem.hasRights(bfree.api._Securable.permissions.VIEW)));
+        var shareItem = (this.isShareRootHidden) ? null : this.getRoot().getShareRootFolder();
+        this.isShareRootHidden = ((!shareItem) || (!shareItem.hasRights(bfree.api._Securable.permissions.VIEW)));
 
         if(this.isSearchHidden)
             this.hideSearch();
@@ -67439,6 +67458,331 @@ bfree.widget.group.Grid.view = [
 
 }
 
+if(!dojo._hasResource['versa.widget.dialog.MessageBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.dialog.MessageBox'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 02/05/12
+ * Time: 3:56 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.dialog.MessageBox');
+
+
+
+
+versa.DialogResults = {
+    'None':     0x0000,
+    'OK':       0x0001,
+    'Cancel':   0x0002,
+    'Abort':    0x0003,
+    'Retry':    0x0004,
+    'Ignore':   0x0005,
+    'Yes':      0x0006,
+    'No':       0x0007
+};
+
+versa.MessageBoxButtons = {
+    'None':                 0x0000,
+    'OK':                   0x0001,
+    'Cancel':               0x0002,
+    'OKCancel':             0x0003,
+    'Abort':                0x0004,
+    'Retry':                0x0008,
+    'Ignore':               0x0010,
+    'RetryCancel':          0x000A,
+    'AbortRetryIgnore':     0x001C,
+    'Yes':                  0x0020,
+    'No':                   0x0040,
+    'YesNo':                0x0060,
+    'YesNoCancel':          0x0062
+};
+
+versa.MessageBoxIcons = {
+    'None':         0x0000,
+    'Question':     0x0001,
+    'Exclamation':  0x0002,
+    'Asterisk':     0x0003,
+    'Stop':         0x0004,
+    'Error':        0x0005,
+    'Warning':      0x0006,
+    'Information':  0x0007
+};
+
+dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
+    _activeButtons: {},
+    _buttonPaneNode: null,
+    _closing: false,
+    _contentNode: null,
+    _dialogResult: versa.DialogResults.Cancel,
+    _displayNode: null,
+
+    buttons: versa.MessageBoxButtons.None,
+    icon: versa.MessageBoxIcons.None,
+    message: '',
+
+    _initializeButtons: function(){
+
+        if((this.buttons & versa.MessageBoxButtons.OK) == versa.MessageBoxButtons.OK){
+            this._activeButtons.OK = new bfree.widget.Button({
+                id: 'btnOk',
+                'class': 'versaButton',
+                label: 'OK',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.OK)
+            });
+            this._activeButtons.OK.placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Yes) == versa.MessageBoxButtons.Yes){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Yes',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Yes)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.No) == versa.MessageBoxButtons.No){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'No',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.No)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Retry) == versa.MessageBoxButtons.Retry){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Retry',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Retry)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Cancel) == versa.MessageBoxButtons.Cancel){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Cancel',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Cancel)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Abort) == versa.MessageBoxButtons.Abort){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Abort',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Abort)
+            }).placeAt(this._buttonPaneNode);
+        }
+        if((this.buttons & versa.MessageBoxButtons.Ignore) == versa.MessageBoxButtons.Ignore){
+            new bfree.widget.Button({
+                'class': 'versaButton',
+                label: 'Ignore',
+                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Ignore)
+            }).placeAt(this._buttonPaneNode);
+        }
+
+    },
+
+    _initializeIcon: function(){
+
+        if(this.icon == versa.MessageBoxIcons.None)
+            return;
+
+        dojo.style(this._displayNode, {paddingLeft: '56px'});
+
+        var icon = 'error';
+
+        switch(this.icon){
+            case versa.MessageBoxIcons.Question:
+                icon = 'question';
+                break;
+            case versa.MessageBoxIcons.Exclamation:
+                icon = 'exclamation';
+                break;
+            case versa.MessageBoxIcons.Asterisk:
+                icon = 'asterisk';
+                break;
+            case versa.MessageBoxIcons.Stop:
+                icon = 'stop';
+                break;
+            case versa.MessageBoxIcons.Error:
+                icon = 'error';
+                break;
+            case versa.MessageBoxIcons.Warning:
+                icon = 'warning';
+                break;
+            case versa.MessageBoxIcons.Information:
+                icon = 'information';
+                break;
+        }
+
+        var imgSrc = dojo.replace('/images/icons/32/{0}.png', [icon]);
+        dojo.create('img', {
+            src: imgSrc,
+            style: { position:'absolute',left:'16px',top:'18px' }
+        }, this._displayNode);
+
+    },
+
+    _onHide: function(dialogResult){
+        this._dialogResult = dialogResult;
+        for(var b in this._activeButtons){
+            this._activeButtons[b].set('disabled', true);
+        }
+        this.hide();
+    },
+
+    constructor: function(){
+    },
+
+    destroy: function(){
+        this.destroyDescendants();
+        this.inherited('destroy', arguments);
+    },
+
+    hide: function(dialog){
+        if(this._closing)
+            return;
+        this._closing = true;
+        this.inherited('hide', arguments);
+    },
+
+    onClose: function(dialogResult){
+    },
+
+    onHide: function(){
+        setTimeout(versa.widget.dialog.MessageBox._closeFnRef(this), this.duration);
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        dojo.create('img', {
+            src: '/images/icons/16/logo.png',
+            style: { position:'absolute',left:'2px',top:'5px' }
+        }, this.titleBar);
+
+        dojo.style(this.titleNode, {marginLeft: '12px'});
+        dojo.style(this.containerNode, {padding: '0'});
+
+        this._contentNode = dojo.create('div');
+
+        this._displayNode = dojo.create(
+            'div',
+            {
+                style: {
+                    display: 'table-cell',
+                    maxWidth: '480px',
+                    height: '48px',
+                    minWidth: '164px',
+                    padding: '16px 16px 16px 16px',
+                    verticalAlign: 'middle'
+                }
+            },
+            this._contentNode
+        );
+
+        this._initializeIcon();
+
+        dojo.create(
+            'p',
+            {   'class': 'dijitDarkLabel',
+                innerHTML: this.message
+            },
+            this._displayNode
+        );
+
+        //Create button node and buttons
+        this._buttonPaneNode = dojo.create(
+            'div',
+            {
+                'class': 'versaDialogButtonPane',
+                style: {height: '40px',padding:'10px 4px 0 0',textAlign:'right'}
+            },
+            this._contentNode
+        );
+        this._initializeButtons();
+
+        this.set('content', this._contentNode);
+
+    },
+
+    startup: function(){
+        this.inherited('startup', arguments);
+    }
+
+});
+
+versa.widget.dialog.MessageBox._closeFnRef= function(that){
+    return ( function(){
+        that.onClose(that._dialogResult);
+        that.destroy();
+    });
+};
+
+
+
+
+}
+
+if(!dojo._hasResource['versa.VersaFile']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.VersaFile'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 16/02/12
+ * Time: 2:44 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.VersaFile');
+
+
+
+dojo.declare('versa.VersaFile', null,{
+});
+
+versa.alert = function(msg){
+    new versa.widget.dialog.MessageBox({
+        id: 'versaAlert',
+        title: 'VersaFile Message',
+        message: msg,
+        buttons: versa.MessageBoxButtons.OK,
+        icon: versa.MessageBoxIcons.Warning,
+        onClose: function(dialogResult){ console.log(dialogResult); }
+    }).show();
+};
+
+versa.confirm = function(msg, onOk, onCancel){
+
+    var onOkFn = (onOk) ? onOk: function() { };
+    var onCancelFn = (onCancel) ? onCancel: function() { };
+
+    var msgBox = new versa.widget.dialog.MessageBox({
+        id: 'versaAlert',
+        title: 'VersaFile Message',
+        message: msg,
+        buttons: versa.MessageBoxButtons.OKCancel,
+        icon: versa.MessageBoxIcons.Question,
+        onClose: function(dialogResult){
+            (dialogResult == versa.DialogResults.OK) ? onOkFn() : onCancelFn();
+        }
+    });
+
+    setTimeout(versa.VersaFile._loadMsgBoxFnRef(msgBox), 1000);
+};
+
+versa.VersaFile._loadMsgBoxFnRef = function(that){
+    return ( function() {
+       that.show();
+    });
+};
+
+
+versa.VersaFile.messages = {
+    'TRIAL_REMAINING': 'You have <strong>{days_left}</strong> days remaining on your free trial.',
+    'TRIAL_FINAL': '<strong>This is your final day remaining on your free trial.</strong>',
+    'TRIAL_EXPIRED': '<strong>!!! YOUR TRIAL PERIOD HAS EXPIRED !!!</strong>',
+    'ACTIVATE_LINK': 'Click <a href="http://www.versafile.com" class="dijitBoldLabel versaLink" target="_blank">here</a> to upgrade.'
+
+}
+
+}
+
 if(!dojo._hasResource['bfree.widget.group.Administration']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.widget.group.Administration'] = true;
 /**
@@ -67449,6 +67793,7 @@ dojo._hasResource['bfree.widget.group.Administration'] = true;
  * To change this template use File | Settings | File Templates.
  */
 dojo.provide('bfree.widget.group.Administration');
+
 
 
 
@@ -69378,7 +69723,8 @@ bfree.widget.doctype.Editor.generateDefaultWidget = function(default_value, rowI
             if(defaultType==bfree.api.PropertyMapping.types.date.floating){
                 wdg = "Current Date";
             }else{
-                default_value=new Date(default_value);
+                default_value=default_value.split("T");
+                default_value=dojo.date.locale.parse(default_value[0], {datePattern: "yyyy-MM-dd", selector: "date"});
                 wdg = versa.api.Formatter.formatDateTime(default_value);
             }
         }else if(dataType.isBoolean()){
@@ -71725,11 +72071,7 @@ dojo.declare('bfree.widget.search.TextBox', [dijit._Widget, dijit._Templated],{
 	library: null,
 
     _form: null,
-
-	btnAdvanced: null,
-	btnReset: null,
-	btnSubmit: null,
-	frmSearch: null,
+    activeQuery: null,
 	txtSearch: null,
 
     _form_onReset: function(){
@@ -71739,21 +72081,19 @@ dojo.declare('bfree.widget.search.TextBox', [dijit._Widget, dijit._Templated],{
     _form_onSubmit: function(){
         var searchText = this.txtSearch.get('value');
 
-        try{
+        this.activeQuery = new bfree.api.Search({
+            type: bfree.api.Search.types.SIMPLE,
+            queryData: searchText
+        });
 
-            var searchItem = new bfree.api.Search({
-                type: bfree.api.Search.types.SIMPLE,
-                queryData: searchText
-            });
-
-            this.onSearch(searchItem);
-
-        }
-        catch(e){
-            console.log(e);
-        }
+        this.onSearch(this.activeQuery);
 
         return false;
+    },
+
+    _onSearch: function(searchItem){
+        this.activeQuery = searchItem;
+        this.onSearch(this.activeQuery);
     },
 
 	_textbox_onChange: function(newValue){
@@ -71762,11 +72102,17 @@ dojo.declare('bfree.widget.search.TextBox', [dijit._Widget, dijit._Templated],{
 	},
 
 	constructor: function(args){
-
 	},
 
     onSearch: function(searchItem){
+    },
 
+    _form_onKeyPress: function(evt){
+        if(evt.keyCode==13){
+            evt.preventDefault();
+            this._form_onSubmit();
+            return false;
+        }
     },
 
 	postCreate: function(){
@@ -71774,7 +72120,8 @@ dojo.declare('bfree.widget.search.TextBox', [dijit._Widget, dijit._Templated],{
 
         this._form = new dijit.form.Form({
 			onSubmit: dojo.hitch(this, this._form_onSubmit),
-			onReset: dojo.hitch(this, this._form_onReset)
+			onReset: dojo.hitch(this, this._form_onReset),
+            onKeyPress: dojo.hitch(this, this._form_onKeyPress)
 		}, this.formNode);
 
 		new dijit.form.Button({
@@ -71795,7 +72142,7 @@ dojo.declare('bfree.widget.search.TextBox', [dijit._Widget, dijit._Templated],{
 			library: this.library,
             iconClass: 'searchIcon bfreeIcon',
 			showLabel: false,
-            onSearch: dojo.hitch(this, this.onSearch)
+            onSearch: dojo.hitch(this, this._onSearch)
 		}, this.advancedButtonNode);
 
 	},
@@ -77728,6 +78075,16 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
         });
 		this.addChild(this._buttons.DELETE);
 
+        this._buttons.UNSHARE = new dijit.MenuItem({
+            label: 'Remove from Share',
+            disabled: true,
+            iconClass: 'menuIcon bfreeIconDeleteDocument',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.UNSHARE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.UNSHARE);
+
         this._arrDivides[3] = new dijit.MenuSeparator();
 		this.addChild(this._arrDivides[3]);
 
@@ -77760,16 +78117,6 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
                 bfree.widget.Bfree.ObjectTypes.DOCUMENT)
         });
         this.addChild(this._buttons.DESTROY);
-
-        this._buttons.UNSHARE = new dijit.MenuItem({
-            label: 'Remove from Share',
-            disabled: true,
-            iconClass: 'menuIcon bfreeIconDeleteDocument',
-            onClick: dojo.hitch(this, this._onCommand,
-                bfree.widget.Bfree.Commands.UNSHARE,
-                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
-        });
-        this.addChild(this._buttons.UNSHARE);
 
 
     }
@@ -77897,19 +78244,18 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
     _setActiveFolderAttr: function(folder){
 
-        if(folder.isError()){
+        if((folder) && (folder.isError())){
             return;
         }
 
         //Don't re-query if user clicks on active folder...unless it is the 'Search' folder.
-        var doQuery = ((folder !== this.activeFolder) || folder.isSearch());
+        var doQuery = ((folder) && (folder !== this.activeFolder));
 
         this.activeFolder = folder;
         this._mnuReference.set('activeFolder', this.activeFolder);
 
-        var view_definition = this.activeLibrary.getViewDefinitions().fetchById({id: this.activeFolder.view_definition_id});
-
         if(doQuery){
+            var view_definition = this.activeLibrary.getViewDefinitions().fetchById({id: this.activeFolder.view_definition_id});
             this.selection.clear();
             this.set('activeView', view_definition.getView(this.activeLibrary));
             this.set('activeQuery', this.activeFolder.getActiveQuery().getQuery());
@@ -77944,8 +78290,11 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
         //Update folder's view definition if it has changed.
         if((this.activeFolder) && (!this.activeLibrary.getFolders().containsValue(this.activeFolder, 'view_definition_id', this.activeView.id))){
+            var queryItem = this.activeFolder.getActiveQuery();
             this.activeLibrary.getFolders().setValue(this.activeFolder, 'view_definition_id', this.activeView.id);
             this.activeLibrary.getFolders().save();
+            if(this.activeFolder.isSearch())
+                this.activeFolder.setActiveQuery(queryItem);
         }
 
     },
@@ -88519,310 +88868,6 @@ versa.widget.zone.metrics.Info.show = function(args){
 
 }
 
-if(!dojo._hasResource['versa.widget.dialog.MessageBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['versa.widget.dialog.MessageBox'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 02/05/12
- * Time: 3:56 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('versa.widget.dialog.MessageBox');
-
-
-
-
-versa.DialogResults = {
-    'None':     0x0000,
-    'OK':       0x0001,
-    'Cancel':   0x0002,
-    'Abort':    0x0003,
-    'Retry':    0x0004,
-    'Ignore':   0x0005,
-    'Yes':      0x0006,
-    'No':       0x0007
-};
-
-versa.MessageBoxButtons = {
-    'None':                 0x0000,
-    'OK':                   0x0001,
-    'Cancel':               0x0002,
-    'OKCancel':             0x0003,
-    'Abort':                0x0004,
-    'Retry':                0x0008,
-    'Ignore':               0x0010,
-    'RetryCancel':          0x000A,
-    'AbortRetryIgnore':     0x001C,
-    'Yes':                  0x0020,
-    'No':                   0x0040,
-    'YesNo':                0x0060,
-    'YesNoCancel':          0x0062
-};
-
-versa.MessageBoxIcons = {
-    'None':         0x0000,
-    'Question':     0x0001,
-    'Exclamation':  0x0002,
-    'Asterisk':     0x0003,
-    'Stop':         0x0004,
-    'Error':        0x0005,
-    'Warning':      0x0006,
-    'Information':  0x0007
-};
-
-dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
-    _activeButtons: {},
-    _buttonPaneNode: null,
-    _closing: false,
-    _contentNode: null,
-    _dialogResult: versa.DialogResults.Cancel,
-    _displayNode: null,
-
-    buttons: versa.MessageBoxButtons.None,
-    icon: versa.MessageBoxIcons.None,
-    message: '',
-
-    _initializeButtons: function(){
-
-        if((this.buttons & versa.MessageBoxButtons.OK) == versa.MessageBoxButtons.OK){
-            this._activeButtons.OK = new bfree.widget.Button({
-                id: 'btnOk',
-                'class': 'versaButton',
-                label: 'OK',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.OK)
-            });
-            this._activeButtons.OK.placeAt(this._buttonPaneNode);
-        }
-        if((this.buttons & versa.MessageBoxButtons.Yes) == versa.MessageBoxButtons.Yes){
-            new bfree.widget.Button({
-                'class': 'versaButton',
-                label: 'Yes',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Yes)
-            }).placeAt(this._buttonPaneNode);
-        }
-        if((this.buttons & versa.MessageBoxButtons.No) == versa.MessageBoxButtons.No){
-            new bfree.widget.Button({
-                'class': 'versaButton',
-                label: 'No',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.No)
-            }).placeAt(this._buttonPaneNode);
-        }
-        if((this.buttons & versa.MessageBoxButtons.Retry) == versa.MessageBoxButtons.Retry){
-            new bfree.widget.Button({
-                'class': 'versaButton',
-                label: 'Retry',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Retry)
-            }).placeAt(this._buttonPaneNode);
-        }
-        if((this.buttons & versa.MessageBoxButtons.Cancel) == versa.MessageBoxButtons.Cancel){
-            new bfree.widget.Button({
-                'class': 'versaButton',
-                label: 'Cancel',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Cancel)
-            }).placeAt(this._buttonPaneNode);
-        }
-        if((this.buttons & versa.MessageBoxButtons.Abort) == versa.MessageBoxButtons.Abort){
-            new bfree.widget.Button({
-                'class': 'versaButton',
-                label: 'Abort',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Abort)
-            }).placeAt(this._buttonPaneNode);
-        }
-        if((this.buttons & versa.MessageBoxButtons.Ignore) == versa.MessageBoxButtons.Ignore){
-            new bfree.widget.Button({
-                'class': 'versaButton',
-                label: 'Ignore',
-                onClick: dojo.hitch(this, this._onHide, versa.DialogResults.Ignore)
-            }).placeAt(this._buttonPaneNode);
-        }
-
-    },
-
-    _initializeIcon: function(){
-
-        if(this.icon == versa.MessageBoxIcons.None)
-            return;
-
-        dojo.style(this._displayNode, {paddingLeft: '48px'});
-
-        var icon = 'error';
-
-        switch(this.icon){
-            case versa.MessageBoxIcons.Question:
-                icon = 'question';
-                break;
-            case versa.MessageBoxIcons.Exclamation:
-                icon = 'exclamation';
-                break;
-            case versa.MessageBoxIcons.Asterisk:
-                icon = 'asterisk';
-                break;
-            case versa.MessageBoxIcons.Stop:
-                icon = 'stop';
-                break;
-            case versa.MessageBoxIcons.Error:
-                icon = 'error';
-                break;
-            case versa.MessageBoxIcons.Warning:
-                icon = 'warning';
-                break;
-            case versa.MessageBoxIcons.Information:
-                icon = 'information';
-                break;
-        }
-
-        var imgSrc = dojo.replace('/images/icons/32/{0}.png', [icon]);
-        dojo.create('img', {
-            src: imgSrc,
-            style: { position:'absolute',left:'8px',top:'8px' }
-        }, this._displayNode);
-
-    },
-
-    _onHide: function(dialogResult){
-        this._dialogResult = dialogResult;
-        for(var b in this._activeButtons){
-            this._activeButtons[b].set('disabled', true);
-        }
-        this.hide();
-    },
-
-    constructor: function(){
-    },
-
-    destroy: function(){
-        this.destroyDescendants();
-        this.inherited('destroy', arguments);
-    },
-
-    hide: function(dialog){
-        if(this._closing)
-            return;
-        this._closing = true;
-        this.inherited('hide', arguments);
-    },
-
-    onClose: function(dialogResult){
-    },
-
-    onHide: function(){
-        setTimeout(versa.widget.dialog.MessageBox._closeFnRef(this), this.duration);
-    },
-
-    postCreate: function(){
-        this.inherited('postCreate', arguments);
-
-        dojo.create('img', {
-            src: '/images/icons/16/logo.png',
-            style: { position:'absolute',left:'2px',top:'5px' }
-        }, this.titleBar);
-
-        dojo.style(this.titleNode, {marginLeft: '12px'});
-        dojo.style(this.containerNode, {padding: '0'});
-
-        this._contentNode = dojo.create('div');
-
-        this._displayNode = dojo.create(
-            'div',
-            {
-                style: {
-                    display: 'table-cell',
-                    maxWidth: '480px',
-                    height: '48px',
-                    minWidth: '164px',
-                    padding: '0 8px 0 8px',
-                    verticalAlign: 'middle'
-                }
-            },
-            this._contentNode
-        );
-
-        this._initializeIcon();
-
-        dojo.create(
-            'p',
-            {   'class': 'dijitDarkLabel',
-                innerHTML: this.message
-            },
-            this._displayNode
-        );
-
-        //Create button node and buttons
-        this._buttonPaneNode = dojo.create(
-            'div',
-            {
-                'class': 'versaDialogButtonPane',
-                style: {height: '32px',padding:'4px 4px 0 0',textAlign:'right'}
-            },
-            this._contentNode
-        );
-        this._initializeButtons();
-
-        this.set('content', this._contentNode);
-
-    },
-
-    startup: function(){
-        this.inherited('startup', arguments);
-    }
-
-});
-
-versa.widget.dialog.MessageBox._closeFnRef= function(that){
-    return ( function(){
-        that.onClose(that._dialogResult);
-        that.destroy();
-    });
-};
-
-
-
-
-}
-
-if(!dojo._hasResource['versa.VersaFile']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['versa.VersaFile'] = true;
-/**
- * Created by JetBrains RubyMine.
- * User: scotth
- * Date: 16/02/12
- * Time: 2:44 PM
- * To change this template use File | Settings | File Templates.
- */
-dojo.provide('versa.VersaFile');
-
-
-
-dojo.declare('versa.VersaFile', null,{
-});
-
-versa.alert = function(msg){
-    new versa.widget.dialog.MessageBox({
-        id: 'versaAlert',
-        title: 'VersaFile Message',
-        message: msg,
-        buttons: versa.MessageBoxButtons.OK,
-        icon: versa.MessageBoxIcons.Warning,
-        onClose: function(dialogResult){ console.log(dialogResult); }
-    }).show();
-}
-
-versa.confirm = function(msg){
-
-
-}
-
-versa.VersaFile.messages = {
-    'TRIAL_REMAINING': 'You have <strong>{days_left}</strong> days remaining on your free trial.',
-    'TRIAL_FINAL': '<strong>This is your final day remaining on your free trial.</strong>',
-    'TRIAL_EXPIRED': '<strong>!!! YOUR TRIAL PERIOD HAS EXPIRED !!!</strong>',
-    'ACTIVATE_LINK': 'Click <a href="http://www.versafile.com" class="dijitBoldLabel versaLink" target="_blank">here</a> to upgrade.'
-
-}
-
-}
-
 if(!dojo._hasResource['bfree.widget.zone.Show']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.widget.zone.Show'] = true;
 /**
@@ -88884,6 +88929,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     _btnAvatar: null,
     _cmdBar: null,
     _grdDocuments: null,
+    _txtSearch: null,
 
     activeDocuments: [],
     activeFolder: null,
@@ -89055,10 +89101,14 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     },
 
     __onFolderLoad: function(folder){
-
         this.activeFolder = folder;
-        this._grdDocuments.set('activeFolder', this.activeFolder);
 
+        //Search query gets 'lost' when search folder gets populated from db.
+        if(this.activeFolder.isSearch() && (!this.activeFolder._activeQuery)){
+            this.activeFolder.setActiveQuery(this._txtSearch.get('activeQuery'));
+        }
+
+        this._grdDocuments.set('activeFolder', this.activeFolder);
     },
 
     __onFolderLoadError: function(item, e){
@@ -89394,10 +89444,14 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         var folder = node.item;
         if((this.activeType == bfree.widget.Bfree.ObjectTypes.FOLDER) && (folder === this.activeFolder)){
-            this._wdgItemInfo.preload(bfree.widget.Bfree.ObjectTypes.FOLDER, [folder]);
-            this._wdgItemInfo.loadItem({
-                item: folder
+            this._wdgItemInfo.preload({
+                type: bfree.widget.Bfree.ObjectTypes.FOLDER,
+                items: [folder]
             });
+            this._wdgItemInfo.load({
+            type: bfree.widget.Bfree.ObjectTypes.FOLDER,
+            items: [folder]
+        });
         }
 
     },
@@ -89429,6 +89483,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         var searchFolder = rootFolder.getSearchFolder();
 
         if(searchFolder){
+            this._grdDocuments.set('activeFolder', null);
             this.set('activeType', bfree.widget.Bfree.ObjectTypes.FOLDER);
             searchFolder.setActiveQuery(queryItem);
             this._tvwFolders.showSearch();
@@ -90569,7 +90624,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             style:'z-index: 512;bottom:4px;left:0;position:absolute'
         }, this.toolbarNode);
 
-        new bfree.widget.search.TextBox({
+        this._txtSearch = new bfree.widget.search.TextBox({
             library: this.activeLibrary,
 			onSearch: dojo.hitch(this, this._doAdHocQuery),
             style: 'width:100%'
