@@ -185,13 +185,15 @@ class ReferencesController < ApplicationController
     end
 
     folder_id = params[:folder_id].to_i
-    @folder = (folder_id == 0) ? nil : @library.folders.viewable(@active_user, @active_group).find(folder_id)
+    @folder = @library.folders.viewable(@active_user, @active_group).find(folder_id)
     if !(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles) && (@folder.folder_type == VersaFile::FolderTypes.Share))
       raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.CreateFiles)
     end
 
-    shared_reference = @reference.create_share(@folder, @active_user)
-    shared_reference.save()
+    unless @folder.references.exists?(:document_id => @reference.document_id)
+      shared_reference = @reference.create_share(@folder, @active_user)
+      shared_reference.save()
+    end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
     respond_to do |format|

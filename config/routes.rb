@@ -125,6 +125,9 @@ VersaFile::Application.routes.draw do
         collection do
           get 'root'
         end
+        member do
+          put 'share_items'
+        end
       end
 
       resources :property_definitions

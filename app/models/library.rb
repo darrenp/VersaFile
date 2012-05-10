@@ -461,7 +461,7 @@ private
         :folder_type => VersaFile::FolderTypes.Root,
         :created_by => self.created_by,
         :updated_by => self.created_by,
-        :parent_id => nil?
+        :parent_id => nil
     )
 
     #create trash folder
@@ -500,14 +500,16 @@ private
             AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup)
         ]
     )
+    trash.save
 
     share_root.acl = self.zone.acls.create(
-        inherits = false,
+        :inherits => false,
         :acl_entries => [
           AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup),
           AclEntry.create(:grantee => self.zone.groups.everyones.first, :role => self.zone.roles.nones.first, :precedence => Bfree::Acl::PrecedenceTypes.Everyone)
         ]
     )
+    share_root.save
 
   end
 

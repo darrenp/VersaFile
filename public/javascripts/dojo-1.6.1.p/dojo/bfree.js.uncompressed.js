@@ -7564,6 +7564,16 @@ dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
         this.securable_type = bfree.api._Securable.types.Folder;
     },
 
+    childNameExists: function(name, ignoreId){
+
+        return dojo.some(this.children, function(child){
+            if(child.getId() == ignoreId)
+                return false;
+            return (child.name.toLowerCase() == name.toLowerCase());
+        }, this);
+
+    },
+
     getActiveQuery: function(){
 
         if(!this._activeQuery){
@@ -7669,8 +7679,34 @@ dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
     setActiveQuery: function(query){
         this._activeQuery = query;
         this._activeQuery.view_definition_id = this.view_definition_id;
+    },
+
+    shareItems: function(args){
+        var zone = args.zone;
+        var library = args.library;
+
+        var ids = []
+        dojo.forEach(args.references, function(reference){
+            ids.push(reference.getId());
+        }, this);
+
+        var url = dojo.replace(bfree.api.Folder.SHAREITEMS_TRGT,  [zone.subdomain, library.id, this.getId()]);
+        var putData = {
+            reference_ids: ids
+        };
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return true;
     }
+
+
 });
+
+bfree.api.Folder.SHAREITEMS_TRGT = '/zones/{0}/libraries/{1}/folders/{2}/share_items.json';
 
 bfree.api.Folder.FolderTypes = {
     'ROOT':         0x0000,
@@ -17018,14 +17054,14 @@ dojo.declare('bfree.api.SharedItem', bfree.api._Object, {
 
         bfree.api.Utilities.viewUrl({
             windowBox: args.windowBox,
-            url: '',
+            url: url,
             window_name: 'versa_viewer'
         });
 
-        form.set('action', url);
-        form.set('target', 'versa_viewer');
-        form.set('method', 'post');
-        form.submit();
+//        form.set('action', url);
+//        form.set('target', '_blank');
+//        form.set('method', 'post');
+//        form.submit();
 	}
 
 
@@ -59518,42 +59554,43 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
             //Check for upload complete.
             if(!documentItem.getState(bfree.api.Document.states.UPLOADED)){
-                alert('The file has not completed uploading');
-                return;
+                versa.alert('The file has not completed uploading');
             }
+            else{
+                //Purge document of all properties NOT in selected document type.
+                documentItem.clean_properties({library: this.library});
 
-            //Purge document of all properties NOT in selected document type.
-            documentItem.clean_properties({library: this.library});
+                //Check for invalid properties.
+                if(!documentItem.validate({library: this.library})){
+                    throw new Error('One or more properties are missing or invalid');
+                }
 
-            //Check for invalid properties.
-            if(!documentItem.validate({library: this.library})){
-                throw new Error('One or more properties are missing or invalid');
-            }
+                //create document item in store and update state of grid item
+                this._btnAdd.set('disabled', true);
 
-            //create document item in store and update state of grid item
-            this._btnAdd.set('disabled', true);
-
-            documentItem.state |= bfree.api.Document.states.PENDING;
-            this._fileGrid.updateRow(idx);
-            var newItem = this._documents.create(documentItem);
-            this._editor.set('activeItem', documentItem);
-            this._setState(this._activeItem);
-
-            function __onComplete(args){
-                //Set state after success
-                this._fileGrid.store.setValue(this._activeItem, 'document', newItem);
+                documentItem.state |= bfree.api.Document.states.PENDING;
                 this._fileGrid.updateRow(idx);
-                this._editor.set('activeItem', newItem);
+                var newItem = this._documents.create(documentItem);
+                this._editor.set('activeItem', documentItem);
                 this._setState(this._activeItem);
 
-                this.__setNextItem(idx, true);
+                function __onComplete(args){
+                    //Set state after success
+                    this._fileGrid.store.setValue(this._activeItem, 'document', newItem);
+                    this._fileGrid.updateRow(idx);
+                    this._editor.set('activeItem', newItem);
+                    this._setState(this._activeItem);
+
+                    this.__setNextItem(idx, true);
+                }
+
+                //save valid documents to server
+                this._documents.save({
+                    onComplete: __onComplete,
+                    scope: this
+                });
             }
 
-            //save valid documents to server
-            this._documents.save({
-                onComplete: __onComplete,
-                scope: this
-            });
 
         }
         catch(e){
@@ -64472,58 +64509,42 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
     },
 
     _editor_onChange: function(value){
-        var isNew = false;
 
         try{
 
-            var parent;
-            if(this.item.parent_id==0){
-                parent=this.tree.rootNode.item;
-            }else{
-                parent=this.tree.folders.fetchById({id: this.item.parent_id});
+            function __onClose(){
+                this._destroyEditor();
+                setTimeout(dojo.hitch(this, function(){ this.edit();}), 100);
             }
 
-            for(var i in parent.children){
-                if(i!="__parent"&&
-                   parent.children[i].declaredClass=="bfree.api.Folder"&&
-                   parent.children[i].name.toLowerCase()==value.toLowerCase()&&
-                   parent.children[i].id!=this.item.id){
-                    alert("Duplicate folder names are not allowed.");
-                    this._destroyEditor();
-                    setTimeout(dojo.hitch(this, function(){
-                        this.edit();
-                    }), 100);
-                    return;
-                }
+            var parent = this.tree.folders.fetchById({id: this.item.parent_id});
+            if(parent.childNameExists(value, this.item.getId())){
+                var msg = dojo.replace('Cannot create folder: The destination folder already contains a folder named \'{0}\'', [value]);
+                versa.alert(msg, dojo.hitch(this, __onClose));
             }
-
-            if(value.trim()==""){
+            else if(value.trim() == ''){
                 this._editor_onCancel();
-                return;
             }
+            else{
+                this.set('label', value);
+                this.tree._beforeSelected(this);
+                this.tree.folders.setValue(this.item, 'name', value);
+                this.tree.folders.save();
 
-            this.set('label', value);
+                var nodes = this.tree.getNodesByItem(parent);
+                dojo.forEach(nodes, function(node){
+                    node.item.children.sort(bfree.api.Folder.sort);
+                    node.setChildItems(node.item.children);
+                }, this);
 
-            this.tree._beforeSelected(this);
+                (this.item.isNew()) ?
+                   this.tree.onNewNode(this) :
+                   this.tree.onUpdateNode(this);
 
-            isNew = this.item.isNew();
-
-            this.tree.folders.setValue(this.item, 'name', value);
-            this.tree.folders.save();
-
-            var nodes = this.tree.getNodesByItem(parent);
-            dojo.forEach(nodes, function(node){
-                node.item.children.sort(bfree.api.Folder.sort);
-                node.setChildItems(node.item.children);
-            }, this);
-
-            (isNew) ?
-               this.tree.onNewNode(this) :
-               this.tree.onUpdateNode(this);
-
-            this.tree._afterSelected(this);
-            this.tree.setEditing(false);
-            this._destroyEditor();
+                this.tree._afterSelected(this);
+                this.tree.setEditing(false);
+                this._destroyEditor();
+            }
 
         }
         catch(e){
@@ -64745,20 +64766,8 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
 
         var path = item.path;
+        this.setSelectedItem(item);
 
-        var nodes = this.getNodesByItem(item);
-        dojo.forEach(nodes, function(node, idx){
-            var parent = node.getParent();
-            var children = parent.getChildren();
-            children.removeByValue(node);
-            for(var i in children){
-                if(children[i].item){
-                    children[i] = children[i].item;
-                }
-            }
-            parent.setChildItems(children);
-
-        }, this);
 
 		this.folders.destroy({item: item});
         path.pop();
@@ -64869,12 +64878,17 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
 
         newParentNode.expand();
 
-        this.library.getFolders().setValue(folder, 'parent_id', parent.getId());
-        this.model.pasteItem(folder, oldParentNode.item, parent, false);
+        if(parent.childNameExists(folder.name)){
+            var msg = dojo.replace('Cannot move folder: The destination folder already contains a folder named \'{name}\'', folder);
+            versa.alert(msg);
+        }
+        else{
+            this.library.getFolders().setValue(folder, 'parent_id', parent.getId());
+            this.model.pasteItem(folder, oldParentNode.item, parent, false);
+            this.library.getFolders().save();
+            this.setSelectedPath(folder.path);
+        }
 
-        this.library.getFolders().save();
-
-        this.setSelectedPath(folder.path);
 
     },
 
@@ -67736,14 +67750,16 @@ dojo.provide('versa.VersaFile');
 dojo.declare('versa.VersaFile', null,{
 });
 
-versa.alert = function(msg){
+versa.alert = function(msg, onClose){
+    var onCloseFn = (onClose) ? onClose: function() { };
+
     new versa.widget.dialog.MessageBox({
         id: 'versaAlert',
         title: 'VersaFile Message',
         message: msg,
         buttons: versa.MessageBoxButtons.OK,
         icon: versa.MessageBoxIcons.Warning,
-        onClose: function(dialogResult){ console.log(dialogResult); }
+        onClose: onCloseFn
     }).show();
 };
 
@@ -67932,20 +67948,20 @@ dojo.declare('bfree.widget.group.Administration', [dijit._Widget, dijit._Templat
 
                 if(!this._validateItems(item)){
                     var msg = 'Cannot delete Group: One or more Groups contain invalid data';
-                    alert(msg);
-                    return;
+                    versa.alert(msg);
+                }
+                else{
+
+                    var msg = dojo.replace('Are you sure you want to delete the group: \'{0}\'?', [item.name]);
+                    if (!confirm(msg))
+                        return;
+
+                    var idx = this._grdGroups.getItemIndex(item);
+                    this._groups.destroy({item: item});
+                    this._grdGroups.setSelectedIndex(idx);
+                    this._editor.focus();
                 }
 
-                var msg = dojo.replace('Are you sure you want to delete the group: \'{0}\'?', [item.name]);
-                if (!confirm(msg))
-                    return;
-
-                var idx = this._grdGroups.getItemIndex(item);
-                this._groups.destroy({item: item});
-                this._grdGroups.setSelectedIndex(idx);
-                this._editor.focus();
-                //twice?
-//                this._grdGroups.setSelectedIndex(idx);
             }
 
         }
@@ -68062,12 +68078,13 @@ dojo.declare('bfree.widget.group.Administration', [dijit._Widget, dijit._Templat
 
             if(!this._validateItems()){
                 var msg = 'Cannot save Group changes: One or more Groups contain invalid data';
-                alert(msg);
-                return;
+                versa.alert(msg);
+            }
+            else{
+                var item = this._grdGroups.selection.getFirstSelected();
+                this._groups.save({onComplete: dojo.hitch(this, this.saveOnComplete, item)});
             }
 
-            var item = this._grdGroups.selection.getFirstSelected();
-            this._groups.save({onComplete: dojo.hitch(this, this.saveOnComplete, item)});
         }
         catch(e){
             var err = new bfree.api.Error('Failed to save Group changes', e);
@@ -89371,7 +89388,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
     __onShare: function(object_type, params){
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
-                this._onDocumentShare(params.folder, params.items);
+                this._onShareDocuments(params.folder, params.items);
                 break;
             case bfree.widget.Bfree.ObjectTypes.FOLDER:
                 //this._onFolderShare(params.folder);
@@ -90215,6 +90232,35 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 error: err
             });
         }
+    },
+
+    _onShareDocuments: function(share, items){
+
+        try{
+
+            dojo.forEach(items, function(item){
+                this._grdDocuments.setBusy(item, true);
+            }, this);
+
+           share.shareItems({
+               zone: this.zone,
+               library: this.activeLibrary,
+               references: items
+           });
+
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to share documents', e);
+            bfree.widget.ErrorManager.handleError({
+                error: err
+            });
+        }
+        finally{
+            dojo.forEach(items, function(item){
+                this._grdDocuments.setBusy(item, false);
+            }, this);
+        }
+
     },
 
     _onShareDestroy: function(share){

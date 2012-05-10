@@ -45,6 +45,34 @@ class FoldersController < ApplicationController
 
   end
 
+  def share_items
+
+    @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
+    if !(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles) && (@folder.folder_type == VersaFile::FolderTypes.Share))
+      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.CreateFiles)
+    end
+
+    params['reference_ids'].each do |reference_id|
+
+      reference = @library.references.viewable(@active_user, @active_group).complete.find(reference_id)
+      unless Acl.has_rights(reference.active_permissions, Bfree::Acl::Permissions.WriteMetadata)
+        raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
+      end
+
+      unless @folder.references.exists?(:document_id => reference.document_id)
+        shared_reference = reference.create_share(@folder, @active_user)
+        shared_reference.save()
+      end
+
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render :json => '' }
+    end
+
+  end
+
   # GET /folders/1
   # GET /folders/1.json
   def show
