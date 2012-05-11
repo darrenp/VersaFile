@@ -312,6 +312,7 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/widget/user/List.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Editor.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Grid.js
+./../../../dojo-1.6.1.p/versa/widget/dialog/_Base.js
 ./../../../dojo-1.6.1.p/versa/widget/dialog/MessageBox.js
 ./../../../dojo-1.6.1.p/versa/VersaFile.js
 ./../../../dojo-1.6.1.p/bfree/widget/group/Administration.js

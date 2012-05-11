@@ -55916,7 +55916,9 @@ bfree.widget.propdef.Widget.getWidget = function(dataType, wdgId, label, format,
 
     }
     else if((dataType.isBoolean())){
-        defaultValue=parseInt(defaultValue);
+        if(defaultValue==="0"||defaultValue==="1"){
+            defaultValue=parseInt(defaultValue);
+        }
 
         wdg = new dijit.form.CheckBox({
             id: wdgId,
@@ -56143,6 +56145,11 @@ dojo.declare('bfree.widget.doctype.properties.Editor', [dijit._Widget, dijit._Te
                 wdg.set('value', value?value:0);
             }else if(value instanceof Date&&wdg.declaredClass=="bfree.widget.FilteringSelect"){
                 wdg.set('value', bfree.api.Utilities.formatDate(value));
+            }else if(wdg.declaredClass=="dijit.form.CheckBox"){
+                if(value==="0"||value==="1"){
+                    value=parseInt(value);
+                }
+                wdg.set('checked', value);
             }else{
                 wdg.set('value', value);
             }
@@ -61163,6 +61170,13 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
     _normalizedCreator: null,
 
+    _cancelDnd: function(){
+        console.log('cancel.dnd');
+        dojo.publish("/dnd/cancel");
+        //this.onDndCancel();
+        dojo.dnd.manager().stopDrag();
+    },
+
     _checkDocumentDrag: function(sourceItems){
         var canDrag = true;
         //Place holder for start of document drag
@@ -61401,6 +61415,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
         if(source !== this){
             this.inherited('onDndStart', arguments);
+            this.isDragging = false;
             return;
         }
 
@@ -61423,7 +61438,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
         (canDnd) ?
             this.inherited('onDndStart', arguments) :
-            dojo.dnd.manager().stopDrag();
+            this._cancelDnd();
 
     },
 
@@ -61444,6 +61459,35 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
 	}
 });
+
+dojo.dnd.manager().startDrag = function(source, nodes, copy){
+		// summary:
+		//		called to initiate the DnD operation
+		// source: Object
+		//		the source which provides items
+		// nodes: Array
+		//		the list of transferred items
+		// copy: Boolean
+		//		copy items, if true, move items otherwise
+		this.source = source;
+		this.nodes  = nodes;
+		this.copy   = Boolean(copy); // normalizing to true boolean
+		this.avatar = this.makeAvatar();
+		dojo.body().appendChild(this.avatar.node);
+		dojo.publish("/dnd/start", [source, nodes, this.copy]);
+		this.events = [
+			dojo.connect(dojo.doc, "onmousemove", this, "onMouseMove"),
+		    dojo.connect(dojo.doc, "onmouseup",   this, "onMouseUp"),
+	        dojo.connect(dojo.doc, "onkeydown",   this, "onKeyDown"),
+		    dojo.connect(dojo.doc, "onkeyup",     this, "onKeyUp"),
+			// cancel text selection and text dragging
+		    dojo.connect(dojo.doc, "ondragstart",   dojo.stopEvent),
+		    //dojo.connect(dojo.body(), "onselectstart", bfree.stopEvent)
+		];
+		var c = "dojoDnd" + (copy ? "Copy" : "Move");
+		dojo.addClass(dojo.body(), c);
+	};
+
 
 bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
 
@@ -67472,16 +67516,16 @@ bfree.widget.group.Grid.view = [
 
 }
 
-if(!dojo._hasResource['versa.widget.dialog.MessageBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
-dojo._hasResource['versa.widget.dialog.MessageBox'] = true;
+if(!dojo._hasResource['versa.widget.dialog._Base']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.dialog._Base'] = true;
 /**
  * Created by JetBrains RubyMine.
  * User: scotth
- * Date: 02/05/12
- * Time: 3:56 PM
+ * Date: 10/05/12
+ * Time: 11:40 AM
  * To change this template use File | Settings | File Templates.
  */
-dojo.provide('versa.widget.dialog.MessageBox');
+dojo.provide('versa.widget.dialog._Base');
 
 
 
@@ -67524,17 +67568,11 @@ versa.MessageBoxIcons = {
     'Information':  0x0007
 };
 
-dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
-    _activeButtons: {},
-    _buttonPaneNode: null,
-    _closing: false,
-    _contentNode: null,
-    _dialogResult: versa.DialogResults.Cancel,
-    _displayNode: null,
+dojo.declare('versa.widget.dialog._Base', dijit.Dialog,{
 
-    buttons: versa.MessageBoxButtons.None,
-    icon: versa.MessageBoxIcons.None,
-    message: '',
+    _buttonPaneNode: null,
+    _contentNode: null,
+    _widgetNode: null,
 
     _initializeButtons: function(){
 
@@ -67591,6 +67629,83 @@ dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
         }
 
     },
+
+    constructor: function(args){
+
+    },
+
+    destroy: function(){
+        this.destroyDescendants();
+        this.inherited('destroy', arguments);
+    },
+
+    postCreate: function(){
+        this.inherited('postCreate', arguments);
+
+        //Set title icon
+        dojo.create('img', {
+            src: '/images/icons/16/logo.png',
+            style: { position:'absolute',left:'2px',top:'5px' }
+        }, this.titleBar);
+
+        dojo.style(this.titleNode, {marginLeft: '12px'});
+        dojo.style(this.containerNode, {padding: '0'});
+
+        //Create content 'wrapper' div
+        this._contentNode = dojo.create('div');
+        this._widgetNode = dojo.create('div', { }, this._contentNode);
+
+        //Create button node and buttons
+        this._buttonPaneNode = dojo.create(
+            'div',
+            {
+                'class': 'versaDialogButtonPane',
+                style: {height: '40px',padding:'10px 4px 0 0',textAlign:'right'}
+            },
+            this._contentNode
+        );
+        this._initializeButtons();
+
+
+
+    },
+
+    startup: function(){
+        this.set('content', this._contentNode);
+        this.inherited('startup', arguments);
+    }
+
+
+});
+
+}
+
+if(!dojo._hasResource['versa.widget.dialog.MessageBox']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['versa.widget.dialog.MessageBox'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 02/05/12
+ * Time: 3:56 PM
+ * To change this template use File | Settings | File Templates.
+ */
+dojo.provide('versa.widget.dialog.MessageBox');
+
+
+
+dojo.declare('versa.widget.dialog.MessageBox', versa.widget.dialog._Base,{
+    _activeButtons: {},
+    _buttonPaneNode: null,
+    _closing: false,
+    _contentNode: null,
+    _dialogResult: versa.DialogResults.Cancel,
+    _displayNode: null,
+
+    buttons: versa.MessageBoxButtons.None,
+    icon: versa.MessageBoxIcons.None,
+    message: '',
+
+
 
     _initializeIcon: function(){
 
@@ -67666,16 +67781,11 @@ dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
     postCreate: function(){
         this.inherited('postCreate', arguments);
 
-        dojo.create('img', {
-            src: '/images/icons/16/logo.png',
-            style: { position:'absolute',left:'2px',top:'5px' }
-        }, this.titleBar);
 
-        dojo.style(this.titleNode, {marginLeft: '12px'});
-        dojo.style(this.containerNode, {padding: '0'});
 
-        this._contentNode = dojo.create('div');
+        //console.log('one');
 
+        //create div that contains both image and text
         this._displayNode = dojo.create(
             'div',
             {
@@ -67688,10 +67798,23 @@ dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
                     verticalAlign: 'middle'
                 }
             },
-            this._contentNode
+            this._widgetNode
         );
 
         this._initializeIcon();
+
+        //
+
+        /*
+
+
+
+
+
+
+
+
+
 
         dojo.create(
             'p',
@@ -67701,18 +67824,11 @@ dojo.declare('versa.widget.dialog.MessageBox', dijit.Dialog,{
             this._displayNode
         );
 
-        //Create button node and buttons
-        this._buttonPaneNode = dojo.create(
-            'div',
-            {
-                'class': 'versaDialogButtonPane',
-                style: {height: '40px',padding:'10px 4px 0 0',textAlign:'right'}
-            },
-            this._contentNode
-        );
-        this._initializeButtons();
 
-        this.set('content', this._contentNode);
+
+
+
+        */
 
     },
 
@@ -69068,6 +69184,8 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
 
                     if(dataType.isDateTime()){
                         defaultValue=null;
+                    }else if(dataType.isBoolean()){
+                        defaultValue=false;
                     }else{
                         defaultValue='';
                     }
@@ -69278,11 +69396,14 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
 
      _onPropertyMapCreated: function(newItem, parentInfo){
 
+        var dataType=this._propMapStore.getValue(newItem, 'data_type');
+
         this.activeItem.property_mappings.push({
             sort_order: this._propMapStore.getValue(newItem, 'sort'),
             property_definition_id: this._propMapStore.getIdentity(newItem),
             is_required: false,
             choice_list_id: null,
+            default_value:dataType.isBoolean()?false:null,
             default_type: 0
         });
         this.onValueChange(this.activeItem, 'property_mappings', [], this.activeItem.property_mappings);
@@ -71780,7 +71901,7 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
         return {
             operator_id: operator.id,
             lhs: propertyDefinition.id,
-            rhs: this._formatValue(this._wdgValue.get('value'), dataType)
+            rhs: this._formatValue(dataType.isBoolean()?this._wdgValue.get('checked'):this._wdgValue.get('value'), dataType)
         }
     },
 
@@ -77832,6 +77953,7 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
 
         if(source !== this){
             this.inherited('onDndStart', arguments);
+            this.isDragging = false;
             return;
         }
 
@@ -78560,11 +78682,11 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         this.set('autoRender', false);
 
         this.setStore(this.activeLibrary.getReferences().store, { type: bfree.api.Search.types.NONE });
-
         this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
             accept:[],
             grid: this
         });
+
     }
 
 
