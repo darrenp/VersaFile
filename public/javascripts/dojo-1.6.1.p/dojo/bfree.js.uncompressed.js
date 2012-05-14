@@ -57691,6 +57691,11 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
     documents:0,
     maxDocuments:50,
 
+    devMode: false,
+    isDebug: false,
+    serverTimeout: 60000,
+
+
     _createFlashUploader: function(){
 		// summary:
 		//		Internal. Creates Flash Uploader
@@ -57737,8 +57742,8 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
 				deferredUploading:this.deferredUploading || 0,
 				selectMultipleFiles: this.multiple,
 				id: this.id,
+                devMode: this.devMode,
 				isDebug: this.isDebug,
-				noReturnCheck: this.skipServerCheck,
 				serverTimeout:this.serverTimeout
 			},
 			params: {
@@ -61170,13 +61175,6 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 
     _normalizedCreator: null,
 
-    _cancelDnd: function(){
-        console.log('cancel.dnd');
-        dojo.publish("/dnd/cancel");
-        //this.onDndCancel();
-        dojo.dnd.manager().stopDrag();
-    },
-
     _checkDocumentDrag: function(sourceItems){
         var canDrag = true;
         //Place holder for start of document drag
@@ -61411,21 +61409,18 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
     },
 
+
     onDndStart: function(source, nodes, copy){
 
+        this.inherited('onDndStart', arguments);
         if(source !== this){
-            this.inherited('onDndStart', arguments);
-            this.isDragging = false;
+            //DnD was initiated from another source (not Folder Tree)
+            //Defer cancel to the 'Grid' source, (not a great solution).
+            source.cancelled = true;
             return;
         }
 
-        //only drag tree nodes.
-        if(!this.startNode.isInstanceOf(bfree.widget._TreeNode)){
-            dojo.dnd.manager().stopDrag();
-            return;
-        }
-
-        //Can't dnd:
+         //Can't dnd:
         //- User must have 'Author' permissions or higher to DnD folder
         //- Root folder
         //- Recycle Bin
@@ -61436,12 +61431,10 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             return treeNode.item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!(treeNode.item.isRoot() || treeNode.item.isSpecial()));
         }, this);
 
-        (canDnd) ?
-            this.inherited('onDndStart', arguments) :
-            this._cancelDnd();
+        if(!canDnd)
+             dojo.dnd.manager().onKeyDown({keyCode: dojo.keys.ESCAPE});
 
     },
-
 
     onMouseDown: function(e){
 		// summary:
@@ -61460,34 +61453,43 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 	}
 });
 
-dojo.dnd.manager().startDrag = function(source, nodes, copy){
-		// summary:
-		//		called to initiate the DnD operation
-		// source: Object
-		//		the source which provides items
-		// nodes: Array
-		//		the list of transferred items
-		// copy: Boolean
-		//		copy items, if true, move items otherwise
-		this.source = source;
-		this.nodes  = nodes;
-		this.copy   = Boolean(copy); // normalizing to true boolean
-		this.avatar = this.makeAvatar();
-		dojo.body().appendChild(this.avatar.node);
-		dojo.publish("/dnd/start", [source, nodes, this.copy]);
-		this.events = [
-			dojo.connect(dojo.doc, "onmousemove", this, "onMouseMove"),
-		    dojo.connect(dojo.doc, "onmouseup",   this, "onMouseUp"),
-	        dojo.connect(dojo.doc, "onkeydown",   this, "onKeyDown"),
-		    dojo.connect(dojo.doc, "onkeyup",     this, "onKeyUp"),
-			// cancel text selection and text dragging
-		    dojo.connect(dojo.doc, "ondragstart",   dojo.stopEvent),
-		    //dojo.connect(dojo.body(), "onselectstart", bfree.stopEvent)
-		];
-		var c = "dojoDnd" + (copy ? "Copy" : "Move");
-		dojo.addClass(dojo.body(), c);
-	};
+dojo.dnd.manager().canDrop = function(flag){
+    // summary:
+    //	 	called to notify if the current target can accept items
+    var canDropFlag = Boolean(this.target && flag);
+    if(this.canDropFlag != canDropFlag){
+        this.canDropFlag = canDropFlag;
+        if(this.avatar) this.avatar.update();
+    }
+};
 
+dojo.dnd.manager().startDrag = function(source, nodes, copy){
+    // summary:
+    //		called to initiate the DnD operation
+    // source: Object
+    //		the source which provides items
+    // nodes: Array
+    //		the list of transferred items
+    // copy: Boolean
+    //		copy items, if true, move items otherwise
+    this.source = source;
+    this.nodes  = nodes;
+    this.copy   = Boolean(copy); // normalizing to true boolean
+    this.avatar = this.makeAvatar();
+    dojo.body().appendChild(this.avatar.node);
+    dojo.publish("/dnd/start", [source, nodes, this.copy]);
+    this.events = [
+        dojo.connect(dojo.doc, "onmousemove", this, "onMouseMove"),
+        dojo.connect(dojo.doc, "onmouseup",   this, "onMouseUp"),
+        dojo.connect(dojo.doc, "onkeydown",   this, "onKeyDown"),
+        dojo.connect(dojo.doc, "onkeyup",     this, "onKeyUp"),
+        // cancel text selection and text dragging
+        dojo.connect(dojo.doc, "ondragstart",   dojo.stopEvent)
+        //dojo.connect(dojo.body(), "onselectstart", bfree.stopEvent)
+    ];
+    var c = "dojoDnd" + (copy ? "Copy" : "Move");
+    dojo.addClass(dojo.body(), c);
+};
 
 bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
 
@@ -72174,7 +72176,14 @@ dojo.declare('bfree.widget.search.DropDown', dijit.form.DropDownButton,
 		});
 
 
-	}
+	},
+
+    openDropDown: function(){
+        this.library.getPropertyDefinitions().clearCache();
+        this.inherited('openDropDown', arguments);
+    }
+
+
 
 });
 
@@ -77949,11 +77958,19 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
         return false;
     },
 
+    destroy: function(){
+        this.inherited('destroy', arguments);
+    },
+
     onDndStart: function(source, nodes, copy){;
 
+        this.inherited('onDndStart', arguments);
         if(source !== this){
-            this.inherited('onDndStart', arguments);
-            this.isDragging = false;
+            //DnD was initiated from another source (not Document Grid)
+            //If cancel was deferred from tree than perform a 'global' cancel.
+            (source.cancelled) ?
+                dojo.publish("/dnd/cancel") :
+                this.onDndCancel();
             return;
         }
 
@@ -77966,12 +77983,10 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
             return (item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!item.isShare()));
         });
 
-        (canDnd) ?
-            this.inherited('onDndStart', arguments) :
-            dojo.dnd.manager().stopDrag();
+        if(!canDnd)
+             dojo.dnd.manager().onKeyDown({keyCode: dojo.keys.ESCAPE});
 
     }
-
 
 
 });
@@ -78682,10 +78697,13 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         this.set('autoRender', false);
 
         this.setStore(this.activeLibrary.getReferences().store, { type: bfree.api.Search.types.NONE });
+
+        /*
         this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
             accept:[],
             grid: this
         });
+        */
 
     }
 
@@ -90150,6 +90168,17 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 item: parent,
                 callback: dojo.hitch(this, function(item){
                     this._tvwFolders.moveFolder(item, folder);
+                    //children don't properly refresh after being moved
+                    this._tvwFolders.model.getChildren(
+                        item,
+                        dojo.hitch(this, function(children){
+                            dojo.forEach(children, function(child){
+                                this.activeLibrary.getFolders().loadItem({
+                                    item: child
+                                });
+                            }, this);
+                        })
+                    );
                 })
             });
 

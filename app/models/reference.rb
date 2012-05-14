@@ -143,7 +143,7 @@ class Reference < ActiveRecord::Base
 
   #Returns full text search results
   scope :simple, lambda{ |text|
-    where(sanitize_sql_array(["MATCH (documents.body, documents.metadata, documents.custom_metadata) AGAINST ('%s' IN BOOLEAN MODE)", text]))
+    where(sanitize_sql_array(["MATCH (documents.body, documents.metadata, documents.custom_metadata) AGAINST ('%s' IN BOOLEAN MODE)", text.gsub("'", "''")]))
   }
 
   #returns only documents that the user has at least "view" privileges
