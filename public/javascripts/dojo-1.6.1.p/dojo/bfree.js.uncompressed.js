@@ -58193,6 +58193,7 @@ dojo.declare('bfree.widget.file.MultiUploader', [dijit._Widget, dijit._Templated
         }
 
         this._uploader = new bfree.widget.Uploader({
+            //force: 'flash',
             label: (this.multiple ? 'Choose File(s)...' : 'Choose File...'),
             multiple: this.multiple,
             uploadOnSelect: false,
@@ -59369,7 +59370,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
     _btnAdd_onClick: function(evt){
         this._onSubmit();
-        this.filesLoaded=false;
+        this.filesLoaded = false;
     },
 
     _chkAddMinor_onChange: function(newValue){
@@ -59395,6 +59396,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
     _onFileSelect: function(fileItem){
         //File is selected...
+        this._uploading = true;
 
         //Check if file exists (by Name)
         var existingItem = null;
@@ -59444,7 +59446,8 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
             state: bfree.api.Document.states.PENDING
         });
 
-        this.filesLoaded=true;
+
+        this.filesLoaded = true;
 
     },
 
@@ -59466,6 +59469,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
             this._wdgPreview.set('activeItem', documentItem);
         }
 
+        this._uploading = false;
         this._setState(this._activeItem);
 
     },
@@ -59566,7 +59570,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
 
             //Check for upload complete.
             if(!documentItem.getState(bfree.api.Document.states.UPLOADED)){
-                versa.alert('The file has not completed uploading');
+                alert('The file has not completed uploading');
             }
             else{
                 //Purge document of all properties NOT in selected document type.
@@ -64932,10 +64936,27 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             this.library.getFolders().setValue(folder, 'parent_id', parent.getId());
             this.model.pasteItem(folder, oldParentNode.item, parent, false);
             this.library.getFolders().save();
+            this.updateChildren(folder);
             this.setSelectedPath(folder.path);
         }
 
 
+    },
+
+    updateChildren: function(parent){
+        //children don't properly refresh after being moved
+        this.model.getChildren(
+            parent,
+            dojo.hitch(this, function(children){
+                dojo.forEach(children, function(child){
+                    //slice(0) clones an array
+                    child.path=parent.path.slice(0);
+                    child.path.push(child.id.toString());
+                    child.text_path=parent.text_path+"/"+child.name;
+                    this.updateChildren(child);
+                }, this);
+            })
+        );
     },
 
     onNewNode: function(node){
@@ -90168,17 +90189,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 item: parent,
                 callback: dojo.hitch(this, function(item){
                     this._tvwFolders.moveFolder(item, folder);
-                    //children don't properly refresh after being moved
-                    this._tvwFolders.model.getChildren(
-                        item,
-                        dojo.hitch(this, function(children){
-                            dojo.forEach(children, function(child){
-                                this.activeLibrary.getFolders().loadItem({
-                                    item: child
-                                });
-                            }, this);
-                        })
-                    );
                 })
             });
 
