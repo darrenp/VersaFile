@@ -7722,6 +7722,9 @@ bfree.api.Folder.getIconUrl = function(folder, size){
     var iconName = 'content';
 
     switch(folder.folder_type){
+        case bfree.api.Folder.FolderTypes.ROOT:
+            iconName = 'root';
+            break;
         case bfree.api.Folder.FolderTypes.TRASH:
             iconName = 'recyclebin';
             break;
@@ -7730,6 +7733,9 @@ bfree.api.Folder.getIconUrl = function(folder, size){
             break;
         case bfree.api.Folder.FolderTypes.SHARE_ROOT:
             iconName = 'share_root';
+            break;
+        case bfree.api.Folder.FolderTypes.SHARE:
+            iconName = 'share';
             break;
 
     }
@@ -11655,6 +11661,7 @@ dojo.declare("dojo.dnd.Source", dojo.dnd.Selector, {
 		//		event processor for onmousemove
 		// e: Event
 		//		mouse event
+        //console.log('targetState :> ' + this.targetState + ' ' + new Date().getTime());
 		if(this.isDragging && this.targetState == "Disabled"){ return; }
 		dojo.dnd.Source.superclass.onMouseMove.call(this, e);
 		var m = dojo.dnd.manager();
@@ -11726,6 +11733,7 @@ dojo.declare("dojo.dnd.Source", dojo.dnd.Selector, {
 		}
 	},
 	onDndStart: function(source, nodes, copy){
+        console.log('dojo.dnd.Source.onDndStart');
 		// summary:
 		//		topic event processor for /dnd/start, called to initiate the DnD operation
 		// source: Object
@@ -61202,7 +61210,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             if(targetFolder.isTrash()){
                 //don't allow for items already deleted.
                 canDrop = dojo.every(sourceItems, function(item, idx){
-                    return (!item.isDeleted()) && item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
+                    return (!(item.isDeleted() || item.isShare())) && item.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS);
                 }, this);
             }
             else if(targetFolder.isSearch()){
@@ -61213,7 +61221,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             }
             else if(targetFolder.isShare()){
                 //Can't share deleted items.
-                canDrop = !sourceItems[0].isDeleted();
+                canDrop = !(sourceItems[0].isDeleted() || sourceItems[0].isShare());
             }
 
         }
@@ -61221,8 +61229,10 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             canDrop = false;
         }
         else{
+            //- User must have 'Author' permissions or higher to DnD document
+            //- Don't allow 'share' references to be DnD'd
             canDrop = dojo.every(sourceItems, function(item, idx){
-                return item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA);
+                return (item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!item.isShare()));
             }, this);
         }
 
@@ -61244,6 +61254,17 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
         else if(targetFolder.isSearch() || targetFolder.isShare()){
             canDrop = false;
+        }
+        else{
+            //Can't dnd:
+            //- User must have 'Author' permissions or higher to DnD folder
+            //- Root folder
+            //- Recycle Bin
+            //- Search
+            //- Shares
+            canDrop = dojo.every(sourceItems, function(sourceItem){
+                return (!(sourceItem.isRoot() || sourceItem.isSpecial()) && sourceItem.hasRights(bfree.api._Securable.permissions.WRITE_METADATA));
+            }, this);
         }
 
         return canDrop;
@@ -61413,31 +61434,8 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
     },
 
-
     onDndStart: function(source, nodes, copy){
-
         this.inherited('onDndStart', arguments);
-        if(source !== this){
-            //DnD was initiated from another source (not Folder Tree)
-            //Defer cancel to the 'Grid' source, (not a great solution).
-            source.cancelled = true;
-            return;
-        }
-
-         //Can't dnd:
-        //- User must have 'Author' permissions or higher to DnD folder
-        //- Root folder
-        //- Recycle Bin
-        //- Search
-        //- Shares
-        var canDnd = dojo.every(nodes, function(node){
-            var treeNode = source.getItem(node.id).data;
-            return treeNode.item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!(treeNode.item.isRoot() || treeNode.item.isSpecial()));
-        }, this);
-
-        if(!canDnd)
-             dojo.dnd.manager().onKeyDown({keyCode: dojo.keys.ESCAPE});
-
     },
 
     onMouseDown: function(e){
@@ -61456,44 +61454,6 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
         }
 	}
 });
-
-dojo.dnd.manager().canDrop = function(flag){
-    // summary:
-    //	 	called to notify if the current target can accept items
-    var canDropFlag = Boolean(this.target && flag);
-    if(this.canDropFlag != canDropFlag){
-        this.canDropFlag = canDropFlag;
-        if(this.avatar) this.avatar.update();
-    }
-};
-
-dojo.dnd.manager().startDrag = function(source, nodes, copy){
-    // summary:
-    //		called to initiate the DnD operation
-    // source: Object
-    //		the source which provides items
-    // nodes: Array
-    //		the list of transferred items
-    // copy: Boolean
-    //		copy items, if true, move items otherwise
-    this.source = source;
-    this.nodes  = nodes;
-    this.copy   = Boolean(copy); // normalizing to true boolean
-    this.avatar = this.makeAvatar();
-    dojo.body().appendChild(this.avatar.node);
-    dojo.publish("/dnd/start", [source, nodes, this.copy]);
-    this.events = [
-        dojo.connect(dojo.doc, "onmousemove", this, "onMouseMove"),
-        dojo.connect(dojo.doc, "onmouseup",   this, "onMouseUp"),
-        dojo.connect(dojo.doc, "onkeydown",   this, "onKeyDown"),
-        dojo.connect(dojo.doc, "onkeyup",     this, "onKeyUp"),
-        // cancel text selection and text dragging
-        dojo.connect(dojo.doc, "ondragstart",   dojo.stopEvent)
-        //dojo.connect(dojo.body(), "onselectstart", bfree.stopEvent)
-    ];
-    var c = "dojoDnd" + (copy ? "Copy" : "Move");
-    dojo.addClass(dojo.body(), c);
-};
 
 bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
 
@@ -67892,6 +67852,9 @@ dojo.declare('versa.VersaFile', null,{
 versa.alert = function(msg, onClose){
     var onCloseFn = (onClose) ? onClose: function() { };
 
+    alert(msg);
+    return;
+
     new versa.widget.dialog.MessageBox({
         id: 'versaAlert',
         title: 'VersaFile Message',
@@ -71947,6 +71910,7 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
 
         this._cmbProperties = new bfree.widget.FilteringSelect({
             store: this.propertyDefinitions.store,
+            fetchProperties:{ sort: [{attribute:"sort_id",descending: false}] },
             onChange: dojo.hitch(this, this._cmbProperties_onChange)
         }, this.propertiesNode);
 
@@ -71955,7 +71919,7 @@ dojo.declare('bfree.widget.search.Criterion', [dijit._Widget, dijit._Templated],
             onChange: dojo.hitch(this, this._cmbOperators_onChange)
         }, this.operatorsNode);
 
-        this._wdgValue = bfree.widget.ValidationTextBox({
+        this._wdgValue = new bfree.widget.ValidationTextBox({
             style: 'width:100%'
         }, this.valueNode);
 
@@ -72197,15 +72161,7 @@ dojo.declare('bfree.widget.search.DropDown', dijit.form.DropDownButton,
 		});
 
 
-	},
-
-    openDropDown: function(){
-        this.library.getPropertyDefinitions().clearCache();
-        this.inherited('openDropDown', arguments);
-    }
-
-
-
+	}
 });
 
 }
@@ -77983,30 +77939,36 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
         this.inherited('destroy', arguments);
     },
 
-    onDndStart: function(source, nodes, copy){;
 
+    onDndStart: function(source, nodes, copy){;
         this.inherited('onDndStart', arguments);
+        if(source === this){
+            this.grid._deferSelect = false;
+        }
+
+
+        /*
+        console.log('versa.widget.reference.dnd.Source.onDndStart');
+
         if(source !== this){
+            console.log(this.grid.views.views[0].source);
             //DnD was initiated from another source (not Document Grid)
             //If cancel was deferred from tree than perform a 'global' cancel.
+            this.grid.views.views[0].source.onDndCancel();
             (source.cancelled) ?
                 dojo.publish("/dnd/cancel") :
                 this.onDndCancel();
+
             return;
         }
 
-        this.grid._deferSelect = false
 
-        //- User must have 'Author' permissions or higher to DnD document
-        //- Don't allow 'share' references to be DnD'd
-        var canDnd = dojo.every(nodes, function(node, idx){
-            var item = source.getItem(node.id).data;
-            return (item.hasRights(bfree.api._Securable.permissions.WRITE_METADATA) && (!item.isShare()));
-        });
+
+
 
         if(!canDnd)
              dojo.dnd.manager().onKeyDown({keyCode: dojo.keys.ESCAPE});
-
+        */
     }
 
 
@@ -78595,8 +78557,11 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
     onSelectionChanged: function(){
         var items = this.selection.getSelected();
-        this._dndSource.deleteSelectedNodes();
-        this._dndSource.insertNodes(true, items);
+
+        if(this._dndSource){
+            this._dndSource.deleteSelectedNodes();
+            this._dndSource.insertNodes(true, items);
+        }
         this.inherited('onSelectionChanged', arguments);
     },
 
@@ -78715,17 +78680,13 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         //Select 'default' initial view -- needed for startup
         var viewDefinition = this.activeLibrary.getViewDefinitions().getSystem()[0];
         this.set('activeView', viewDefinition.getView(this.activeLibrary));
-        this.set('autoRender', false);
 
+        console.log(this.views.views[0].source);
         this.setStore(this.activeLibrary.getReferences().store, { type: bfree.api.Search.types.NONE });
 
-        /*
-        this._dndSource = new versa.widget.reference.dnd.Source(this.views.views[0].contentNode, {
-            accept:[],
-            grid: this
-        });
-        */
+        this.set('autoRender', false);
 
+        console.log(this.views.views[0].source);
     }
 
 
