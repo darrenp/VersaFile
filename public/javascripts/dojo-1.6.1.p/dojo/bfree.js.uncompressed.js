@@ -64920,7 +64920,7 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
                 dojo.forEach(children, function(child){
                     //slice(0) clones an array
                     child.path=parent.path.slice(0);
-                    child.path.push(child.id.toString());
+                    child.path.push(child.getId().toString());
                     child.text_path=parent.text_path+"/"+child.name;
                     this.updateChildren(child);
                 }, this);

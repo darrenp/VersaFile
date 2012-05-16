@@ -7,11 +7,11 @@ require 'prawn'
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 5
-configatron.bfree.build_number = 1602
+configatron.bfree.build_number = 1603
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
 
-configatron.admin.reserved.subdomains=["admin", "mysql", "dev"]
+configatron.admin.reserved.subdomains=["admin", "mysql", "dev", "vf1"]
 
 configatron.bfree.mail.support = "support@versafile.com"
 configatron.bfree.mail.from = "\"VersaFile Accounts\" <accounts@versafile.com>"
