@@ -85,6 +85,10 @@ class ZoneNode < ActiveRecord::Base
 
   end
 
+  def share_url(share_id)
+    return self.server.base_url << "/zones/#{self.subdomain}/shares/#{share_id}"
+  end
+
   def zone_url
     return self.server.base_url << "/zones/#{self.subdomain}/main"
   end

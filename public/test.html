@@ -13,95 +13,39 @@
 
 
 <script type="text/javascript" src="/javascripts/dojo-1.6.1.d/dojo/dojo.js" djConfig="parseOnLoad: true"></script>
-
 <script type="text/javascript" src="/javascripts/dojo-1.6.1.d/bfree/_proto.js"></script>
 <script type="text/javascript">
 
+dojo.require('bfree.widget.Button');
+dojo.require('versa.widget.Dialog');
+dojo.require('versa.VersaFile');
 
-dojo.require('bfree.widget.Bfree');
-dojo.require('bfree.widget.SortGrid');
-dojo.require('bfree.api.ItemFileWriteStore');
+function __onClick(e){
 
+    var s = 'Washington was 1-2 on home ice in the first round against Boston, but the Capitals had a solid 26-11-4 record as the host during the regular season. New York had a 24-12-5 record away from MSG this season and was 2-1 at Ottawa in this year\'s Eastern Conference quarterfinal series, which the Rangers won in seven games.';
 
-var view1 = [
-    {
-        cells: [
-            {
-                field: 'sort',
-                name: '&nbsp',
-                width: '16px',
-                hidden: true
-            },
-            {
-                field: 'name',
-                name: 'Property',
-                width: 'auto'
-            },
-            {
-                field: 'data_type',
-                name: 'Data Type',
-                width: '96px'
-            },
-            {
-                field: 'choice_list_id',
-                name: 'Choice List',
-                width:'96px'
-            },
-            {
-                field: 'default_value',
-                name: 'Default',
-                width: '128px',
-                styles: 'padding:0 2px 0 2px;text-align:center;'
-            },
-            {
-                field: 'is_required',
-                name: 'Required?',
-                width: '64px',
-                styles: 'text-align:center;'
-            }
-        ],
-        width: 'auto'
-    }
-];
+    /*
+    var dlg = new versa.widget.Dialog({
+        title: 'This  is a really long title that should be cut off',
+        message: 'short'
+    });
+    dlg.show();
+    */
+
+    //alert(s);
+    versa.alert(s);
+    //confirm(s);
+}
 
 dojo.addOnLoad(function(){
 
-    var _propMapStore = new bfree.api.ItemFileWriteStore({
-            data: {
-                identifier: 'id',
-                label: 'name',
-                items: [{
-                    id: 1,
-                    name: 'Hiya'
-                }]
-            }
-        });
-
-    var g = new bfree.widget.SortGrid({
-            id: 'grdTest',
-            'class': 'versaGridOutlineNoPad versaNoHeader',
-            query: {},
-            noDataMessage: 'No Properties Defined',
-            store: _propMapStore,
-            structure: view1,
-            formatterScope: this,
-            rowHeight:24,
-            style: 'width:100%;height:256px'
-        }, 'gridNode');
-    g.startup();
-
-    var h = new bfree.widget.SortGrid({
-            id: 'grdTest2',
-            'class': 'versaGridOutlineNoPad',
-            query: {},
-            noDataMessage: 'No Properties Defined',
-            store: _propMapStore,
-            structure: view1,
-            formatterScope: this,
-            rowHeight:24,
-            style: 'width:100%;height:256px'
-        }, 'gridNode2');
-    h.startup();
+    new bfree.widget.Button({
+            'class': 'versaButton',
+            iconClass: 'buttonIcon bfreeIconClose',
+            disabledIconClass: 'buttonIcon bfreeIconCloseD',
+            label: 'Close',
+            onClick: __onClick
+        }, 'buttonNode');
 
 });
 
@@ -114,12 +58,6 @@ dojo.addOnUnload(function(){
 </head>
 
 <body class="versafile claro" oncontextmenu="return true;" style="padding: 32px !important">
-
-
-<div id="gridNode"></div>
-
-<div id="gridNode2"></div>
-
-
+    <div id="buttonNode"></div>
 </body>
 </html>

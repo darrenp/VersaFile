@@ -48,7 +48,7 @@ curl \
     -X POST \
     -d "{ \
             \"authenticity_token\":\"$auth_token\",
-            \"email\":\"scotth@rkosolutions.com\", \
+            \"email\":\"aarons@rkosolutions.com\", \
             \"password\":\"dont4get\", \
             \"name\":\"Moe's Tavern\", \
             \"first_name\":\"Moe\", \
@@ -62,7 +62,7 @@ curl \
             \"billing_type\":0, \
             \"trial_period\":0, \
             \"template\": 0, \
-            \"subdomains\": [ { \"name\":\"moes3\", \"user_quota\":3, \"disk_quota\": 12 } ] \
+            \"subdomains\": [ { \"name\":\"moes\", \"user_quota\":3, \"disk_quota\": 12 } ] \
         }" \
     http://$SERVER_HOST/accounts
 echo
@@ -83,7 +83,7 @@ curl \
             \"authenticity_token\":\"$auth_token\",
             \"customer_code\":\"$curr_date\"
         }" \
-    http://$SERVER_HOST/accounts/scotth@rkosolutions.com
+    http://$SERVER_HOST/accounts/aarons@rkosolutions.com
 echo
 echo ================================================
 echo

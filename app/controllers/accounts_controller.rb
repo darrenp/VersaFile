@@ -363,7 +363,7 @@ class AccountsController < ApplicationController
 
       respond_to do |format|
         format.html { redirect_to @account, notice: 'Account was successfully created.' }
-        format.json { render json: @account.to_json(:except=>:password, :methods => [:subdomains, :template]), status: :ok }
+        format.json { render json: @account.to_json(:except=>:password, :methods => [:subdomains, :template]), :status => :ok }
       end
 
     rescue => e

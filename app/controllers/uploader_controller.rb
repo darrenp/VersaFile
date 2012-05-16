@@ -64,6 +64,8 @@ class UploaderController < ApplicationController
 
       @upload_type = params[:upload_type].nil? ? '' : params[:upload_type].downcase
 
+      p
+
       case @upload_type
         when 'html5'
           uploaded_files = params[:uploadedfiles]
@@ -78,78 +80,6 @@ class UploaderController < ApplicationController
           raise "Invalid Uploader type"
       end
 
-
-=begin
-      if(params[:upload_type] == 'html5')
-
-        @retval = {
-            :uploadedfiles => []
-        }
-
-        @files = []
-        params[:uploadedfiles].each do |uploaded_file|
-
-          file_info = (is_pkg ?
-              UploaderHelper.write_pkg_file(@zone, uploaded_file) :
-              UploaderHelper.write_file(@zone, unique_id, uploaded_file))
-
-         @retval[:uploadedfiles] << {
-            :name => uploaded_file.original_filename,
-            :content_type => File.mime_type?(uploaded_file.original_filename),
-            :size =>  uploaded_file.size,
-            :file => file_info[:name]
-         }
-
-        end
-
-        render :text =>  "(#{@retval.to_json})" #"{ \"uploadedfiles\": #{ @files.to_json } }"
-
-      elsif(params[:upload_type] == 'flash')
-
-        uploaded_file = params[:uploadedfileFlash]
-
-        file_info = (is_pkg ?
-              UploaderHelper.write_pkg_file(@zone, uploaded_file) :
-              UploaderHelper.write_file(@zone, unique_id, uploaded_file))
-
-        @fileinfo = {
-          :name => uploaded_file.original_filename,
-          :content_type => File.mime_type?(uploaded_file.original_filename),
-          :size => uploaded_file.size,
-          :file =>  file_info[:name]
-        }
-
-        return_text = "file=#{CGI::escape(@fileinfo[:file])},name=#{CGI::escape(@fileinfo[:name])},size=#{@fileinfo[:size]},type=#{@fileinfo[:content_type]}"
-        logger.debug(return_text)
-        render :text => return_text
-      else
-
-        uploaded_file = params[:uploadedfile0]
-
-        file_info = (is_pkg ?
-              UploaderHelper.write_pkg_file(@zone, uploaded_file) :
-              UploaderHelper.write_file(@zone, unique_id, uploaded_file))
-
-        @fileinfo = {
-          :name => uploaded_file.original_filename,
-          :content_type => File.mime_type?(uploaded_file.original_filename),
-          :size => uploaded_file.size,
-          :file =>  file_info[:name]
-        }
-
-        respond_to do |format|
-          format.html {}
-        end
-
-      end
-
-    rescue => e
-      logger.error "Upload failed => #{e.message}"
-      respond_to do |format|
-        format.json { render :json => e.message, :status => :unprocessable_entity }
-      end
-    end
-=end
 
   end
 
@@ -202,6 +132,8 @@ def uploadFlash(zone, unique_id, uploaded_file, is_pkg)
     error_msg = e.message
   end
 
+  logger.debug(uploaded_file.original_filename + " :> " + file_info[:name])
+
   file_info = {
     :name => uploaded_file.original_filename,
     :content_type => File.mime_type?(uploaded_file.original_filename),
@@ -210,9 +142,9 @@ def uploadFlash(zone, unique_id, uploaded_file, is_pkg)
     :error => error_msg
   }
 
-  logger.debug "file=#{CGI::escape(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escape(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
-
-  render :text => "file=#{CGI::escapeHTML(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escapeHTML(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+  #logger.debug "file=#{CGI::escape(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escape(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+  #logger.debug "file=#{CGI::escapeHTML(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escapeHTML(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
+  render :text => "file=#{CGI::escape(file_info[:file]).gsub(',', '%2C')},name=#{CGI::escape(file_info[:name]).gsub(',', '%2C')},size=#{file_info[:size]},type=#{file_info[:content_type]},error=#{file_info[:error]}"
 end
 
 def uploadIFrame(zone, unique_id, uploaded_file, is_pkg)

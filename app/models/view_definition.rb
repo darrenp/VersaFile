@@ -3,6 +3,7 @@ class ViewDefinition < ActiveRecord::Base
   has_many  :cell_definitions,
             :order => "column_order",
             :dependent => :destroy
+  has_many :view_mappings, :dependent => :destroy
 
   attr_accessor :sort_id
 
@@ -18,6 +19,7 @@ class ViewDefinition < ActiveRecord::Base
       :scope => "*",
       :sort_by => "documents.name",
       :is_system => is_system,
+      :is_template=>true,
       :created_by => created_by,
       :updated_by => created_by
     )
@@ -61,7 +63,7 @@ class ViewDefinition < ActiveRecord::Base
       next if pd.data_type_id == Bfree::DataTypes.Text
       
       width = "128px"
-      width = "auto" if icust < 1
+      width = "256px" if icust < 1
        
       cell_def = view_definition.cell_definitions.new(
         :library_id => library.id,
@@ -89,7 +91,7 @@ class ViewDefinition < ActiveRecord::Base
         :name => "Document Type",
         :label => "Document Type",
         :formatter => 0,
-        :noresize => true,
+        :noresize => false,
         :width => "128px",
         :style => "",
         :column_order => i
@@ -104,7 +106,7 @@ class ViewDefinition < ActiveRecord::Base
         :name => "Version",
         :label => "Version",
         :formatter => 0,
-        :noresize => true,
+        :noresize => false,
         :width => "64px",
         :style => "",
         :column_order => i
@@ -119,7 +121,7 @@ class ViewDefinition < ActiveRecord::Base
         :name => "Size",
         :label => "Size",
         :formatter => 2,
-        :noresize => true,
+        :noresize => false,
         :width => "64px",
         :style => "",
         :column_order => i
@@ -134,7 +136,7 @@ class ViewDefinition < ActiveRecord::Base
         :name => "Owner",
         :label => "Owner",
         :formatter => 0,
-        :noresize => true,
+        :noresize => false,
         :width => "128px",
         :style => "",
         :column_order => i

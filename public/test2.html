@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/grid/resources/Grid.css">
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/grid/resources/claroGrid.css">
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/bfree/_proto.js"></script>
+<script type="text/javascript">
+dojo.require('dijit.InlineEditBox');
+dojo.require('bfree.widget.Button');
+
+function __onClick(e){
+    var labelNode = dojo.byId('labelNode');
+
+    dojo.attr(labelNode, 'innerHTML', '');
+    var editSpan = dojo.create('span', {innerHTML: this.label}, labelNode, 'first');
+
+    var editor = new dijit.InlineEditBox({
+            id: 'wdgEditor',
+            intermediateChanges:false,
+			tree: this.tree,
+            node: this,
+            autoSave: true,
+			width: '256px',
+            scrollIntoView: false,
+            value: 'My Test Folder Name'
+        }, editSpan);
+
+		editor.startup();
+}
+
+dojo.addOnLoad(function(){
+
+    new bfree.widget.Button({
+            'class': 'versaButton',
+            iconClass: 'buttonIcon bfreeIconClose',
+            disabledIconClass: 'buttonIcon bfreeIconCloseD',
+            label: 'Close',
+            onClick: __onClick
+        }, 'buttonNode');
+
+});
+
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return true;" style="padding: 32px !important">
+    <div id="buttonNode"></div><br><br>
+    <div id="labelNode">Replace Me!</div>
+</body>
+
+</html>

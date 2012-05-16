@@ -2,13 +2,16 @@ class Document < ActiveRecord::Base
   belongs_to :zone
   belongs_to :library
   belongs_to  :document_type
-  belongs_to :folder
-  has_many  :versions, :dependent => :destroy
+  has_many :references, :dependent => :destroy
+  has_many :folders, :through => :references
+  has_many  :versions, :dependent => :destroy, :autosave => true
   has_one   :current_version,
             :class_name => 'Version',
             :conditions => {:is_current_version => true}
   has_one :acl, :as => :securable, :dependent => :destroy
-  before_create :create_acl
+
+  before_save :on_before_save
+  after_save :on_after_save
 
   JOIN_STMT = 'INNER JOIN versions ON versions.document_id = documents.id AND versions.is_current_version=1 INNER JOIN document_types on documents.document_type_id=document_types.id'
 
@@ -137,17 +140,30 @@ class Document < ActiveRecord::Base
 
   end
 
-  def checkin(user)
+  def checkin(user, attributes, file)
 
-    raise "Document is not checked out" unless (self.state&Bfree::DocumentStates.CheckedOut) == Bfree::DocumentStates.CheckedOut
-    #raise "Document is not checked out" unless self.state == Bfree::DocumentStates.CheckedOut
+    raise "Document is not checked out" unless ((self.state & Bfree::DocumentStates.CheckedOut) == Bfree::DocumentStates.CheckedOut)
     raise "User '#{self.checked_out_by}' has the document checked out" unless self.checked_out_by == user.name
 
-     self.update_attributes(
-        :state => Bfree::DocumentStates.CheckedIn,
-        :checked_out_by => nil,
-        :updated_by => user.name
-     )
+    self.update_attributes(
+      :name => attributes[:name],
+      :description => attributes[:description],
+      :state => Bfree::DocumentStates.CheckedIn,
+      :checked_out_by => nil,
+      :document_type_id=>attributes[:document_type_id],
+      :updated_by => user.name
+    )
+
+    self.update_metadata(attributes)
+
+    #Create new version
+    version = Version.supersede(self.library, self.current_version, file, false)
+    version.binary_content_type = attributes[:binary_content_type] if version.binary_content_type.blank?
+    self.versions.push(version)
+
+    unless version.save
+      raise version.errors
+    end
 
   end
 
@@ -172,6 +188,10 @@ class Document < ActiveRecord::Base
     return self.acl
   end
 
+  def deleted?
+    return (self.state & Bfree::DocumentStates.Deleted == Bfree::DocumentStates.Deleted)
+  end
+
   def soft_delete(user)
 
     self.update_attributes(
@@ -183,51 +203,58 @@ class Document < ActiveRecord::Base
 
   def soft_restore(user)
 
-    if(!self.folder)
-      self.update_attributes(
-        :state => self.state & ~Bfree::DocumentStates.Deleted,
-        :updated_by => user.name,
-        :folder_id => 0
-      )
-    else
-      self.update_attributes(
+    self.update_attributes(
         :state => self.state & ~Bfree::DocumentStates.Deleted,
         :updated_by => user.name
-      )
-    end
+    )
+
   end
 
   def extract_content()
 
-    my_body = %x{java -jar tika-app-1.0.jar -t #{self.current_version.binary.path} }
-    my_metadata = %x{java -jar tika-app-1.0.jar -m #{self.current_version.binary.path} }
-    my_custom_metadata = self.generate_custom_metadata()
+    my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
+    my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
 
     self.update_attributes(
         :body => my_body,
         :metadata => my_metadata,
-        :custom_metadata => my_custom_metadata
+        :state => (self.state | Bfree::DocumentStates.Indexed)
     )
-    self.state = self.state | Bfree::DocumentStates.Indexed
-    self.save
 
+  end
+
+  def update_properties(user, attributes)
+
+    self.update_attributes(
+      :name => attributes[:name],
+      :description => attributes[:description],
+      :updated_by => user.name,
+      :document_type_id=>attributes[:document_type_id]
+    )
+
+    self.update_metadata(attributes)
   end
 
   def update_metadata(properties)
 
+    #clear ALL custom properties first (in case document type has changed)
+    self.clear_metadata
+
+    #for each of the properties...
     properties.each do |property|
       prp_name = property[0]
       prp_value = property[1]
 
+      #does the document have this attribute?
       if self.has_attribute?(prp_name)
 
+          #Does the property definition exist...if it doesn't or it is a system property, ignore
           prp_def = self.library.property_definitions.find(:first, :conditions => ["table_name = ? AND column_name =?", 'documents', prp_name])
           next if prp_def.nil? || prp_def.is_system?
 
+          #set property value only if the value has changed
           curr_value = self.read_attribute(prp_name)
-          if curr_value != prp_value
-             self[prp_name] = prp_value
-          end
+          self[prp_name] = prp_value unless curr_value == prp_value
 
       end
 
@@ -245,6 +272,8 @@ class Document < ActiveRecord::Base
 
     text << self.name
     text << self.description unless self.description.blank?
+    text << self.document_type.name
+    text << self.current_version.binary_file_name
 
     #Create custom property columns
     #Strings
@@ -334,16 +363,60 @@ class Document < ActiveRecord::Base
     return count
   end
 
-  def create_acl
+protected
+  def on_before_save
 
-    self.acl = (self.folder.nil?) ?
-                  self.library.acl.deep_clone :
-                  self.folder.acl.deep_clone
-    self.acl.inherits = true
+  end
+
+  def on_after_save
+    logger.debug('DOCUMENT SAVE')
+    self.update_attribute(:custom_metadata, self.generate_custom_metadata()) if self.custom_metadata.nil?
+  end
+
+  def clear_metadata
+
+    self.custom_metadata = nil
+
+    #Strings
+    Bfree::ColumnMaximum.StringMax.times do |n|
+      column_name = "prp_str%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Booleans
+    Bfree::ColumnMaximum.BooleanMax.times do |n|
+      column_name = "prp_bln%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Integers
+    Bfree::ColumnMaximum.IntegerMax.times do |n|
+      column_name = "prp_int%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Floats
+    Bfree::ColumnMaximum.FloatMax.times do |n|
+      column_name = "prp_flt%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Dates
+    Bfree::ColumnMaximum.DateTimeMax.times do |n|
+      column_name = "prp_dtt%03d" % (n + 1)
+      self[column_name] = nil
+    end
+
+    #Text
+    Bfree::ColumnMaximum.TextMax.times do |n|
+      column_name = "prp_txt%03d" % (n + 1)
+      self[column_name] = nil
+    end
 
   end
 
 private
+
 
   def self.merge(document, data)
 

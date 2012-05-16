@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version %>/dojox/grid/resources/Grid.css">
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version %>/dojox/grid/resources/claroGrid.css">
+
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+<% if ENV['RAILS_ENV'] != 'development' || !ENV['FORCE_OPTIMIZE'].nil? %>
+
+<script type="text/javascript">
+
+var djConfig = {
+    isDebug: false,
+    parseOnLoad: true,
+    cacheBust: '<%= "%d.%02d.%02d.%04d" % [configatron.bfree.major_version, configatron.bfree.minor_version, configatron.bfree.revision_number, configatron.bfree.build_number] %>'
+};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script >
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/bfree.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: true,
+		parseOnLoad: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+
+<% end %>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/bfree/_proto.js"></script>
+<script type="text/javascript">
+dojo.require('bfree.api.Zones');
+dojo.require('versa.widget.share.Show');
+dojo.require('dijit.layout.BorderContainer');
+dojo.require('dijit.layout.ContentPane');
+
+dojo.addOnLoad(function(){
+    bfree.api.XhrHelper.authenticity_token = '<%= form_authenticity_token %>';
+
+    var zones = new bfree.api.Zones();
+	var myzone = zones.fetchById({
+		id: '<%= @zone.subdomain %>'
+	});
+
+    var share = myzone.getShares().fetchById({id: '<%= @share.fingerprint %>'});
+
+    var wdg = dijit.byId('shareNode');
+    if(wdg){
+        wdg.resize();
+        wdg.set('zone', myzone);
+        wdg.set('share', share);
+    }
+
+});
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return false;">
+
+<div    id="mainNode"
+        dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="top"
+            spitter="false"
+            class="versaDivTop"
+            style="padding:0">
+      <img src="/images/versafile-64-tm.png" height="64" style=""/>
+    </div>
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="center"
+            spitter="false"
+            class="versaDivBottom"
+            style="padding:0">
+
+<% if @error.nil? %>
+        <div id="shareNode" dojoType="versa.widget.share.Show" style="height:100%"></div>
+<% else %>
+        <%= @error.message %>
+<% end %>
+
+    </div>
+
+</div>
+
+</body>
+</html>

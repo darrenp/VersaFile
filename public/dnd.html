@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojo/resources/dojo.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojo/resources/dnd.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/grid/resources/Grid.css">
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-1.6.1.d/dojox/grid/resources/claroGrid.css">
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/dojo/dojo.js" djConfig="parseOnLoad: true"></script>
+
+<script type="text/javascript" src="/javascripts/dojo-1.6.1.d/bfree/_proto.js"></script>
+<script type="text/javascript">
+
+dojo.require('dojo.dnd.Source');
+
+dojo.addOnLoad(function(){
+
+    var dndSource = dojo.byId('dndSource'); //new dojo.dnd.Source('sourceNode');
+
+    dndSource.insertNodes(false, [
+        'GoodDog',
+        'BadDog',
+        'OkDog'
+    ]);
+
+});
+
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" style="padding: 32px !important">
+
+<div id="sourceNode" class="container"></div>
+<br>
+
+<div id='dndSource' dojoType="dojo.dnd.Source" class="container" copyOnly="true">
+    <div>
+        <div class="dojoDndItem">Item <strong>X</strong></div>
+        <div class="dojoDndItem">Item <strong>Y</strong></div>
+        <div class="dojoDndItem">Item <strong>Z</strong></div>
+    </div>
+</div>
+
+
+</body>
+</html>

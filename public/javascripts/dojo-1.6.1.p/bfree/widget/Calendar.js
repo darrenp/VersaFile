@@ -1,0 +1,8 @@
+/*
+	Copyright (c) 2004-2011, The Dojo Foundation All Rights Reserved.
+	Available via Academic Free License >= 2.1 OR the modified BSD license.
+	see: http://dojotoolkit.org/license for details
+*/
+
+
+if(!dojo._hasResource["bfree.widget.Calendar"]){dojo._hasResource["bfree.widget.Calendar"]=true;dojo.provide("bfree.widget.Calendar");dojo.require("dijit.Calendar");dojo.declare("bfree.widget.Calendar",[dijit._Widget,dijit._Templated,bfree.widget._DialogWidget],{templateString:dojo.cache("bfree/widget","template/Calendar.html","<div style=\"height:100%;width:100%\">\n    <div dojoAttachPoint=\"calendarNode\">\n\n    </div>\n</div>\n"),widgetsInTemplate:true,_calendar:null,_loadItem:function(){try{}finally{this.onWidgetLoaded();}},constructor:function(_1){},destroy:function(){this.inherited("destroy",arguments);},isValid:function(){return true;},onDialogClosing:function(_2){return true;},onLoaded:function(){},postCreate:function(){this._calendar=new dijit.Calendar({value:new Date(),onChange:dojo.hitch(this,this._onChange),zIndex:2050},this.calendarNode);},startup:function(){this.inherited("startup",arguments);setTimeout(bfree.widget.Calendar._loadFnRef(this),10);},_onChange:function(_3){this.onDateSelected(_3);if(this.dialog){this.dialog._onClose(bfree.widget.Dialog.dialogResult.ok);}},onDateSelected:function(_4){}});bfree.widget.Calendar._loadFnRef=function(_5){return (function(){_5._loadItem();});};bfree.widget.Calendar.show=function(_6){var _7=new bfree.widget.Dialog({id:"dlgCalendar",title:"Choose a Date",widgetConstructor:bfree.widget.Calendar,widgetParams:{onDateSelected:_6.onDateSelected},buttons:bfree.widget.Dialog.buttons.none,noResize:true,width:180,height:240,zIndex:2048});_7.startup();_7.show();};}

@@ -6,12 +6,15 @@ class Library < ActiveRecord::Base
   has_one :acl, :as => :securable
   has_one :configuration, :as => :configurable
   has_many :folders
+  has_many :shares
+  has_many :references
   has_many :documents
   has_many :versions
   has_many :choice_lists
   has_many :view_definitions
   has_many :cell_definitions
   has_many :preferences
+  has_many :view_mappings
 
   after_create :create_defaults
 
@@ -39,6 +42,10 @@ class Library < ActiveRecord::Base
     return libraries
   end
 
+  def root_folder
+    return self.folders.where(:folder_type == VersaFile::FolderTypes.Root).first
+  end
+
   def as_json(options={})
     json_obj = super.as_json(options)
     json_obj[:active_permissions] = self.acl.get_role(options[:user], options[:group]).permissions
@@ -50,7 +57,7 @@ class Library < ActiveRecord::Base
     choicelist_count = self.choice_lists.count
     propdef_count = self.property_definitions.count
     doctype_count = self.document_types.count
-    viewdef_count = self.view_definitions.count
+    viewdef_count = self.view_definitions.where(:is_template => true).count
 
     folder_count = self.folders.count - 2   #remove two for search/recycle bin folders
     document_count = self.documents.count
@@ -448,32 +455,61 @@ private
 
     ViewDefinition.from_document_type(self, document_type, self.created_by, true).save()
 
+    root_folder = self.zone.folders.create(
+        :library => self,
+        :name => self.name,
+        :folder_type => VersaFile::FolderTypes.Root,
+        :created_by => self.created_by,
+        :updated_by => self.created_by,
+        :parent_id => nil
+    )
+
     #create trash folder
     trash = self.zone.folders.create(
       :library => self,
       :name => 'Recycle Bin',
-      :is_trash => true,
+      :folder_type => VersaFile::FolderTypes.Trash,
       :created_by => self.created_by,
       :updated_by => self.updated_by,
-      :parent_id=>0
+      :parent => root_folder
     )
     #create search folder
     search = self.zone.folders.create(
       :library => self,
       :name => 'Search',
-      :is_search => true,
+      :folder_type => VersaFile::FolderTypes.Search,
       :created_by => self.created_by,
       :updated_by => self.updated_by,
-      :parent_id=>0
+      :parent => root_folder
     )
 
-    #createdefault ACL
+    #create share folder
+    share_root = self.zone.folders.create(
+      :library => self,
+      :name => 'Shares',
+      :folder_type => VersaFile::FolderTypes.ShareRoot,
+      :created_by => self.created_by,
+      :updated_by => self.updated_by,
+      :parent => root_folder
+    )
+
+    #create default ACLs
     trash.acl = self.zone.acls.create(
         :inherits => false,
         :acl_entries => [
-            AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup )
+            AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup)
         ]
     )
+    trash.save
+
+    share_root.acl = self.zone.acls.create(
+        :inherits => false,
+        :acl_entries => [
+          AclEntry.create(:grantee => self.zone.groups.admins.first, :role => self.zone.roles.admins.first, :precedence => Bfree::Acl::PrecedenceTypes.NamedGroup),
+          AclEntry.create(:grantee => self.zone.groups.everyones.first, :role => self.zone.roles.nones.first, :precedence => Bfree::Acl::PrecedenceTypes.Everyone)
+        ]
+    )
+    share_root.save
 
   end
 

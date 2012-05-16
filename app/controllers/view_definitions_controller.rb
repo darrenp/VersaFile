@@ -5,7 +5,11 @@ class ViewDefinitionsController < ApplicationController
   def index
 
     @library = @zone.libraries.find(params[:library_id])
-    @view_definitions = @library.view_definitions.all(:order => "name")
+    if(params[:is_template])
+      @view_definitions = @library.view_definitions.all(:conditions=>{:is_template=>true}, :order => "name")
+    else
+      @view_definitions = @library.view_definitions.all(:order => "name")
+    end
 
     @view_definitions.sort! do |a,b|
       String.natcmp(a.name, b.name, true)
@@ -51,9 +55,11 @@ class ViewDefinitionsController < ApplicationController
           :description => params[:description],
           :scope => params[:scope],
           :sort_by => params[:sort_by],
+          :is_desc => params[:is_desc].nil? ? false : params[:is_desc],
           :is_system => params[:is_system],
           :created_by => User.find_by_id(session[:active_user_id]).name,
-          :updated_by => User.find_by_id(session[:active_user_id]).name
+          :updated_by => User.find_by_id(session[:active_user_id]).name,
+          :is_template => params[:is_template]
         )
 
         params[:cell_definitions].each do |cell_definition|
@@ -107,6 +113,7 @@ class ViewDefinitionsController < ApplicationController
           :description => params[:description],
           :scope => params[:scope],
           :sort_by => params[:sort_by],
+          :is_desc => params[:is_desc].nil? ? false : params[:is_desc],
           :updated_by => User.find_by_id(session[:active_user_id]).name
         )
 

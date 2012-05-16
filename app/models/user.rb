@@ -2,6 +2,7 @@ class User < ActiveRecord::Base
   belongs_to :zone
   has_and_belongs_to_many :groups
   has_one :avatar, :as => :imageable
+  has_many :view_mappings, :dependent=>:destroy
   after_create :after_create
 
   attr_accessor :sort_id
