@@ -90431,6 +90431,12 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         try{
 
             function __onClose(dlgResult, retValue){
+
+                if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
+                    var shareRoot = this._tvwFolders.getRoot().getShareRootFolder();
+                    if(shareRoot) this._tvwFolders.resortChildren(shareRoot);
+                }
+
                 return true;
             }
 
