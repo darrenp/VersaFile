@@ -6995,7 +6995,7 @@ dojo.declare('bfree.api.Documents', [bfree.api._Collection],{
         this.target = dojo.replace(bfree.api.Documents.TRGT, [this.zone.subdomain, this.library.id]);
 		this.schema = bfree.api.Document.schema;
 		this.cache = false;
-        this.syncMode = false;
+        //this.syncMode = false;
 
 		this._initialize();
         this.store.isUpdateable = dojo.hitch(this, this._isUpdateable);

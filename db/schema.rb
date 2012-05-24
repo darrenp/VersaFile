@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120417220327) do
+ActiveRecord::Schema.define(:version => 20120524161632) do
 
   create_table "accounts", :force => true do |t|
     t.string   "email",                                      :null => false
@@ -44,12 +44,18 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.integer "precedence"
   end
 
+  add_index "acl_entries", ["acl_id"], :name => "index_acl_entries_on_acl_id"
+  add_index "acl_entries", ["grantee_id", "grantee_type"], :name => "index_acl_entries_on_grantee_id_and_grantee_type"
+  add_index "acl_entries", ["role_id"], :name => "index_acl_entries_on_role_id"
+
   create_table "acls", :force => true do |t|
     t.integer "zone_id",        :null => false
     t.integer "securable_id"
     t.string  "securable_type"
     t.boolean "inherits"
   end
+
+  add_index "acls", ["securable_id", "securable_type"], :name => "index_acls_on_securable_id_and_securable_type"
 
   create_table "avatars", :force => true do |t|
     t.integer  "zone_id",            :null => false
@@ -79,6 +85,8 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.string  "date_format"
   end
 
+  add_index "cell_definitions", ["view_definition_id"], :name => "index_cell_definitions_on_view_definition_id"
+
   create_table "choice_lists", :force => true do |t|
     t.integer  "library_id"
     t.string   "name"
@@ -96,6 +104,8 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.string  "name"
     t.integer "sort_order"
   end
+
+  add_index "choice_values", ["choice_list_id"], :name => "index_choice_values_on_choice_list_id"
 
   create_table "configuration_settings", :force => true do |t|
     t.integer "configuration_id"
@@ -308,6 +318,7 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
   end
 
   add_index "documents", ["body", "metadata", "custom_metadata"], :name => "fulltext_document"
+  add_index "documents", ["document_type_id"], :name => "index_documents_on_document_type_id"
 
   create_table "folders", :force => true do |t|
     t.integer  "zone_id"
@@ -320,6 +331,8 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.datetime "updated_at"
     t.integer  "folder_type"
   end
+
+  add_index "folders", ["parent_id"], :name => "index_folders_on_parent_id"
 
   create_table "groups", :force => true do |t|
     t.integer  "zone_id"
@@ -404,7 +417,11 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.boolean "is_required"
     t.string  "default_value"
     t.integer "choice_list_id"
+    t.integer "default_type",           :default => 0
   end
+
+  add_index "property_mappings", ["document_type_id"], :name => "index_property_mappings_on_document_type_id"
+  add_index "property_mappings", ["property_definition_id"], :name => "index_property_mappings_on_property_definition_id"
 
   create_table "references", :force => true do |t|
     t.integer "reference_type"
@@ -412,6 +429,9 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.integer "folder_id"
     t.integer "document_id"
   end
+
+  add_index "references", ["document_id"], :name => "index_references_on_document_id"
+  add_index "references", ["folder_id"], :name => "index_references_on_folder_id"
 
   create_table "rko_users", :force => true do |t|
     t.string   "name"
@@ -452,6 +472,8 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.datetime "expiry"
   end
 
+  add_index "shares", ["folder_id"], :name => "index_shares_on_folder_id"
+
   create_table "users", :force => true do |t|
     t.integer  "zone_id"
     t.string   "name",                                 :null => false
@@ -484,6 +506,8 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.integer "library_id"
   end
 
+  add_index "versions", ["document_id"], :name => "index_versions_on_document_id"
+
   create_table "view_definitions", :force => true do |t|
     t.integer  "library_id"
     t.string   "name"
@@ -496,6 +520,7 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "is_template", :default => true
+    t.boolean  "is_desc",     :default => false
   end
 
   create_table "view_mappings", :force => true do |t|
@@ -503,8 +528,10 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.integer "folder_id"
     t.integer "user_id"
     t.integer "view_definition_id"
-    t.integer "sort_column"
   end
+
+  add_index "view_mappings", ["folder_id", "user_id"], :name => "index_view_mappings_on_folder_id_and_user_id", :unique => true
+  add_index "view_mappings", ["view_definition_id"], :name => "index_view_mappings_on_view_definition_id"
 
   create_table "zone_nodes", :force => true do |t|
     t.integer  "account_id"
@@ -537,5 +564,7 @@ ActiveRecord::Schema.define(:version => 20120417220327) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "zones", ["subdomain"], :name => "index_zones_on_subdomain", :unique => true
 
 end

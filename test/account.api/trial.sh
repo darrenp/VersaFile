@@ -1,4 +1,5 @@
-SERVER_HOST=admin.bfreetest.com:3000
+SERVER_HOST=admin.versatest.com:3000
+#SERVER_HOST=admin.bfreetest.com:3000
 #SERVER_HOST=admin.versafiledev.com
 
 echo LOGON
@@ -57,7 +58,7 @@ curl \
             \"account_type\":0, \
             \"billing_type\":0, \
             \"trial_period\":60, \
-            \"template\": 1, \
+            \"template\": 0, \
             \"subdomains\": [ { \"name\":\"nuke\", \"user_quota\":3, \"disk_quota\": 12 } ] \
         }" \
     http://$SERVER_HOST/accounts

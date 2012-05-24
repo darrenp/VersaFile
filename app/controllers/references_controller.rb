@@ -70,7 +70,7 @@ class ReferencesController < ApplicationController
     end
 
     Document.transaction do
-        @reference.document.checkout(@active_user)
+       @reference.document.checkout(@active_user)
     end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
@@ -405,6 +405,70 @@ class ReferencesController < ApplicationController
       end
     end
     return csv_string
+  end
+
+  def create_document(tmp_file, title)
+
+    Document.transaction do
+
+      isMinorVersion = false
+
+      @document_type = @library.document_types.find_by_name('Document')
+
+      @folder = @library.folders.viewable(@active_user, @active_group).root_folders.first
+      raise "Folder has not been specified" if @folder.nil?
+
+      @version = Version.supersede(@library, nil, tmp_file, isMinorVersion)
+
+      @document = @zone.documents.new({
+          :library => @library,
+          :document_type => @document_type,
+          :name => title,
+          :description => '',
+          :state => Bfree::DocumentStates.CheckedIn,
+          :created_by => @active_user.name,
+          :updated_by => @active_user.name,
+          :versions => [ @version ]
+      })
+
+      #@document.update_metadata(params)
+      #if(@version.binary_content_type.blank?)
+      #@version.binary_content_type = params[:binary_content_type]
+      #end
+
+      unless @document.save
+        raise @document.errors
+      end
+
+      @reference = @library.references.create({
+        :reference_type => VersaFile::ReferenceTypes.Content,
+        :document => @document,
+        :folder_id => (@folder.nil? ? 0 : @folder.id)
+      })
+
+      @document.delay.extract_content()
+
+
+    end
+
+  end
+
+  def bulk_add
+     i = 1
+    dir = Rails.root.join('test', 'documents')
+    (1..39).each do |x|
+      Dir.foreach(dir) do |tmp_entry|
+        next if ['.', '..'].include?(tmp_entry)
+        if !File.directory?(tmp_entry)
+          title = "document.%.12f" % Time.now.to_f
+          logger.debug("%04d %s %s" % [i, tmp_entry, title])
+          File.open(File.join(dir, tmp_entry)) do |file|
+            self.create_document(file, title)
+          end
+          i += 1
+        end
+      end
+    end
   end
 
 end
