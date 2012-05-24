@@ -4,8 +4,12 @@ cd ../..
 rm -rf system
 rm -rf tmp
 
+cd log
+rm -rf *.log
+cd ..
+
 find . -type d -name '.svn' -exec rm -rf {} \;
+
 git add .
-find . -type d -name '.svn' -exec git rm -rf {} \;
 git commit
 git push origin development

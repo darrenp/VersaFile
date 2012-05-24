@@ -188,12 +188,17 @@ class FoldersController < ApplicationController
 
     if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata))
       Folder.transaction do
-        parent_id = params[:parent_id].to_i
-        @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(parent_id)
-        @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
 
+        #change name here
         @folder.name = params[:name] unless params[:name].nil?
-        @folder.parent = @parent
+
+        #change parent folder here
+        unless ((params[:parent_id].nil?) || (@folder.folder_type != VersaFile::FolderTypes.Content))
+          #attempt to retrieve parent folder -- assign root if folder not found.
+          @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(params[:parent_id])
+          @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
+          @folder.file_in_folder(@parent) if @folder.parent != @parent
+        end
 
         #update share properties
         if(@folder.folder_type == VersaFile::FolderTypes.Share)
@@ -213,6 +218,7 @@ class FoldersController < ApplicationController
           @view_mapping.view_definition.destroy unless @view_mapping.view_definition.id == params[:view_definition_id]
         end
       end
+
     end
 
     if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View))

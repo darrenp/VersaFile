@@ -22,6 +22,21 @@ class Folder < ActiveRecord::Base
     .joins("INNER JOIN ( #{Acl.viewable('Folder', user, group).to_sql} ) AS viewable ON viewable.id = folders.id")
   }
 
+  def file_in_folder(parent)
+
+    self.parent = parent
+
+    #1) inherit for parent
+    if self.acl.inherits
+      self.acl.inherit_from_parent(self)
+      self.acl.save
+    end
+
+    #2) Propagate to children
+    self.propagate_acl()
+
+  end
+
   def text_path
 
     if self.parent != nil
