@@ -10,6 +10,7 @@ configatron.bfree.revision_number = 5
 configatron.bfree.build_number = 2402
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
+configatron.mobile.dojo.version = ((Rails.env == 'development') ? '1.7.2.d' : '1.7.2.p')
 
 configatron.admin.reserved.subdomains=["admin", "mysql", "dev", "vf1"]
 
