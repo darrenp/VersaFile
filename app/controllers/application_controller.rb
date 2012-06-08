@@ -1,6 +1,9 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
+  has_mobile_fu
+  before_filter :force_mobile_format
+
   before_filter :set_p3p
 
   def set_p3p

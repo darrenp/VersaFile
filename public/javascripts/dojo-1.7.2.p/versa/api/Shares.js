@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/Shares",["dojo/_base/declare","versa/api/_Collection","versa/api/Share"],function(_1){var o=_1("versa.api.Shares",[versa.api._Collection],{constructor:function(_2){this.zone=_2.zone;this.target=dojo.replace(versa.api.Shares.TRGT,[this.zone.subdomain]);this.schema=versa.api.Share.schema;this.cache=true;this._initialize();}});o.TRGT="/zones/{0}/shares";return o;});

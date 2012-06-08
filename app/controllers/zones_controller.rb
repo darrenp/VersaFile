@@ -10,8 +10,9 @@ class ZonesController < ApplicationController
 
     begin
       respond_to do |format|
-        format.html { redirect_to :controller => 'zones', :action => 'welcome', :id => @zone.subdomain }
         format.json { render :json => 'Login failed: ' + exception.message, :status => :unauthorized }
+        format.html { redirect_to :controller => 'zones', :action => 'welcome', :id => @zone.subdomain }
+        format.mobile { redirect_to :controller => 'zones', :action => 'welcome', :id => @zone.subdomain }
       end
     rescue => e
       logger.debug 'ERROR: ' + e.message
@@ -22,8 +23,9 @@ class ZonesController < ApplicationController
   rescue_from Exceptions::SessionExpired do |exception|
     begin
       respond_to do |format|
-        format.html { redirect_to :controller => 'zones', :action => 'welcome', :id => 1 }
         format.json { render :json => 'Session expired' , :status => :unauthorized }
+        format.html { redirect_to :controller => 'zones', :action => 'welcome', :id => 1 }
+        format.mobile { redirect_to :controller => 'zones', :action => 'welcome', :id => 1 }
       end
     rescue => e
       logger.debug 'ERROR: ' + e.message
@@ -192,6 +194,13 @@ class ZonesController < ApplicationController
         end
 
       } # welcome.html.erb
+      format.mobile{
+        if @zone.nil? || active_user.nil?
+          render :layout => false
+        else
+          redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'main'
+        end
+      }
       format.xml  { render :xml => @zone }
     end
 
@@ -262,8 +271,15 @@ class ZonesController < ApplicationController
     @library = @zone.libraries.first
 
     respond_to do |format|
+      @user = active_user
+      format.json { render :json => @zone.to_json(
+          :include => {  :configuration => {:include => {:configuration_settings => {:only => [:name, :value]}},
+                            :only => [:configuration_settings]}},
+          :methods => [:trial_expiry],
+          :except => [:fingerprint, :zone_avatar_id])
+        return
+      }
       format.html {
-        @user = active_user
         if(@user != nil && @user.password_expires !=nil && @user.password_expires < Time.now)
           redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'expired'
           return
@@ -271,11 +287,14 @@ class ZonesController < ApplicationController
           render :layout => false
         end
       }# show.html.erb
-      format.json { render :json => @zone.to_json(
-          :include => {  :configuration => {:include => {:configuration_settings => {:only => [:name, :value]}},
-                            :only => [:configuration_settings]}},
-          :methods => [:trial_expiry],
-          :except => [:fingerprint, :zone_avatar_id]) }
+      format.mobile {
+        if(@user != nil && @user.password_expires !=nil && @user.password_expires < Time.now)
+          redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'expired'
+          return
+        else
+          render :layout => false
+        end
+      }
     end
 
   end
@@ -287,9 +306,19 @@ class ZonesController < ApplicationController
 
     @library = @zone.libraries.first
 
+
+
     respond_to do |format|
+      @user = active_user
       format.html {
-        @user = active_user
+        if(@user != nil && @user.password_expires !=nil && @user.password_expires < Time.now)
+          redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'expired'
+          return
+        else
+          render :action=>'show', :layout => false
+        end
+      }
+      format.mobile {
         if(@user != nil && @user.password_expires !=nil && @user.password_expires < Time.now)
           redirect_to :controller => 'zones', :id => @zone.subdomain, :action => 'expired'
           return

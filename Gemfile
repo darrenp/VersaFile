@@ -16,6 +16,7 @@ gem 'delayed_job', '~> 2.1.4'
 gem 'prawn', '~> 1.0.0.rc1'
 gem 'prawnto'
 gem 'rubyzip'
+gem 'mobile-fu'
 
 gem 'newrelic_rpm' #allow ey monitoring
 

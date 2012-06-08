@@ -1,0 +1,2 @@
+//>>built
+define("versa/widget/mobile/TextBox",["dojo/_base/declare","dojox/mobile/TextBox"],function(_1){return _1("versa.widget.mobile.TextBox",[dojox.mobile.TextBox],{buildRendering:function(){this.inherited("buildRendering",arguments);if(this.type){this.domNode.type=this.type;}}});});

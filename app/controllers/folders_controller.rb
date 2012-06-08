@@ -36,7 +36,12 @@ class FoldersController < ApplicationController
   # GET /folders.json
   def index
 
-    @folders = @library.folders.viewable(@active_user, @active_group).root_folders
+    if(params[:parent_id])
+      @folders = @library.folders.viewable(@active_user, @active_group).find_all_by_parent_id(params[:parent_id])
+    else
+      @folders = @library.folders.viewable(@active_user, @active_group).root_folders
+    end
+
 
     respond_to do |format|
       format.html # index.html.erb

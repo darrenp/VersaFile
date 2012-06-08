@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/Operator",["dojo/_base/declare","dojox/json/ref","versa/api/Error"],function(_1){var o=_1("versa.api.Operator",[],{id:null,name:null,value:null,constructor:function(_2){dojo.safeMixin(this,((!_2)?{}:_2));}});o.schema={type:"object",properties:{"id":{type:"integer"},"name":{type:"string","default":""},"value":{type:"string"},"no_rhs":{type:"boolean"}},prototype:new o()};return o;});
