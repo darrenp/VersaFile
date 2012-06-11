@@ -130,7 +130,9 @@ require(["dojo/_base/declare",
                             entry.document=this.document;
                             entry.onCommand=this.onCommand;
                             entry.onClick=function(){
-                                this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_TEXT, {document: this.document, property: this.property, label: this.label});
+                                this.select(true);
+                                setTimeout('var caller=dijit.byId(\''+this.id+'\');' +
+                                           'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_TEXT, {document: caller.document, property: caller.property, label: caller.label});', 3);
                             }
                         }
 

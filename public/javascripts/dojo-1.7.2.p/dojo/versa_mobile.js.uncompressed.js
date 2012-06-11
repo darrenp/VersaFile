@@ -8194,7 +8194,10 @@ require(["dojo/_base/declare",
                                 icon: '../../images/icons/32/folder.png',
                                 clickable: true,
                                 onClick: function(){
-                                    this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_FOLDER, {parent: this.parent, folder:this.item});
+                                    this.select(true);
+                                    setTimeout('var caller=dijit.byId(\''+this.id+'\');' +
+                                               'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_FOLDER, {parent: caller.parent, folder:caller.item});', 3);
+//                                    this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_FOLDER, {parent: this.parent, folder:this.item});
                                 }
                             }
                         );
@@ -8211,7 +8214,9 @@ require(["dojo/_base/declare",
                             icon: '../../images/mimetypes/32/default.png',
                             clickable: true,
                             onClick: function(){
-                                this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_PROPERTIES, {from: this.from, reference:this.item});
+                                this.select(true);
+                                setTimeout('var caller=dijit.byId(\''+this.id+'\');' +
+                                           'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_PROPERTIES, {from: caller.from, reference:caller.item});', 3);
                             }
                         }
                     );
@@ -22875,7 +22880,9 @@ require(["dojo/_base/declare",
                             entry.document=this.document;
                             entry.onCommand=this.onCommand;
                             entry.onClick=function(){
-                                this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_TEXT, {document: this.document, property: this.property, label: this.label});
+                                this.select(true);
+                                setTimeout('var caller=dijit.byId(\''+this.id+'\');' +
+                                           'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_TEXT, {document: caller.document, property: caller.property, label: caller.label});', 3);
                             }
                         }
 
