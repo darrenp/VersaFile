@@ -673,7 +673,21 @@ define("versa/widget/mobile/TextBox", ["dojo/_base/declare",
                 if(this.type){
                     this.domNode.type=this.type;
                 }
-            }
+            },
+
+            _onFocus: function(){
+                this.inherited('_onFocus', arguments);
+                this.onFocus();
+            },
+
+            _onBlur: function(){
+                this.inherited('_onBlur', arguments);
+                this.onFocus();
+            },
+
+            onFocus: function(){},
+
+            onBlur: function(){}
         });
     }
 );
@@ -2158,15 +2172,11 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
             showSearch: function(from){
                 this.searchView.set("back", from.id);
                 from.performTransition("searchView", 1, "slidev");
-                this.searchView.findAppBars();
-                this.searchView.resize();
             },
 
             performSearch: function(search){
                 this.searchResultsView.set('search', search);
                 this.searchView.performTransition("searchResultsView", 1, "slide");
-                this.searchResultsView.findAppBars();
-                this.searchResultsView.resize();
             },
 
             showFolder: function(parent, folder){
@@ -2182,9 +2192,6 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                     this.folderViews[folder.id].startup();
                 }
                 this.folderViews[parent.id].performTransition("folder-"+folder.id, 1, "slide");
-                this.folderViews[folder.id].findAppBars();
-                this.folderViews[folder.id].resize();
-
             },
 
             showText: function(document, property, label){
@@ -2202,8 +2209,6 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                     this.textViews[document.id+"-"+property].startup();
                 }
                 this.documentViews[document.id].performTransition("document-"+document.id+"-"+property, 1, "slide");
-                this.textViews[document.id+"-"+property].findAppBars();
-                this.textViews[document.id+"-"+property].resize();
             },
 
             showDocumentProperties: function(from, reference){
@@ -2225,8 +2230,6 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                         }
                         this.documentViews[document.id].set('back', from.id);
                         from.performTransition("document-"+document.id, 1, "slide");
-                        this.documentViews[document.id].findAppBars();
-                        this.documentViews[document.id].resize();
                     }),
                     onError: this.__onDocumentLoadError
                 });
@@ -2248,8 +2251,6 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                         this.documentContentViews[reference.document_id].startup();
                     }
                     this.documentViews[reference.document_id].performTransition("document-content-"+reference.document_id, 1, "slide");
-                    this.documentContentViews[reference.document_id].findAppBars();
-                    this.documentContentViews[reference.document_id].resize();
                 }else{
                     var file=reference.getCopyUrl(this.zone, this.activeLibrary);
                     this.downloadUrl(file);
@@ -2272,7 +2273,7 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                     id: "searchView",
                     back: "folder-"+this.rootFolder.id,
                     onCommand: dojo.hitch(this, this.onCommand)
-                }, dojo.create("div", {style: {height: "100%", width: "100%"}}, dojo.body()));
+                }, dojo.create("div", {}, dojo.body()));
                 this.searchView.startup();
 
                 this.searchResultsView=new versa.widget.search.mobile.SearchResultsView({
@@ -2295,9 +2296,6 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                 this.folderViews[this.rootFolder.id].startup();
 
                 this.loadingView.performTransition(this.folderViews[this.rootFolder.id].id, 1, "fade");
-                this.folderViews[this.rootFolder.id].findAppBars();
-                this.folderViews[this.rootFolder.id].resize();
-
             }
         });
 
@@ -7345,9 +7343,14 @@ require(["dojo/_base/declare",
             showRoot: true,
             showSearch: true,
             reference: null,
+            syncWithViews: true,
 
             constructor: function(args){
                 this.inherited('constructor', arguments);
+            },
+
+            onResize: function(){
+                this.inherited('onResize', arguments);
             },
 
             postCreate: function(args){
@@ -7359,8 +7362,12 @@ require(["dojo/_base/declare",
                         from: this.from,
                         onCommand: this.onCommand,
                         onClick: function(){
-                            this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_ROOT, {from: this.from});
-                            this.set('selected', false);
+                            this.select();
+                            setTimeout(
+                                'var caller=dijit.byId(\''+this.id+'\');'+
+                                'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_ROOT, {from: caller.from});'+
+                                'caller.select(true);',
+                            100);
                         }
                     }, dojo.create("div"));
                     this.addChild(this.footerRootButton);
@@ -7371,8 +7378,18 @@ require(["dojo/_base/declare",
                         onCommand: this.onCommand,
                         reference: this.reference,
                         onClick: function(){
-                            this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_CONTENT, {reference: this.reference});
-                            this.set('selected', false);
+                            this.select();
+                            setTimeout(
+                                'var caller=dijit.byId(\''+this.id+'\');'+
+                                'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_CONTENT, {reference: this.reference});'+
+                                'caller.select(true);',
+                            100);
+
+//                            this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_CONTENT, {reference: this.reference});
+//                            setTimeout(
+//                                'var caller=dijit.byId(\''+this.id+'\');'+
+//                                'caller.select(true)',
+//                            3);
                         }
                     }, dojo.create("div"));
                     this.addChild(this.footerViewButton);
@@ -7383,8 +7400,18 @@ require(["dojo/_base/declare",
                         from: this.from,
                         onCommand: this.onCommand,
                         onClick: function(){
-                            this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_SEARCH, {from: this.from});
-                            this.set('selected', false);
+                            this.select();
+                            setTimeout(
+                                'var caller=dijit.byId(\''+this.id+'\');'+
+                                'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_SEARCH, {from: caller.from});'+
+                                'caller.select(true);',
+                            100);
+
+//                            this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_SEARCH, {from: this.from});
+//                            setTimeout(
+//                                'var caller=dijit.byId(\''+this.id+'\');'+
+//                                'caller.select(true)',
+//                            3);
                         }
                     }, dojo.create("div"));
                     this.addChild(this.footerSearchButton);
@@ -8251,6 +8278,16 @@ require(["dojo/_base/declare",
                 this.addChild(this.header);
                 this.addChild(this.footer);
                 this.addChild(this.etedlMain);
+            },
+
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
+
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
             },
 
 
@@ -10736,7 +10773,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.cpContent);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);
@@ -11753,7 +11798,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.cpContent);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);
@@ -12309,6 +12362,19 @@ define("dojox/mobile/common", [
 				f = dm.hideAddressBar;
 			}
 		}
+        var curSize = dm.getScreenSize();
+        // Watch for resize events when the virtual keyboard is shown/hidden,
+        // the heuristic to detect this is that the screen width does not change
+        // and the height changes by more than 100 pixels.
+        connect.connect(null, "onresize", null, function(e){
+ 	        var newSize = dm.getScreenSize();
+            if(newSize.w == curSize.w && Math.abs(newSize.h - curSize.h) >= 100){
+ 	            // keyboard has been shown/hidden
+ 	            _f(e);
+ 	        }
+ 	        curSize = newSize;
+ 	    });
+
 		connect.connect(null, (win.global.onorientationchange !== undefined && !has("android"))
 			? "onorientationchange" : "onresize", null, f);
 	
@@ -14447,6 +14513,14 @@ require(["dojo/_base/declare",
                 });
 
                 this.searchField=dijit.byId('searchField');
+                this.searchField.onFocus = dojo.hitch(this, function(){
+                    this.findAppBars();
+                    this.resize();
+                });
+                this.searchField.onBlur = dojo.hitch(this, function(){
+                    this.findAppBars();
+                    this.resize();
+                });
                 this.searchButton=dijit.byId('searchButton');
                 dojo.connect(this.searchButton, 'onClick', dojo.hitch(this, function(){
                     this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.get('value')});
@@ -14457,7 +14531,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.header);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);
@@ -22909,7 +22991,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.etedlMain);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);
@@ -24363,7 +24453,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.etedlMain);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);

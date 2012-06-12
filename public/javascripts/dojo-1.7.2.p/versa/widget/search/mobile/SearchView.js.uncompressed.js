@@ -49,6 +49,14 @@ require(["dojo/_base/declare",
                 });
 
                 this.searchField=dijit.byId('searchField');
+                this.searchField.onFocus = dojo.hitch(this, function(){
+                    this.findAppBars();
+                    this.resize();
+                });
+                this.searchField.onBlur = dojo.hitch(this, function(){
+                    this.findAppBars();
+                    this.resize();
+                });
                 this.searchButton=dijit.byId('searchButton');
                 dojo.connect(this.searchButton, 'onClick', dojo.hitch(this, function(){
                     this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.get('value')});
@@ -59,7 +67,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.header);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);

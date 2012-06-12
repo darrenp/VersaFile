@@ -14,7 +14,21 @@ define("versa/widget/mobile/TextBox", ["dojo/_base/declare",
                 if(this.type){
                     this.domNode.type=this.type;
                 }
-            }
+            },
+
+            _onFocus: function(){
+                this.inherited('_onFocus', arguments);
+                this.onFocus();
+            },
+
+            _onBlur: function(){
+                this.inherited('_onBlur', arguments);
+                this.onFocus();
+            },
+
+            onFocus: function(){},
+
+            onBlur: function(){}
         });
     }
 );

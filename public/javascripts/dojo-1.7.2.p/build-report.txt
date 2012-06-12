@@ -1,4 +1,4 @@
-Build started: Mon Jun 11 2012 10:58:25 GMT-0600 (MDT)
+Build started: Tue Jun 12 2012 10:03:41 GMT-0600 (MDT)
 Build application version: 1.7.0dev (23930)
 Messages:
 info(100) Assumed module uses legacy loader API.
@@ -224,8 +224,6 @@ info(100) Assumed module uses legacy loader API.
 	module: dojox/drawing/Drawing
 	module: dojox/drawing/ui/dom/Zoom
 	module: dojox/wire/ml/Data
-	module: versa/widget/ValidationTextBox
-	module: versa/widget/Button
 	module: versa/_proto
 info(101) Using dojo/loadInit plugin for module.
 	module: dojox/cometd/RestChannels
@@ -1447,77 +1445,74 @@ info(102) Optimizing module
 	module: dojo/_base/unload
 	module: dojo/parser
 	module: versa/api/ChoiceList
-	module: versa/api/Documents
-	module: versa/api/ChoiceLists
-	module: versa/widget/document/mobile/DocumentContentView
-	module: versa/api/CellDefinitions
-	module: versa/api/PropertyDefinition
-	module: versa/api/CellDefinition
-	module: versa/api/Document
-	module: versa/api/DataTypes
+	module: versa/api/_Collection
+	module: versa/api/Share
+	module: versa/api/XhrHelper
+	module: versa/api/Roles
 	module: versa/api/ViewDefinition
-	module: versa/api/Shares
-	module: versa/api/Formatter
+	module: versa/api/DocumentType
+	module: versa/api/Folders
+	module: versa/api/Version
+	module: versa/api/_Configurable
 	module: versa/api/Libraries
-	module: versa/widget/ValidationTextBox
-	module: versa/widget/zone/mobile/LogonView
-	module: versa/api/DocumentTypes
-	module: versa/api/Search
-	module: versa/api/Operator
-	module: versa/api/ViewMapping
-	module: versa/api/References
+	module: versa/widget/document/mobile/LargeTextView
+	module: versa/api/Formatter
+	module: versa/VersaFile
+	module: versa/api/PropertyMappings
+	module: versa/api/Error
+	module: versa/api/Shares
+	module: versa/api/DataTypes
 	module: versa/api/Library
-	module: versa/widget/zone/mobile/Logon
-	module: versa/widget/mobile/Heading
-	module: versa/widget/Button
-	module: versa/api/SharedItems
+	module: versa/api/Preference
 	module: versa/api/PermissionSet
+	module: versa/widget/document/mobile/DocumentContentView
 	module: versa/api/SharedItem
 	module: versa/api/_Securable
-	module: versa/api/Version
-	module: versa/api/Operators
 	module: versa/api/Reference
-	module: versa/widget/mobile/TextBox
-	module: versa/api/_Configurable
-	module: versa/api/ViewDefinitions
-	module: versa/api/Roles
-	module: versa/api/PropertyMappings
+	module: versa/api/DataType
 	module: versa/api/Groups
-	module: versa/widget/document/mobile/DocumentPropertyView
-	module: versa/widget/search/mobile/SearchResultsView
-	module: versa/api/Share
-	module: versa/api/_Object
-	module: versa/api/Folders
-	module: versa/api/Preference
-	module: versa/widget/mobile/Footing
-	module: versa/api/Utilities
-	module: versa/widget/document/mobile/LargeTextView
-	module: versa/VersaFile
+	module: versa/api/DocumentTypes
+	module: versa/api/Group
+	module: versa/api/Operators
+	module: versa/api/CellDefinitions
+	module: versa/api/ViewMapping
+	module: versa/widget/mobile/TextBox
+	module: versa/api/SharedItems
+	module: versa/widget/zone/mobile/Show
 	module: versa/api/ViewMappings
-	module: versa/api/XhrHelper
-	module: versa/widget/dialog/MessageBox
-	module: versa/api/DocumentType
-	module: versa/api/PropertyDefinitions
-	module: versa/api/Error
-	module: versa/api/Application
-	module: versa/api/Versions
-	module: versa/api/_Collection
-	module: versa/api/User
-	module: versa/api/Users
+	module: versa/api/_Object
+	module: versa/widget/search/mobile/SearchResultsView
+	module: versa/api/Document
+	module: versa/api/Zones
+	module: versa/api/Acl
 	module: versa/api/Role
-	module: versa/api/PropertyMapping
+	module: versa/api/Versions
+	module: versa/widget/zone/mobile/LogonView
+	module: versa/api/PropertyDefinitions
+	module: versa/api/Documents
+	module: versa/_proto
+	module: versa/api/Search
+	module: versa/api/User
+	module: versa/widget/zone/mobile/Logon
+	module: versa/api/Users
+	module: versa/api/PropertyDefinition
+	module: versa/widget/mobile/Heading
 	module: versa/api/Folder
 	module: versa/widget/folder/mobile/FolderView
-	module: versa/api/DataType
-	module: versa/api/Preferences
-	module: versa/api/Zone
-	module: versa/widget/dialog/_Base
-	module: versa/api/Acl
-	module: versa/widget/zone/mobile/Show
-	module: versa/api/Group
+	module: versa/api/Operator
+	module: versa/api/CellDefinition
+	module: versa/api/PropertyMapping
+	module: versa/api/ViewDefinitions
+	module: versa/widget/document/mobile/DocumentPropertyView
+	module: versa/widget/mobile/Footing
+	module: versa/api/Application
+	module: versa/api/Utilities
+	module: versa/api/ChoiceLists
 	module: versa/widget/search/mobile/SearchView
-	module: versa/api/Zones
-	module: versa/_proto
+	module: versa/api/References
+	module: versa/api/Preferences
+	module: versa/widget/dialog/_Base
+	module: versa/api/Zone
 	module: dojo/versa_mobile
 	module: dojox/cometd/RestChannels-loadInit
 info(106) Optimizing CSS.
@@ -2334,147 +2329,143 @@ info(108) Interning strings.
 	module: dojox/drawing/ui/dom/Zoom
 	module: dojox/wire/ml/Data
 	module: versa/api/ChoiceList
-	module: versa/api/Documents
-	module: versa/api/ChoiceLists
-	module: versa/widget/document/mobile/DocumentContentView
-	module: versa/api/CellDefinitions
-	module: versa/api/PropertyDefinition
-	module: versa/api/CellDefinition
-	module: versa/api/Document
-	module: versa/api/DataTypes
+	module: versa/api/_Collection
+	module: versa/api/Share
+	module: versa/api/XhrHelper
+	module: versa/api/Roles
 	module: versa/api/ViewDefinition
-	module: versa/api/Shares
-	module: versa/api/Formatter
+	module: versa/api/DocumentType
+	module: versa/api/Folders
+	module: versa/api/Version
+	module: versa/api/_Configurable
 	module: versa/api/Libraries
-	module: versa/widget/ValidationTextBox
-	module: versa/widget/zone/mobile/LogonView
-	module: versa/api/DocumentTypes
-	module: versa/api/Search
-	module: versa/api/Operator
-	module: versa/api/ViewMapping
-	module: versa/api/References
+	module: versa/widget/document/mobile/LargeTextView
+	module: versa/api/Formatter
+	module: versa/VersaFile
+	module: versa/api/PropertyMappings
+	module: versa/api/Error
+	module: versa/api/Shares
+	module: versa/api/DataTypes
 	module: versa/api/Library
-	module: versa/widget/zone/mobile/Logon
-	module: versa/widget/mobile/Heading
-	module: versa/widget/Button
-	module: versa/api/SharedItems
+	module: versa/api/Preference
 	module: versa/api/PermissionSet
+	module: versa/widget/document/mobile/DocumentContentView
 	module: versa/api/SharedItem
 	module: versa/api/_Securable
-	module: versa/api/Version
-	module: versa/api/Operators
 	module: versa/api/Reference
-	module: versa/widget/mobile/TextBox
-	module: versa/api/_Configurable
-	module: versa/api/ViewDefinitions
-	module: versa/api/Roles
-	module: versa/api/PropertyMappings
+	module: versa/api/DataType
 	module: versa/api/Groups
-	module: versa/widget/document/mobile/DocumentPropertyView
-	module: versa/widget/search/mobile/SearchResultsView
-	module: versa/api/Share
-	module: versa/api/_Object
-	module: versa/api/Folders
-	module: versa/api/Preference
-	module: versa/widget/mobile/Footing
-	module: versa/api/Utilities
-	module: versa/widget/document/mobile/LargeTextView
-	module: versa/VersaFile
+	module: versa/api/DocumentTypes
+	module: versa/api/Group
+	module: versa/api/Operators
+	module: versa/api/CellDefinitions
+	module: versa/api/ViewMapping
+	module: versa/widget/mobile/TextBox
+	module: versa/api/SharedItems
+	module: versa/widget/zone/mobile/Show
 	module: versa/api/ViewMappings
-	module: versa/api/XhrHelper
-	module: versa/widget/dialog/MessageBox
-	module: versa/api/DocumentType
-	module: versa/api/PropertyDefinitions
-	module: versa/api/Error
-	module: versa/api/Application
-	module: versa/api/Versions
-	module: versa/api/_Collection
-	module: versa/api/User
-	module: versa/api/Users
+	module: versa/api/_Object
+	module: versa/widget/search/mobile/SearchResultsView
+	module: versa/api/Document
+	module: versa/api/Zones
+	module: versa/api/Acl
 	module: versa/api/Role
-	module: versa/api/PropertyMapping
+	module: versa/api/Versions
+	module: versa/widget/zone/mobile/LogonView
+	module: versa/api/PropertyDefinitions
+	module: versa/api/Documents
+	module: versa/_proto
+	module: versa/api/Search
+	module: versa/api/User
+	module: versa/widget/zone/mobile/Logon
+	module: versa/api/Users
+	module: versa/api/PropertyDefinition
+	module: versa/widget/mobile/Heading
 	module: versa/api/Folder
 	module: versa/widget/folder/mobile/FolderView
-	module: versa/api/DataType
-	module: versa/api/Preferences
-	module: versa/api/Zone
-	module: versa/widget/dialog/_Base
-	module: versa/api/Acl
-	module: versa/widget/zone/mobile/Show
-	module: versa/api/Group
+	module: versa/api/Operator
+	module: versa/api/CellDefinition
+	module: versa/api/PropertyMapping
+	module: versa/api/ViewDefinitions
+	module: versa/widget/document/mobile/DocumentPropertyView
+	module: versa/widget/mobile/Footing
+	module: versa/api/Application
+	module: versa/api/Utilities
+	module: versa/api/ChoiceLists
 	module: versa/widget/search/mobile/SearchView
-	module: versa/api/Zones
-	module: versa/_proto
+	module: versa/api/References
+	module: versa/api/Preferences
+	module: versa/widget/dialog/_Base
+	module: versa/api/Zone
 warn(205) Module not tagged as pure AMD yet it contains AMD API applications.
 	module: versa/api/ChoiceList
-	module: versa/api/Documents
-	module: versa/api/ChoiceLists
-	module: versa/widget/document/mobile/DocumentContentView
-	module: versa/api/CellDefinitions
-	module: versa/api/PropertyDefinition
-	module: versa/api/CellDefinition
-	module: versa/api/Document
-	module: versa/api/DataTypes
+	module: versa/api/_Collection
+	module: versa/api/Share
+	module: versa/api/XhrHelper
+	module: versa/api/Roles
 	module: versa/api/ViewDefinition
-	module: versa/api/Shares
-	module: versa/api/Formatter
+	module: versa/api/DocumentType
+	module: versa/api/Folders
+	module: versa/api/Version
+	module: versa/api/_Configurable
 	module: versa/api/Libraries
-	module: versa/widget/zone/mobile/LogonView
-	module: versa/api/DocumentTypes
-	module: versa/api/Search
-	module: versa/api/Operator
-	module: versa/api/ViewMapping
-	module: versa/api/References
+	module: versa/widget/document/mobile/LargeTextView
+	module: versa/api/Formatter
+	module: versa/VersaFile
+	module: versa/api/PropertyMappings
+	module: versa/api/Error
+	module: versa/api/Shares
+	module: versa/api/DataTypes
 	module: versa/api/Library
-	module: versa/widget/zone/mobile/Logon
-	module: versa/widget/mobile/Heading
-	module: versa/api/SharedItems
+	module: versa/api/Preference
 	module: versa/api/PermissionSet
+	module: versa/widget/document/mobile/DocumentContentView
 	module: versa/api/SharedItem
 	module: versa/api/_Securable
-	module: versa/api/Version
-	module: versa/api/Operators
 	module: versa/api/Reference
-	module: versa/widget/mobile/TextBox
-	module: versa/api/_Configurable
-	module: versa/api/ViewDefinitions
-	module: versa/api/Roles
-	module: versa/api/PropertyMappings
+	module: versa/api/DataType
 	module: versa/api/Groups
-	module: versa/widget/document/mobile/DocumentPropertyView
-	module: versa/widget/search/mobile/SearchResultsView
-	module: versa/api/Share
-	module: versa/api/_Object
-	module: versa/api/Folders
-	module: versa/api/Preference
-	module: versa/widget/mobile/Footing
-	module: versa/api/Utilities
-	module: versa/widget/document/mobile/LargeTextView
-	module: versa/VersaFile
+	module: versa/api/DocumentTypes
+	module: versa/api/Group
+	module: versa/api/Operators
+	module: versa/api/CellDefinitions
+	module: versa/api/ViewMapping
+	module: versa/widget/mobile/TextBox
+	module: versa/api/SharedItems
+	module: versa/widget/zone/mobile/Show
 	module: versa/api/ViewMappings
-	module: versa/api/XhrHelper
-	module: versa/widget/dialog/MessageBox
-	module: versa/api/DocumentType
-	module: versa/api/PropertyDefinitions
-	module: versa/api/Error
-	module: versa/api/Application
-	module: versa/api/Versions
-	module: versa/api/_Collection
-	module: versa/api/User
-	module: versa/api/Users
+	module: versa/api/_Object
+	module: versa/widget/search/mobile/SearchResultsView
+	module: versa/api/Document
+	module: versa/api/Zones
+	module: versa/api/Acl
 	module: versa/api/Role
-	module: versa/api/PropertyMapping
+	module: versa/api/Versions
+	module: versa/widget/zone/mobile/LogonView
+	module: versa/api/PropertyDefinitions
+	module: versa/api/Documents
+	module: versa/api/Search
+	module: versa/api/User
+	module: versa/widget/zone/mobile/Logon
+	module: versa/api/Users
+	module: versa/api/PropertyDefinition
+	module: versa/widget/mobile/Heading
 	module: versa/api/Folder
 	module: versa/widget/folder/mobile/FolderView
-	module: versa/api/DataType
-	module: versa/api/Preferences
-	module: versa/api/Zone
-	module: versa/widget/dialog/_Base
-	module: versa/api/Acl
-	module: versa/widget/zone/mobile/Show
-	module: versa/api/Group
+	module: versa/api/Operator
+	module: versa/api/CellDefinition
+	module: versa/api/PropertyMapping
+	module: versa/api/ViewDefinitions
+	module: versa/widget/document/mobile/DocumentPropertyView
+	module: versa/widget/mobile/Footing
+	module: versa/api/Application
+	module: versa/api/Utilities
+	module: versa/api/ChoiceLists
 	module: versa/widget/search/mobile/SearchView
-	module: versa/api/Zones
+	module: versa/api/References
+	module: versa/api/Preferences
+	module: versa/widget/dialog/_Base
+	module: versa/api/Zone
 warn(209) Missing or empty package.json.
 	filename: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/versa/package.json
 warn(216) dojo/has plugin resource could not be resolved during build-time.
@@ -2674,5 +2665,5 @@ dojo/dojo:
 
 Process finished normally
 	errors: 0
-	warnings: 74
-	build time: 63.009 seconds
+	warnings: 73
+	build time: 90.115 seconds

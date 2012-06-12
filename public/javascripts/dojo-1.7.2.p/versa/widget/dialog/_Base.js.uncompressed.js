@@ -9,8 +9,7 @@
 
 
 define("versa/widget/dialog/_Base", ["dojo/_base/declare",
-         "dijit/Dialog",
-         "versa/widget/Button"],
+        "dijit/Dialog"],
     function(declare){
         var o=declare("versa.widget.dialog._Base", [dijit.Dialog], {
             _buttonPaneNode: null,

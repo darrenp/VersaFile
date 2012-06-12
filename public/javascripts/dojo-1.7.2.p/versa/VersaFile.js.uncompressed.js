@@ -6,8 +6,7 @@
  * Time: 2:44 PM
  * To change this template use File | Settings | File Templates.
  */
-define("versa/VersaFile", ["dojo/_base/declare",
-         "versa/widget/dialog/MessageBox"],
+define("versa/VersaFile", ["dojo/_base/declare"],
     function(declare){
         var o = declare("versa.VersaFile", [], {});
 

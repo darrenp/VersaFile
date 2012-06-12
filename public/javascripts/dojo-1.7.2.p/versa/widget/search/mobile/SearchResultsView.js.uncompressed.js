@@ -95,7 +95,15 @@ require(["dojo/_base/declare",
                 this.addChild(this.etedlMain);
             },
 
+            onBeforeTransitionIn: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
+            onBeforeTransitionOut: function(){
+                this.findAppBars();
+                this.resize();
+            },
 
             startup: function(){
                 this.inherited('startup', arguments);
