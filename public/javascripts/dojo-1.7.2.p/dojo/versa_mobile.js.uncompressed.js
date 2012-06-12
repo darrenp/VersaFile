@@ -7381,7 +7381,7 @@ require(["dojo/_base/declare",
                             this.select();
                             setTimeout(
                                 'var caller=dijit.byId(\''+this.id+'\');'+
-                                'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_CONTENT, {reference: this.reference});'+
+                                'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_CONTENT, {reference: caller.reference});'+
                                 'caller.select(true);',
                             100);
 
