@@ -40,6 +40,8 @@ require(["dojo/_base/declare",
                 var folders=this.folderStore.fetch({query:{parent_id: this.folder.id}}).results;
                 var documents=this.refStore.fetch({query: {type: 1, query: this.folder.id, view: this.folder.view_definition_id}}).results;
 
+                folders.sort(versa.api.Folder.sort);
+
                 var entries=[];
                 dojo.forEach(folders, function(folder){
                     if(!(folder.isSearch()||folder.isTrash()||folder.isShareRoot())){
