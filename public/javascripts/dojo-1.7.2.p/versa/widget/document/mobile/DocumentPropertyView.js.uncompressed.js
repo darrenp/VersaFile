@@ -106,7 +106,7 @@ require(["dojo/_base/declare",
                 entries.push(
                     {
                         label: (this.document.isDeleted() ? 'Deletion Date' : 'Last Modified Date'),
-                        rightText: versa.api.Formatter.formatDateTime(this.document.updated_at)
+                        rightText: versa.api.Formatter.formatDateTime(this.document.updated_at).toString()
                     }
                 );
 

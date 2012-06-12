@@ -6,7 +6,8 @@
  * Time: 3:39 PM
  * To change this template use File | Settings | File Templates.
  */
-define("versa/api/Formatter", ["dojo/_base/declare"],
+define("versa/api/Formatter", ["dojo/_base/declare",
+        "dojo/date/locale"],
     function(declare){
         var o=declare("versa.api.Formatter", [], {});
 
@@ -19,7 +20,7 @@ define("versa/api/Formatter", ["dojo/_base/declare"],
             if(typeof value == 'string')
                 frmt_value = dojo.date.stamp.fromISOString(value);
 
-            return dojo.date.locale.format(frmt_value, {selector: 'date', formatLength: 'medium'})
+            return dojo.date.locale.format(frmt_value, {selector: 'date', formatLength: 'short'})
         };
 
 
