@@ -91,6 +91,13 @@ require(["dojo/_base/declare",
 
                 entries.push(
                     {
+                        label: "Size",
+                        rightText: versa.api.Utilities.readablizeBytes({bytes: this.document.binary_file_size})
+                    }
+                );
+
+                entries.push(
+                    {
                         label: "Checked Out By",
                         rightText: (this.document.getState(versa.api.Document.states.CHECKED_OUT) ? this.document.checked_out_by : '')
                     }
