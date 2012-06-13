@@ -1,0 +1,219 @@
+.icon32{
+	background-repeat: no-repeat;
+	background-position:center center;
+	width:32px;
+	height:32px;	
+}
+
+.overlay16{
+	background-repeat: no-repeat;
+	background-position:center center;
+	width:16px;
+	height:16px;
+}
+
+.imageButton .dijitButtonNode {
+	border: 0 !important;	
+	display: block !important;	
+}
+
+.buttonIcon{	
+	background-repeat: no-repeat;
+	background-position:center center;
+	height:16px;
+	width:16px;
+	margin:2px 4px 0 0;
+}
+
+.imageIcon{
+	background-repeat: no-repeat;
+	background-position:center center;
+	height:16px;
+	width:16px;
+}
+
+.commandIcon{
+	background-repeat: no-repeat;
+	background-position:center center;
+	width:16px;
+	height:16px;
+}
+
+.menuIcon{	
+	background-repeat: no-repeat;
+	background-position:center center;
+	height:16px;
+	width:16px;
+}
+
+.statusIcon{
+	background-repeat: no-repeat;
+	background-position:center center;
+	width:16px;
+	height:16px
+}
+
+.bfreeIconAdmin,
+.bfreeIconUser,
+.bfreeIconRole,
+.bfreeIconPrint,
+.bfreeIconHelp,
+.bfreeIconSave,
+.bfreeIconUndo,
+.bfreeIconLock,
+.bfreeIconUnlock,
+.bfreeIconSearch,
+.bfreeIconEdit,
+.bfreeIconClose,
+
+.bfreeIconNewFolder,
+.bfreeIconEditFolder,
+.bfreeIconDeleteFolder,
+
+.bfreeIconNewDocument,
+.bfreeIconScanDocument,
+.bfreeIconViewDocument,
+.bfreeIconCopyDocument,
+.bfreeIconEditDocument,
+.bfreeIconMoveDocument,
+.bfreeIconCkoDocument,
+.bfreeIconCkiDocument,
+.bfreeIconCancelCkoDocument,
+.bfreeIconDeleteDocument,
+
+.bfreeIconOk,
+.bfreeIconError,
+.bfreeIconCancel,
+
+.bfreeIconLogout{
+	background-image: url('images/icons16.png');
+}
+
+.bfreeIconAdmin{ background-position: 0px; }
+.bfreeIconUser { background-position: -16px; }
+.bfreeIconRole { background-position: -32px; }
+.bfreeIconPrint { background-position: -48px; }
+.bfreeIconHelp { background-position: -64px; }
+.bfreeIconSave { background-position: -80px;}
+.bfreeIconUndo { background-position: -96px;}
+.bfreeIconDelete { background-position: -112px; }
+.bfreeIconLock  { background-position: -128px }
+.bfreeIconUnlock  { background-position: -144px; }
+.bfreeIconSearch { background-position: -160px; }
+.bfreeIconEdit { background-position: -176px; }
+.bfreeIconClose { background-position: -192px; }
+ 
+.bfreeIconNewFolder { background-position: -208px; }
+.bfreeIconEditFolder { background-position: -224px; }
+.bfreeIconDeleteFolder { background-position: -240px; }
+
+.bfreeIconNewDocument { background-position: -256px; }
+.bfreeIconScanDocument { background-position: -272px; }
+.bfreeIconViewDocument { background-position: -288px; }
+.bfreeIconCopyDocument { background-position: -304px; }
+.bfreeIconEditDocument { background-position: -320px; }
+.bfreeIconMoveDocument { background-position: -336px; }
+.bfreeIconCkoDocument  { background-position: -352px; }
+.bfreeIconCkiDocument  { background-position: -368px; }
+.bfreeIconCancelCkoDocument { background-position: -384px; }
+.bfreeIconDeleteDocument { background-position: -400px; }
+
+.bfreeIconOk { background-position: -416px; }
+.bfreeIconError { background-position: -432px; }
+.bfreeIconCancel { background-position: -448px; }
+
+.bfreeIconLogout { background-position: -464px; }
+
+
+.bfreeIconUser32,
+.bfreeIconRole32{
+	background-image: url('images/icons32.png');
+}
+
+.bfreeIconUser32 { background-position: 0px; }
+.bfreeIconRole32 { background-position: 0px; }
+
+.bfreeOverlayBlank,
+.bfreeOverlayConfig,
+.bfreeOverlayHand,
+.bfreeOverlayEdit{
+	background-image: url('images/overlay16.png');
+}
+
+.bfreeOverlayBlank{ background-position: 0px; }
+.bfreeOverlayConfig{ background-position: -16px; }
+.bfreeOverlayHand{ background-position: -32px; }
+.bfreeOverlayEdit{ background-position: -48px; }
+
+/* DISABLED ICONS */
+.bfreeIconAdminD,
+.bfreeIconUserD,
+.bfreeIconRoleD,
+.bfreeIconPrintD,
+.bfreeIconHelpD,
+.bfreeIconSaveD,
+.bfreeIconUndoD,
+.bfreeIconLockD,
+.bfreeIconUnlockD,
+.bfreeIconSearchD,
+.bfreeIconEditD,
+.bfreeIconCloseD,
+
+.bfreeIconNewFolderD,
+.bfreeIconEditFolderD,
+.bfreeIconDeleteFolderD,
+
+.bfreeIconNewDocumentD,
+.bfreeIconScanDocumentD,
+.bfreeIconViewDocumentD,
+.bfreeIconCopyDocumentD,
+.bfreeIconEditDocumentD,
+.bfreeIconMoveDocumentD,
+.bfreeIconCkoDocumentD,
+.bfreeIconCkiDocumentD,
+.bfreeIconCancelCkoDocumentD,
+.bfreeIconDeleteDocumenDt,
+
+.bfreeIconOkD,
+.bfreeIconErrorD,
+.bfreeIconCancelD,
+
+.bfreeIconLogoutD{
+	background-image: url('images/icons16Disabled.png');
+}
+
+.bfreeIconAdminD { background-position: 0px; }
+.bfreeIconUserD { background-position: -16px; }
+.bfreeIconRoleD { background-position: -32px; }
+.bfreeIconPrintD { background-position: -48px; }
+.bfreeIconHelpD { background-position: -64px; }
+.bfreeIconSaveD { background-position: -80px;}
+.bfreeIconUndoD { background-position: -96px;}
+.bfreeIconDeleteD { background-position: -112px; }
+.bfreeIconLockD  { background-position: -128px }
+.bfreeIconUnlockD  { background-position: -144px; }
+.bfreeIconSearchD { background-position: -160px; }
+.bfreeIconEditD { background-position: -176px; }
+.bfreeIconCloseD { background-position: -192px; }
+ 
+.bfreeIconNewFolderD { background-position: -208px; }
+.bfreeIconEditFolderD { background-position: -224px; }
+.bfreeIconDeleteFolderD { background-position: -240px; }
+
+.bfreeIconNewDocumentD { background-position: -256px; }
+.bfreeIconScanDocumentD { background-position: -272px; }
+.bfreeIconViewDocumentD { background-position: -288px; }
+.bfreeIconCopyDocumentD { background-position: -304px; }
+.bfreeIconEditDocumentD { background-position: -320px; }
+.bfreeIconMoveDocumentD { background-position: -336px; }
+.bfreeIconCkoDocumentD  { background-position: -352px; }
+.bfreeIconCkiDocumentD  { background-position: -368px; }
+.bfreeIconCancelCkoDocumentD { background-position: -384px; }
+.bfreeIconDeleteDocumentD { background-position: -400px; }
+
+.bfreeIconOkD { background-position: -416px; }
+.bfreeIconErrorD { background-position: -432px; }
+.bfreeIconCancelD { background-position: -448px; }
+
+.bfreeIconLogoutD { background-position: -464px; }
+

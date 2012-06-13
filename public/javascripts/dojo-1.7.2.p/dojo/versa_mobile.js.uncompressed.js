@@ -8241,7 +8241,7 @@ require(["dojo/_base/declare",
                             item: document,
                             from: this,
                             onCommand: this.onCommand,
-                            icon: '../../images/mimetypes/32/default.png',
+                            icon: versa.api.Document.getIconUrl(document.binary_content_type, 32),
                             clickable: true,
                             onClick: function(){
                                 this.select(true);
@@ -8263,7 +8263,7 @@ require(["dojo/_base/declare",
                 this.header=new versa.widget.mobile.Heading({
                     label: this.folder.name,
                     from: this,
-                    back: this.back,
+                    moveTo: this.back,
                     onCommand: this.onCommand
                 });
 
@@ -10680,15 +10680,25 @@ require(["dojo/_base/declare",
     function(declare){
         declare("versa.widget.mobile.Heading", [dijit._WidgetBase, dojox.mobile.Heading], {
             fixed: "top",
-            back: null,
-            backTransition: null,
-            backDirection: null,
-            backButton: null,
             logoffButton: null,
 
-
             constructor: function(args){
+                if(args.moveTo){
+                    this.back="Back";
+                }
                 this.inherited('constructor', arguments);
+            },
+
+            findCurrentView: function(){
+                // summary:
+                //		Search for the view widget that contains this widget.
+                var w = this;
+                while(true){
+                    w = w.getParent();
+                    if(!w){ return null; }
+                    if(w.isInstanceOf(dojox.mobile.View)){ break; }
+                }
+                return w;
             },
 
             postCreate: function(args){
@@ -10706,20 +10716,31 @@ require(["dojo/_base/declare",
                 this.addChild(this.logoffButton);
             },
 
-            _setBackAttr: function(back){
-                this.back=back;
-                if(!this.backButton&&this.back){
-                    this.backButton=new dojox.mobile.ToolBarButton({
-                        moveTo: this.back,
-                        label: "Back",
-                        transition: this.backTransition?this.backTransition:"slide",
-                        transitionDir: this.backDirection?this.backDirection:-1
-                    });
-                    this.addChild(this.backButton);
-                }else if(this.backButton&&this.back){
-                    this.backButton.set("moveTo", this.back);
+            _setMoveToAttr: function(moveTo){
+                this.moveTo=moveTo;
+                if(this.moveTo){
+                    this.set('back', "Back");
+                }else{
+                    this.set('back', null);
                 }
             }
+
+            //,
+
+//            _setBackAttr: function(back){
+//                this.back=back;
+//                if(!this.backButton&&this.back){
+//                    this.backButton=new dojox.mobile.ToolBarButton({
+//                        moveTo: this.back,
+//                        label: "Back",
+//                        transition: this.backTransition?this.backTransition:"slide",
+//                        transitionDir: this.backDirection?this.backDirection:-1
+//                    });
+//                    this.addChild(this.backButton);
+//                }else if(this.backButton&&this.back){
+//                    this.backButton.set("moveTo", this.back);
+//                }
+//            }
         })
     }
 );
@@ -11764,7 +11785,7 @@ require(["dojo/_base/declare",
                 this.header=new versa.widget.mobile.Heading({
                     label: this.reference.name,
                     from: this,
-                    back: this.back,
+                    moveTo: this.back,
                     onCommand: this.onCommand
                 });
 
@@ -11898,6 +11919,101 @@ define("dijit/_base/manager", [
 	return dijit;
 });
 
+},
+'versa/widget/search/mobile/TextBox':function(){
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 21/11/11
+ * Time: 1:40 PM
+ * To change this template use File | Settings | File Templates.
+ */
+//dojo.provide('bfree.widget.search.TextBox');
+//
+//dojo.require('bfree.api.Search');
+//
+//dojo.require('bfree.widget.ValidationTextBox');
+//dojo.require('bfree.widget.search.DropDown');
+//
+//dojo.require('dijit._Templated');
+//dojo.require('dijit._Widget');
+//dojo.require('dijit.form.Button');
+//dojo.require('dijit.form.TextBox');
+
+define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
+        "dijit/_WidgetBase",
+        "dijit/_TemplatedMixin",
+        "dojox/mobile/Button",
+        "dijit/form/Form",
+        "versa/api/Search",
+        "versa/widget/mobile/TextBox"],
+    function(declare){
+        return declare("versa.widget.search.mobile.TextBox", [dijit._WidgetBase, dijit._TemplatedMixin], {
+            header: null,
+        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div dojoAttachPoint=\"formNode\">\n    <div style=\"width: inherit;padding: 10px; text-align: center;\">\n        <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 100%\" class=\"searchTextBox\">\n            <tr>\n                <td style=\"\"><input dojoAttachPoint=\"textboxNode,focusNode\"></input></td>\n                <td style=\"width:1px\"><button dojoAttachPoint=\"resetButtonNode\"></button></td>\n                <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n            </tr>\n        </table>\n    </div>\n</div>\n\n</div>"),
+
+            operators: null,
+            library: null,
+
+            _form: null,
+            activeQuery: null,
+            txtSearch: null,
+
+            constructor: function(args){
+            },
+
+            onSearch: function(searchItem){
+            },
+
+            postCreate: function(){
+                this.inherited('postCreate', arguments);
+
+                this.btnSearch=new dojox.mobile.Button({
+                    baseClass: 'imageButton imageIcon bfreeIconSearch',
+                    label: '',
+                    showLabel: false,
+                    type: 'submit',
+                    onClick: dojo.hitch(this, this._onClick)
+                }, this.submitButtonNode);
+
+                this.btnReset=new dojox.mobile.Button({
+                    baseClass: 'imageButton imageIcon bfreeIconError',
+                    label: '',
+                    showLabel: false,
+                    onClick: dojo.hitch(this, function(){
+                        this.txtSearch.set('value', '');
+                    })
+                }, this.resetButtonNode);
+
+                this.txtSearch = new versa.widget.mobile.TextBox({
+                    intermediateChanges: true,
+                    placeHolder: 'Search documents...',
+                    style: 'border:0;font-size:13px;width:100%;background:transparent;'
+                }, this.textboxNode);
+
+//                new bfree.widget.search.DropDown({
+//                    library: this.library,
+//                    iconClass: 'searchIcon bfreeIcon',
+//                    showLabel: false,
+//                    onSearch: dojo.hitch(this, this._onSearch)
+//                }, this.advancedButtonNode);
+
+            },
+
+            _onClick: function(){
+                this.onClick();
+            },
+
+            onClick: function(){
+
+            },
+
+            startup: function(){
+                this.inherited('startup', arguments);
+            }
+        }
+    );
+});
 },
 'versa/api/ViewMapping':function(){
 /**
@@ -14476,6 +14592,7 @@ require(["dojo/_base/declare",
          "versa/api/Folders",
          "versa/api/Documents",
          "versa/api/Zones",
+         "versa/widget/search/mobile/TextBox",
          "dojo/data/ItemFileWriteStore",
          "dojo/date/locale"],
     function(declare){
@@ -14489,7 +14606,7 @@ require(["dojo/_base/declare",
             _setBackAttr: function(back){
                 this.back=back;
                 if(this.header){
-                    this.header.set('back', back)
+                    this.header.set('moveTo', back)
                 }
             },
 
@@ -14500,7 +14617,7 @@ require(["dojo/_base/declare",
                     label: "Search",
                     from: this,
                     back: this.back,
-                    backTransition: "slidev",
+                    transition: "slidev",
                     onCommand: this.onCommand
                 });
 
@@ -14511,22 +14628,21 @@ require(["dojo/_base/declare",
                 });
 
                 this.cpContent=new dojox.mobile.ContentPane({
-                    content: dojo.cache("versa.widget.search.mobile", "template/SearchView.html", "<div style=\"width: 100%; height: 100%; text-align: center;\">\n    <input id=\"searchField\"   data-dojo-type=\"versa.widget.mobile.TextBox\"/>\n    <button id=\"searchButton\" data-dojo-type=\"dojox.mobile.Button\">Search</button>\n</div>\n"),
+                    content: dojo.cache("versa.widget.search.mobile", "template/SearchView.html", "<div style=\"width: 100%; height: 100%; text-align: center;\">\n    <input id=\"searchField\"   data-dojo-type=\"versa.widget.search.mobile.TextBox\"/>\n</div>\n"),
                     parseOnLoad: true
                 });
 
                 this.searchField=dijit.byId('searchField');
-                this.searchField.onFocus = dojo.hitch(this, function(){
+                this.searchField.txtSearch.onFocus = dojo.hitch(this, function(){
                     this.findAppBars();
                     this.resize();
                 });
-                this.searchField.onBlur = dojo.hitch(this, function(){
+                this.searchField.txtSearch.onBlur = dojo.hitch(this, function(){
                     this.findAppBars();
                     this.resize();
                 });
-                this.searchButton=dijit.byId('searchButton');
-                dojo.connect(this.searchButton, 'onClick', dojo.hitch(this, function(){
-                    this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.get('value')});
+                this.searchField.set('onClick', dojo.hitch(this, function(){
+                    this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.txtSearch.get('value')});
                 }));
 
                 this.addChild(this.cpContent);
@@ -22878,7 +22994,7 @@ require(["dojo/_base/declare",
             _setBackAttr: function(back){
                 this.back=back;
                 if(this.header){
-                    this.header.set("back", back)
+                    this.header.set("moveTo", back)
                 }
             },
 
@@ -24413,7 +24529,9 @@ require(["dojo/_base/declare",
                                 icon: '../../images/mimetypes/32/default.png',
                                 clickable: true,
                                 onClick: function(){
-                                    this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_PROPERTIES, {from: this.from, reference:this.item});
+                                    this.select(true);
+                                    setTimeout('var caller=dijit.byId(\''+this.id+'\');' +
+                                               'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_PROPERTIES, {from: caller.from, reference:caller.item});', 3);
                                 }
                             }
                         );
@@ -24445,7 +24563,7 @@ require(["dojo/_base/declare",
                 this.header=new versa.widget.mobile.Heading({
                     label: "Search",
                     from: this,
-                    back: this.back,
+                    moveTo: this.back,
                     onCommand: this.onCommand
                 });
 

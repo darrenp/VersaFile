@@ -1,4 +1,4 @@
-Build started: Tue Jun 12 2012 14:34:31 GMT-0600 (MDT)
+Build started: Wed Jun 13 2012 16:23:30 GMT-0600 (MDT)
 Build application version: 1.7.0dev (23930)
 Messages:
 info(100) Assumed module uses legacy loader API.
@@ -1490,6 +1490,7 @@ info(102) Optimizing module
 	module: versa/widget/zone/mobile/LogonView
 	module: versa/api/PropertyDefinitions
 	module: versa/api/Documents
+	module: versa/widget/search/mobile/TextBox
 	module: versa/_proto
 	module: versa/api/Search
 	module: versa/api/User
@@ -2374,6 +2375,7 @@ info(108) Interning strings.
 	module: versa/widget/zone/mobile/LogonView
 	module: versa/api/PropertyDefinitions
 	module: versa/api/Documents
+	module: versa/widget/search/mobile/TextBox
 	module: versa/_proto
 	module: versa/api/Search
 	module: versa/api/User
@@ -2444,6 +2446,7 @@ warn(205) Module not tagged as pure AMD yet it contains AMD API applications.
 	module: versa/widget/zone/mobile/LogonView
 	module: versa/api/PropertyDefinitions
 	module: versa/api/Documents
+	module: versa/widget/search/mobile/TextBox
 	module: versa/api/Search
 	module: versa/api/User
 	module: versa/widget/zone/mobile/Logon
@@ -2555,6 +2558,7 @@ dojo/versa_mobile:
 	dojox/data/JsonRestStore
 	versa/widget/document/mobile/DocumentContentView
 	dijit/_base/manager
+	versa/widget/search/mobile/TextBox
 	versa/api/ViewMapping
 	dojox/mobile/common
 	dojox/rpc/Rest
@@ -2665,5 +2669,5 @@ dojo/dojo:
 
 Process finished normally
 	errors: 0
-	warnings: 73
-	build time: 128.465 seconds
+	warnings: 74
+	build time: 269.109 seconds

@@ -1,0 +1,20 @@
+@import url("vicons/icons.css");
+
+.searchTextBox{
+    border-radius: 5px 5px 5px 5px;
+    border: 1px inset #9CACC0;
+    font-family: Helvetica;
+    font-size: 13px;
+    height: 22px;
+    background-color:  white;
+}
+
+.imageButton {
+	border: 0 !important;
+	display: block !important;
+    background-color: transparent;
+    margin-right: 5px;
+}
+.imageButton:hover {
+    background-color: transparent;
+}

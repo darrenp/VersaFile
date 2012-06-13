@@ -45,7 +45,9 @@ require(["dojo/_base/declare",
                                 icon: '../../images/mimetypes/32/default.png',
                                 clickable: true,
                                 onClick: function(){
-                                    this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_PROPERTIES, {from: this.from, reference:this.item});
+                                    this.select(true);
+                                    setTimeout('var caller=dijit.byId(\''+this.id+'\');' +
+                                               'caller.onCommand(versa.widget.zone.mobile.Show.COMMANDS.SHOW_DOCUMENT_PROPERTIES, {from: caller.from, reference:caller.item});', 3);
                                 }
                             }
                         );
@@ -77,7 +79,7 @@ require(["dojo/_base/declare",
                 this.header=new versa.widget.mobile.Heading({
                     label: "Search",
                     from: this,
-                    back: this.back,
+                    moveTo: this.back,
                     onCommand: this.onCommand
                 });
 

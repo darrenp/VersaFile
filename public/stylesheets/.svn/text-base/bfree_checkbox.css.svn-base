@@ -1,0 +1,46 @@
+.dijitToggleButton .dijitCheckBox,
+.dijitToggleButton .dijitCheckBoxIcon {
+	background-image: url('/javascripts/dojo/dijit/themes/nihilo/images/spriteCheckbox.png') !important;
+}
+
+.dijitCheckBox,
+.dijitCheckBoxIcon {		/* inside a toggle button */
+	background-image: url('/javascripts/dojo/dijit/themes/nihilo/images/spriteCheckbox.png') !important; /* checkbox sprite image */
+	background-repeat: no-repeat !important;
+	width: 16px !important;
+	height: 16px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.dijitCheckBox,
+.dijitToggleButton .dijitCheckBoxIcon {
+	/* unchecked */
+	background-position: -16px !important;
+}
+
+.dijitCheckBoxChecked,
+.dijitToggleButtonChecked .dijitCheckBoxIcon {
+	/* checked */
+	background-position: 0px !important;
+}
+
+.dijitCheckBoxDisabled {
+	/* disabled */
+	background-position: -48px !important;
+}
+
+.dijitCheckBoxCheckedDisabled {
+	/* disabled but checked */
+	background-position: -32px !important;
+}
+
+.dijitCheckBoxHover {
+	/* hovering over an unchecked enabled checkbox */
+	background-position: -80px !important;
+}
+
+.dijitCheckBoxCheckedHover {
+	/* hovering over a checked enabled checkbox */
+	background-position: -64px !important;
+}

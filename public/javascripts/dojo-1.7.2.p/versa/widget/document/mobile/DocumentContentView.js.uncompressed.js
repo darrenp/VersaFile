@@ -30,7 +30,7 @@ require(["dojo/_base/declare",
                 this.header=new versa.widget.mobile.Heading({
                     label: this.reference.name,
                     from: this,
-                    back: this.back,
+                    moveTo: this.back,
                     onCommand: this.onCommand
                 });
 

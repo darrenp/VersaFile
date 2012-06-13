@@ -1,0 +1,18 @@
+.versafile .dijitDialogTitle{
+	color: #336699;
+    white-space: nowrap;
+}
+
+.versafile .versaDialogButtonPane{
+    background-color: #D9D9D6;
+}
+
+/*
+#dlgEditDocument_underlay { background-color: black; }
+#dlgCkiDocument_underlay { background-color: black; }
+#dlgMoveDocument_underlay { background-color: black; }
+#dlgEditPropDefs_underlay { background-color: black; }
+#dlgAdminDocTypes_underlay { background-color: black; }
+#dlgProfileEditor_underlay  { background-color: black; }
+#dlgUserAdmin_underlay { background-color: black; }
+*/

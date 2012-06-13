@@ -43,7 +43,7 @@ require(["dojo/_base/declare",
             _setBackAttr: function(back){
                 this.back=back;
                 if(this.header){
-                    this.header.set("back", back)
+                    this.header.set("moveTo", back)
                 }
             },
 
