@@ -28,7 +28,7 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
     function(declare){
         return declare("versa.widget.search.mobile.TextBox", [dijit._WidgetBase, dijit._TemplatedMixin], {
             header: null,
-        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div dojoAttachPoint=\"formNode\">\n    <div style=\"width: inherit;padding: 10px; text-align: center;\">\n        <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 100%\" class=\"searchTextBox\">\n            <tr>\n                <td style=\"\"><input dojoAttachPoint=\"textboxNode,focusNode\"></input></td>\n                <td style=\"width:1px\"><button dojoAttachPoint=\"resetButtonNode\"></button></td>\n                <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n            </tr>\n        </table>\n    </div>\n</div>\n\n</div>"),
+        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div style=\"width: inherit;padding: 10px; text-align: center;\">\n    <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 300px;margin-left: auto; margin-right: auto; height: 35px;\" class=\"searchTextBox\">\n        <tr>\n            <td style=\"\">\n                <div dojoAttachPoint=\"formNode\">\n                    <input dojoAttachPoint=\"textboxNode,focusNode\"/>\n                </div>\n            </td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"resetButtonNode\"></button></td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n        </tr>\n    </table>\n</div>\n\n</div>"),
 
             operators: null,
             library: null,
@@ -46,8 +46,13 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
             postCreate: function(){
                 this.inherited('postCreate', arguments);
 
+                this._form = new dijit.form.Form({
+                    onSubmit: dojo.hitch(this, this._onSubmit),
+                    onReset: dojo.hitch(this, this.reset)
+                }, this.formNode);
+
                 this.btnSearch=new dojox.mobile.Button({
-                    baseClass: 'imageButton imageIcon bfreeIconSearch',
+                    baseClass: 'imageButton commandIcon32 bfreeIconSearch32',
                     label: '',
                     showLabel: false,
                     type: 'submit',
@@ -55,18 +60,18 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
                 }, this.submitButtonNode);
 
                 this.btnReset=new dojox.mobile.Button({
-                    baseClass: 'imageButton imageIcon bfreeIconError',
+                    baseClass: 'imageButton commandIcon32 bfreeIconError32',
                     label: '',
                     showLabel: false,
-                    onClick: dojo.hitch(this, function(){
-                        this.txtSearch.set('value', '');
-                    })
+                    type: 'reset',
+                    onClick: dojo.hitch(this, this.reset)
                 }, this.resetButtonNode);
+                this.resetButtonNode.type='reset';
 
                 this.txtSearch = new versa.widget.mobile.TextBox({
                     intermediateChanges: true,
                     placeHolder: 'Search documents...',
-                    style: 'border:0;font-size:13px;width:100%;background:transparent;'
+                    style: 'border:0;font-size:20px;width:100%;background:transparent;'
                 }, this.textboxNode);
 
 //                new bfree.widget.search.DropDown({
@@ -78,11 +83,20 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
 
             },
 
-            _onClick: function(){
-                this.onClick();
+            _onSubmit: function(e){
+                e.preventDefault();
+                this.submit();
             },
 
-            onClick: function(){
+            _onClick: function(){
+                this.submit();
+            },
+
+            reset: function(){
+                this.txtSearch.set('value', '');
+            },
+
+            submit: function(){
 
             },
 

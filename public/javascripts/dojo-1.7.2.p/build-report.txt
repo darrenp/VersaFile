@@ -1,4 +1,4 @@
-Build started: Wed Jun 13 2012 16:23:30 GMT-0600 (MDT)
+Build started: Fri Jun 15 2012 14:44:09 GMT-0600 (MDT)
 Build application version: 1.7.0dev (23930)
 Messages:
 info(100) Assumed module uses legacy loader API.
@@ -1517,6 +1517,7 @@ info(102) Optimizing module
 	module: dojo/versa_mobile
 	module: dojox/cometd/RestChannels-loadInit
 info(106) Optimizing CSS.
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/View.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonCheckboxOn.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/RoundRect-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/EdgeToEdgeCategory.css
@@ -1527,8 +1528,10 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/EdgeToEdgeList.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Heading.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ToggleButton-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ProgressIndicator.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/TabBar-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/EnhancedGrid_rtl.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Slider-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/View.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions/flip.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/RoundRectList-compat.css
@@ -1542,20 +1545,25 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/editor/plugins/resources/css/CollapsibleToolbar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Heading-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/charting/resources/Legend.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ComboBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/ComboBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonGreenBall.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/common.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Tooltip-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/RadioButton-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/EdgeToEdgeList.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Switch.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ToggleButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Slider-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/custom-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ipad-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Button.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/ToolBarButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonCheckboxOff-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/TextBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/iphone.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/DocTester/DocTester.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/TextArea-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/RoundRect.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ListItem-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/ComboBox.css
@@ -1576,7 +1584,9 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/TextArea-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/TabBar-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/Pagination.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/EdgeToEdgeCategory-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ListItem.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Button-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/common.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/DnD_rtl.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/resources/Grid.css
@@ -1587,23 +1597,28 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/resources/tundraGrid.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/claro/Filter.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/atom/widget/templates/css/HtmlFeedViewerGrouping.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/TextBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/editor/plugins/resources/css/Blockquote.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/TextBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/Dialog/Dialog.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonYellowStar-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Button-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ToolBarButton.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/EdgeToEdgeCategory.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/form/resources/FilePickerTextBox.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RoundRectList.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/resources/Grid_rtl.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/drawing/resources/drawing.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions/swirl.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonCheckboxOff.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/claroEnhancedGrid.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/calc/resources/Standard.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/TextBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/IconContainer.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/base-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Carousel.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonCheckboxOn-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RoundRectList-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/resources/nihiloGrid.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/TextArea.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/image/resources/Magnifier.css
@@ -1636,6 +1651,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/manni.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/dijit/base.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonRedCirclePlus.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ListItem.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonSilverCircleGrayButton-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/EdgeToEdgeCategory.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonRedCircleMinus-compat.css
@@ -1654,13 +1670,16 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/layout/resources/FloatingPane.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ComboBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/RoundRect.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/base.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/editor/plugins/resources/css/FindReplace.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/RadioButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/atom/widget/templates/css/HtmlFeedViewerEntry.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/Filter_rtl.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/friendly.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Overlay-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/CheckBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/editor/plugins/resources/editorPlugins.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RoundRect.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/TextArea-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Overlay.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/base.css
@@ -1668,6 +1687,8 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonGreenCircleMinus.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions/dissolve.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/layout/resources/GridContainer.css; non-relative URLs skipped: data:image/gif;base64,R0lGODlhAQABAID/AMDAwAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw%3D%3D,../../mdnd/resources/dnd.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ProgressIndicator-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RoundRectCategory.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/TextArea.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonGrayArrow.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/dijit/ColorPicker.css
@@ -1686,9 +1707,11 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ComboBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/IconContainer.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/murphy.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ToggleButton-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/FixedSplitter.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/Heading-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/RoundRectList-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/TabBar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Tooltip.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ProgressIndicator-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonRedBall-compat.css
@@ -1702,6 +1725,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/TabBar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonWhiteSearch-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Tooltip.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/versaphone.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/SpinWheel.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Button-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonSilverCircleGreenPlus-compat.css
@@ -1719,8 +1743,10 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/SpinWheel-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Overlay-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/iphone-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Tooltip.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonRedBall.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Button.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Opener-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/pastie.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/drawing/resources/toolbar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/RadioButton-compat.css
@@ -1736,6 +1762,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Carousel.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonSilverCircleGrayButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/Portlet/Portlet.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/TabBar-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Overlay-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Button-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Opener-compat.css
@@ -1743,6 +1770,8 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonBlueBall.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/CheckBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/Calendar/Calendar.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/versaphone-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/IconContainer-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonGrayRoundRect.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mdnd/resources/dnd.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonGreenBall-compat.css
@@ -1760,11 +1789,13 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/TextBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/RoundRectList.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/atom/widget/templates/css/HtmlFeedEntryEditor.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ToolBarButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Overlay.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ComboBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Slider-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/emacs.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonOrangeBall-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/CheckBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/Filter.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/native.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/TextBox-compat.css
@@ -1773,6 +1804,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Heading.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/EdgeToEdgeList.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonTransparent19.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Switch.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/Pager/Pager.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/DnD.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/EdgeToEdgeCategory.css
@@ -1786,17 +1818,23 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Switch.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/Switch-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/calc/resources/Common.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RadioButton-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/resources/soriaGrid.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Overlay.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/ListItem.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/form/resources/Rating.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/ToggleButton-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/dijit/Calendar-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/tundraEnhancedGrid.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Heading.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Slider-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/base-compat.css; skipped: EdgeToEdgeCategory-compat.css,/home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/base-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/versaphone-app.css; skipped: iphone.css,/home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/versaphone-app.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/Heading.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ProgressIndicator.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/IconContainer.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/layout/resources/RadioGroup.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/EdgeToEdgeList.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Tooltip-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/claro/Common.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonWhiteCheck-compat.css
@@ -1817,9 +1855,13 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/IconContainer.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ipad-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/RoundRectList.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Heading-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/Slider.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RoundRect-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/TabBar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonBlueCirclePlus.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ComboBox.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ToggleButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/atom/widget/templates/css/EntryHeader.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonGrayRoundRect-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/wire/demos/TableContainer.css
@@ -1841,6 +1883,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/form/resources/CheckedMultiSelect.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/EdgeToEdgeCategory.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/UpgradeBar/UpgradeBar.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ListItem-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/dijit/ColorPalette.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/android-app-compat.css; skipped: EdgeToEdgeCategory-compat.css,/home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/android/base-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/Sorter.css
@@ -1867,6 +1910,8 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonWhiteDownArrow-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ToolBarButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/form/resources/RangeSlider.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/TextArea.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/ipad.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/editor/plugins/resources/css/StatusBar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonDarkBlueCheck.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/CheckBox-compat.css
@@ -1888,6 +1933,8 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/editor/plugins/resources/css/Smiley.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Heading-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/Switch.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Carousel.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Switch-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/dijit/dijit.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonSilverCircleRedCross-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/grid/enhanced/resources/tundra/Common.css
@@ -1897,9 +1944,11 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/Switch.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/CheckBox-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/RoundRectList.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Slider.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonWhiteCheck.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/custom.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonBlackCircleCross-compat.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/base-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions/scaleIn.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/Switch-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/image/resources/Badge.css
@@ -1910,11 +1959,15 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Overlay-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonWhiteUpArrow.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/ProgressIndicator.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/PageIndicator.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonSilverCircleGreenButton-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonYellowStar.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/highlight/resources/pygments/fruity.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/RadioButton.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Opener.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonColorButtons.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/versaphone-app-compat.css; skipped: iphone-compat.css,/home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/versaphone-app-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonWhiteUpArrow-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions/coverv.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons.css
@@ -1930,6 +1983,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/RoundRectCategory.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/widget/Loader/Loader.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/Slider.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/CheckBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonRedCircleArrow.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/geo/charting/resources/Map.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/iphone-app-compat.css
@@ -1945,6 +1999,7 @@ info(106) Optimizing CSS.
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/transitions/revealv.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/ComboBox.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/iphone/Opener.css
+	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/versaphone/Button.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/common/domButtons/DomButtonSilverCircleGreenButton.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/blackberry/ListItem-compat.css
 	file: /home/aaron/RubymineProjects/BfreeDocs2/beta/public/javascripts/dojo-1.7.2.d/dojox/mobile/themes/custom/IconContainer-compat.css
@@ -2670,4 +2725,4 @@ dojo/dojo:
 Process finished normally
 	errors: 0
 	warnings: 74
-	build time: 269.109 seconds
+	build time: 58.391 seconds

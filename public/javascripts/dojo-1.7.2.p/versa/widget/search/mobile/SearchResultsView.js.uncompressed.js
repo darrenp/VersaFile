@@ -42,7 +42,7 @@ require(["dojo/_base/declare",
                                 item: document,
                                 from: this,
                                 onCommand: this.onCommand,
-                                icon: '../../images/mimetypes/32/default.png',
+                                icon: versa.api.Document.getIconUrl(document.binary_content_type, 32),
                                 clickable: true,
                                 onClick: function(){
                                     this.select(true);

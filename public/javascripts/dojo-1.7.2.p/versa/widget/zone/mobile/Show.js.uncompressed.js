@@ -227,7 +227,10 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                 }, dojo.create("div", {style: {height: "100%", width: "100%"}}, dojo.body()));
                 this.folderViews[this.rootFolder.id].startup();
 
+                dojox.mobile.hideAddressBar();
+
                 this.loadingView.performTransition(this.folderViews[this.rootFolder.id].id, 1, "fade");
+
             }
         });
 

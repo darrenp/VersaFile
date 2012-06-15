@@ -58,7 +58,7 @@ require(["dojo/_base/declare",
                     this.findAppBars();
                     this.resize();
                 });
-                this.searchField.set('onClick', dojo.hitch(this, function(){
+                this.searchField.set('submit', dojo.hitch(this, function(){
                     this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.txtSearch.get('value')});
                 }));
 

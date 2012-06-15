@@ -54,6 +54,8 @@ define("versa/widget/zone/mobile/Logon", ["dojo/_base/declare",
                     id: 'loadingView'
                 });
 
+                dojox.mobile.hideAddressBar();
+
 //                this.loadingView.performTransition("logonView", 1, "fade");
                 this.logonView.findAppBars();
                 this.logonView.resize();

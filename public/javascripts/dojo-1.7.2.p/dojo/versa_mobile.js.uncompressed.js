@@ -2296,7 +2296,10 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                 }, dojo.create("div", {style: {height: "100%", width: "100%"}}, dojo.body()));
                 this.folderViews[this.rootFolder.id].startup();
 
+                dojox.mobile.hideAddressBar();
+
                 this.loadingView.performTransition(this.folderViews[this.rootFolder.id].id, 1, "fade");
+
             }
         });
 
@@ -9153,14 +9156,14 @@ define("versa/widget/zone/mobile/LogonView", ["dojo/_base/declare",
             postCreate: function(){
                 this.inherited('postCreate', arguments);
 
-                this.heading=new dojox.mobile.Heading({
-                    fixed: "top"
-                });
-                this.heading.domNode.innerHTML='<img src="/images/versafile-32-tm.png"/>';
-                this.addChild(this.heading);
+//                this.heading=new dojox.mobile.Heading({
+//                    fixed: "top"
+//                });
+//                this.heading.domNode.innerHTML='<img src="/images/versafile-32-tm.png"/>';
+//                this.addChild(this.heading);
 
                 this.cpContent=new dojox.mobile.ContentPane({
-                    content: dojo.cache("versa.widget.zone.mobile", "template/Logon.html", "<div align=\"center\">\n    <div id=\"logonFormNode\">\n\n        <div>\n            <div>Username</div>\n            <input id=\"userNameNode\"/>\n        </div>\n\n        <div>\n            <div>Password</div>\n            <input id=\"passwordNode\"/>\n        </div>\n\n        <table id=\"statusNode\">\n            <tr>\n                <td style=\"vertical-align:top;\">\n                    <img id=\"statusImgNode\" src=\"/images/icons/16/blank.png\" width=\"16\" height=\"16\" style=\"float:right;margin-right:8px\"/>\n                </td>\n                <td>\n                    <span id=\"statusMsgNode\"></span>\n                </td>\n            </tr>\n        </table>\n\n        <div>\n            <button id=\"logonButtonNode\" type=\"submit\"></button>\n        </div>\n\n    </div>\n</div>\n")
+                    content: dojo.cache("versa.widget.zone.mobile", "template/Logon.html", "<div style=\"width: 100%; border-bottom: 4px solid #FFD100;height: 50px; position: relative;\">\n    <img src=\"/images/versafile-32-tm.png\" alt=\"VersaFile\" style=\"position: absolute; bottom: 5px; left: 5px;\"/>\n</div>\n<div align=\"center\" style=\"width: 100%; border-top: 4px solid #75787B;\">\n    <div id=\"logonFormNode\" style=\"margin-top: 50px;\">\n\n        <div>\n            <div>Username</div>\n            <input id=\"userNameNode\"/>\n        </div>\n\n        <div>\n            <div>Password</div>\n            <input id=\"passwordNode\"/>\n        </div>\n\n        <table id=\"statusNode\">\n            <tr>\n                <td style=\"vertical-align:top;\">\n                    <img id=\"statusImgNode\" src=\"/images/icons/16/blank.png\" width=\"16\" height=\"16\" style=\"float:right;margin-right:8px\"/>\n                </td>\n                <td>\n                    <span id=\"statusMsgNode\"></span>\n                </td>\n            </tr>\n        </table>\n\n        <div>\n            <button id=\"logonButtonNode\" type=\"submit\"></button>\n        </div>\n\n    </div>\n</div>\n")
                 });
                 this.addChild(this.cpContent);
 
@@ -11950,7 +11953,7 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
     function(declare){
         return declare("versa.widget.search.mobile.TextBox", [dijit._WidgetBase, dijit._TemplatedMixin], {
             header: null,
-        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div dojoAttachPoint=\"formNode\">\n    <div style=\"width: inherit;padding: 10px; text-align: center;\">\n        <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 100%\" class=\"searchTextBox\">\n            <tr>\n                <td style=\"\"><input dojoAttachPoint=\"textboxNode,focusNode\"></input></td>\n                <td style=\"width:1px\"><button dojoAttachPoint=\"resetButtonNode\"></button></td>\n                <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n            </tr>\n        </table>\n    </div>\n</div>\n\n</div>"),
+        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div style=\"width: inherit;padding: 10px; text-align: center;\">\n    <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 300px;margin-left: auto; margin-right: auto; height: 35px;\" class=\"searchTextBox\">\n        <tr>\n            <td style=\"\">\n                <div dojoAttachPoint=\"formNode\">\n                    <input dojoAttachPoint=\"textboxNode,focusNode\"/>\n                </div>\n            </td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"resetButtonNode\"></button></td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n        </tr>\n    </table>\n</div>\n\n</div>"),
 
             operators: null,
             library: null,
@@ -11968,8 +11971,13 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
             postCreate: function(){
                 this.inherited('postCreate', arguments);
 
+                this._form = new dijit.form.Form({
+                    onSubmit: dojo.hitch(this, this._onSubmit),
+                    onReset: dojo.hitch(this, this.reset)
+                }, this.formNode);
+
                 this.btnSearch=new dojox.mobile.Button({
-                    baseClass: 'imageButton imageIcon bfreeIconSearch',
+                    baseClass: 'imageButton commandIcon32 bfreeIconSearch32',
                     label: '',
                     showLabel: false,
                     type: 'submit',
@@ -11977,18 +11985,18 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
                 }, this.submitButtonNode);
 
                 this.btnReset=new dojox.mobile.Button({
-                    baseClass: 'imageButton imageIcon bfreeIconError',
+                    baseClass: 'imageButton commandIcon32 bfreeIconError32',
                     label: '',
                     showLabel: false,
-                    onClick: dojo.hitch(this, function(){
-                        this.txtSearch.set('value', '');
-                    })
+                    type: 'reset',
+                    onClick: dojo.hitch(this, this.reset)
                 }, this.resetButtonNode);
+                this.resetButtonNode.type='reset';
 
                 this.txtSearch = new versa.widget.mobile.TextBox({
                     intermediateChanges: true,
                     placeHolder: 'Search documents...',
-                    style: 'border:0;font-size:13px;width:100%;background:transparent;'
+                    style: 'border:0;font-size:20px;width:100%;background:transparent;'
                 }, this.textboxNode);
 
 //                new bfree.widget.search.DropDown({
@@ -12000,11 +12008,20 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
 
             },
 
-            _onClick: function(){
-                this.onClick();
+            _onSubmit: function(e){
+                e.preventDefault();
+                this.submit();
             },
 
-            onClick: function(){
+            _onClick: function(){
+                this.submit();
+            },
+
+            reset: function(){
+                this.txtSearch.set('value', '');
+            },
+
+            submit: function(){
 
             },
 
@@ -14641,7 +14658,7 @@ require(["dojo/_base/declare",
                     this.findAppBars();
                     this.resize();
                 });
-                this.searchField.set('onClick', dojo.hitch(this, function(){
+                this.searchField.set('submit', dojo.hitch(this, function(){
                     this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.txtSearch.get('value')});
                 }));
 
@@ -23193,6 +23210,8 @@ define("versa/widget/zone/mobile/Logon", ["dojo/_base/declare",
                     id: 'loadingView'
                 });
 
+                dojox.mobile.hideAddressBar();
+
 //                this.loadingView.performTransition("logonView", 1, "fade");
                 this.logonView.findAppBars();
                 this.logonView.resize();
@@ -24526,7 +24545,7 @@ require(["dojo/_base/declare",
                                 item: document,
                                 from: this,
                                 onCommand: this.onCommand,
-                                icon: '../../images/mimetypes/32/default.png',
+                                icon: versa.api.Document.getIconUrl(document.binary_content_type, 32),
                                 clickable: true,
                                 onClick: function(){
                                     this.select(true);
