@@ -7,9 +7,9 @@
   height: 29px;
   border: #9CACC0 1px outset;
   -webkit-border-radius: 5px;
-  background-color: #2DCCD3;
+  background-color: #75787b;
   
-  color: black;
+  color: white;
   font-family: Helvetica;
   font-size: 13px;
   line-height: 29px;
@@ -36,7 +36,8 @@
 }
 .mblButtonSelected {
   
-  color: #419A9E;
+  background-color: #595B5C;
+  color: white;
 }
 .mblButtonDisabled, .mblButton:disabled {
   cursor: default;

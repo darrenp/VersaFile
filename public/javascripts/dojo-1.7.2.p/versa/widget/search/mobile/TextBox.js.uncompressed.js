@@ -75,6 +75,8 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
             },
 
             _onSubmit: function(e){
+                e.preventDefault();
+                this.txtSearch.domNode.blur();
                 this.submit();
             },
 

@@ -15,11 +15,11 @@ html.mobile, .mobile body {
   background-image: -webkit-gradient(linear, left top, left bottom, from(#7a9de9), to(#2362dd), color-stop(0.5, #366edf), color-stop(0.5, #215fdc));
 }
 .mblColorDefault {
-  background-color: #2DCCD3;
+  background-color: #75787b;
   
 }
 .mblColorDefaultSel {
-  background-color: #419A9E;
+  background-color: #595B5C;
   background-image: -webkit-gradient(linear, left top, left bottom, from(#7c87a4), to(#263e6c), color-stop(0.5, #394d77), color-stop(0.5, #243b69));
 }
 .mblHeading {
@@ -33,6 +33,7 @@ html.mobile, .mobile body {
   padding: 0px;
   height: 42px;
   background-color: #75787B;
+  background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0.36, rgb(117,120,123)), color-stop(0.68, rgb(164,165,166)));
   
   border-top: 1px solid #CDD5DF;
   border-bottom: 1px solid #2D3642;
@@ -73,7 +74,7 @@ html.mobile, .mobile body {
   height: 19px;
   border: 1px solid #3A4655;
   -webkit-transform: scale(0.7, 1) rotate(45deg);
-  background-color: #2DCCD3
+  background-color: #75787b
   
 }
 .dj_chrome .mblArrowButtonHead {
@@ -96,15 +97,15 @@ html.mobile, .mobile body {
   line-height: 29px;
   -webkit-border-top-right-radius: 5px;
   -webkit-border-bottom-right-radius: 5px;
-  background-color: #2DCCD3;
+  background-color: #75787b;
   
 }
 .mblArrowButtonSelected .mblArrowButtonHead {
-  background-color: #419A9E;
+  background-color: #595B5C;
   
 }
 .mblArrowButtonSelected .mblArrowButtonBody {
-  background-color: #419A9E;
+  background-color: #595B5C;
   
 }
 .mblSlide.mblOut {
@@ -2203,9 +2204,9 @@ html.mobile, .mobile body {
   height: 29px;
   border: #9CACC0 1px outset;
   -webkit-border-radius: 5px;
-  background-color: #2DCCD3;
+  background-color: #75787b;
   
-  color: black;
+  color: white;
   font-family: Helvetica;
   font-size: 13px;
   line-height: 29px;
@@ -2232,7 +2233,8 @@ html.mobile, .mobile body {
 }
 .mblButtonSelected {
   
-  color: #419A9E;
+  background-color: #595B5C;
+  color: white;
 }
 .mblButtonDisabled, .mblButton:disabled {
   cursor: default;
@@ -2954,7 +2956,7 @@ table.mblClose {
 }
 .mblTabBar .mblTabBarButton.mblTabButtonSelected {
   -webkit-border-radius: 3px;
-  background-color: #419A9E;
+  background-color: #595B5C;
   
 }
 .mblTabBarButtonAnchor {
@@ -3003,7 +3005,7 @@ table.mblClose {
   border-style: inset;
   border-color: #9CACC0;
   border-right-color: #5E708A;
-  background-color: #2DCCD3;
+  background-color: #75787b;
   
   font-family: Helvetica;
   font-size: 13px;
@@ -3041,6 +3043,7 @@ table.mblClose {
   border-top: 1px solid #CDD5DF;
   border-bottom: 1px solid #2D3642;
   background-color: #75787B;
+  background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0.36, rgb(117,120,123)), color-stop(0.68, rgb(153,154,156)));
   
   font-family: Helvetica;
   font-size: 20px;
@@ -3053,7 +3056,7 @@ table.mblClose {
   margin-top: 3px;
 }
 .mblTabPanelHeader .mblTabButton.mblTabButtonSelected {
-  background-color: #419A9E;
+  background-color: #595B5C;
   
 }
 .mblTabPanelHeader .mblTabButtonDomButton {

@@ -133,6 +133,9 @@ define("versa/widget/zone/mobile/LogonView", ["dojo/_base/declare",
                         var password = this._txtPassword.get('value');
 
                         var user = this.zone.logon(username, password);
+
+
+
                         this.onLogon(user);
 
                     }
@@ -179,7 +182,7 @@ define("versa/widget/zone/mobile/LogonView", ["dojo/_base/declare",
 //                this.addChild(this.heading);
 
                 this.cpContent=new dojox.mobile.ContentPane({
-                    content: dojo.cache("versa.widget.zone.mobile", "template/Logon.html", "<div style=\"width: 100%; border-bottom: 4px solid #FFD100;height: 50px; position: relative;\">\n    <img src=\"/images/versafile-32-tm.png\" alt=\"VersaFile\" style=\"position: absolute; bottom: 5px; left: 5px;\"/>\n</div>\n<div align=\"center\" style=\"width: 100%; border-top: 4px solid #75787B;\">\n    <div id=\"logonFormNode\" style=\"margin-top: 50px;\">\n\n        <div>\n            <div>Username</div>\n            <input id=\"userNameNode\"/>\n        </div>\n\n        <div>\n            <div>Password</div>\n            <input id=\"passwordNode\"/>\n        </div>\n\n        <table id=\"statusNode\">\n            <tr>\n                <td style=\"vertical-align:top;\">\n                    <img id=\"statusImgNode\" src=\"/images/icons/16/blank.png\" width=\"16\" height=\"16\" style=\"float:right;margin-right:8px\"/>\n                </td>\n                <td>\n                    <span id=\"statusMsgNode\"></span>\n                </td>\n            </tr>\n        </table>\n\n        <div>\n            <button id=\"logonButtonNode\" type=\"submit\"></button>\n        </div>\n\n    </div>\n</div>\n")
+                    content: dojo.cache("versa.widget.zone.mobile", "template/Logon.html", "<div style=\"width: 100%; border-bottom: 4px solid #FFD100;height: 50px; position: relative;\">\n    <img src=\"/images/versafile-64-tm.png\" alt=\"VersaFile\" style=\"position: absolute; bottom: 5px; left: 5px;\" height=\"32\" width=\"130\"/>\n</div>\n<div align=\"center\" style=\"width: 100%; border-top: 4px solid #75787B;\">\n    <div id=\"logonFormNode\" style=\"margin-top: 50px;\">\n\n        <div>\n            <div>Username</div>\n            <input id=\"userNameNode\"/>\n        </div>\n\n        <div>\n            <div>Password</div>\n            <input id=\"passwordNode\"/>\n        </div>\n\n        <table id=\"statusNode\">\n            <tr>\n                <td style=\"vertical-align:top;\">\n                    <img id=\"statusImgNode\" src=\"/images/icons/16/blank.png\" width=\"16\" height=\"16\" style=\"float:right;margin-right:8px\"/>\n                </td>\n                <td>\n                    <span id=\"statusMsgNode\"></span>\n                </td>\n            </tr>\n        </table>\n\n        <div>\n            <button id=\"logonButtonNode\" type=\"submit\"></button>\n        </div>\n\n    </div>\n</div>\n")
                 });
                 this.addChild(this.cpContent);
 

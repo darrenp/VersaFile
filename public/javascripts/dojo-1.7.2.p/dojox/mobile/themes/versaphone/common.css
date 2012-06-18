@@ -15,10 +15,10 @@ html.mobile, .mobile body {
   background-image: -webkit-gradient(linear, left top, left bottom, from(#7a9de9), to(#2362dd), color-stop(0.5, #366edf), color-stop(0.5, #215fdc));
 }
 .mblColorDefault {
-  background-color: #2DCCD3;
+  background-color: #75787b;
   
 }
 .mblColorDefaultSel {
-  background-color: #419A9E;
+  background-color: #595B5C;
   background-image: -webkit-gradient(linear, left top, left bottom, from(#7c87a4), to(#263e6c), color-stop(0.5, #394d77), color-stop(0.5, #243b69));
 }
