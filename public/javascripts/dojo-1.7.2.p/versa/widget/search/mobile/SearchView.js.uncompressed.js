@@ -16,6 +16,7 @@ require(["dojo/_base/declare",
         declare("versa.widget.search.mobile.SearchView", [dijit._WidgetBase, dojox.mobile.ScrollableView], {
             header: null,
             cpContent: null,
+            footer: null,
 
             constructor: function(args){
             },
@@ -51,12 +52,16 @@ require(["dojo/_base/declare",
 
                 this.searchField=dijit.byId('searchField');
                 this.searchField.txtSearch.onFocus = dojo.hitch(this, function(){
+                    if(this.searchField.txtSearch.focused){
+                        this.footer.domNode.style.visibility='hidden';
+                    }
                     this.findAppBars();
                     this.resize();
                 });
                 this.searchField.txtSearch.onBlur = dojo.hitch(this, function(){
                     this.findAppBars();
                     this.resize();
+                    this.footer.domNode.style.visibility='visible';
                 });
                 this.searchField.set('submit', dojo.hitch(this, function(){
                     this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.txtSearch.get('value')});

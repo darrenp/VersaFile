@@ -41,7 +41,9 @@ require(["dojo/_base/declare",
 
                 if(this.reference.binary_content_type.indexOf('image')>=0){
                     this.cpContent=new dojox.mobile.ContentPane({
-                        content: dojo.replace('<div style="text-align: center;vertical-align: middle;width: 100%; height: 100%;"><img src="{0}"/></div>', [this.reference.getViewUrl(this.zone, this.library)])
+                        content: dojo.replace('<div style="text-align: center;vertical-align: middle;width: 100%; height: 100%;">' +
+                                                '<img src="{0}" style="max-width: 100%; max-height: 100%;"/>' +
+                                              '</div>', [this.reference.getViewUrl(this.zone, this.library)])
                     });
                 }else if(this.reference.binary_content_type.indexOf('text')>=0){
 

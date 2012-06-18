@@ -29,7 +29,7 @@
 }
 .mblTabBar .mblTabBarButton.mblTabButtonSelected {
   -webkit-border-radius: 3px;
-  background-color: #595B5C;
+  background-color: #419A9E;
   
 }
 .mblTabBarButtonAnchor {
@@ -78,7 +78,7 @@
   border-style: inset;
   border-color: #9CACC0;
   border-right-color: #5E708A;
-  background-color: #75787b;
+  background-color: #2DCCD3;
   
   font-family: Helvetica;
   font-size: 13px;
@@ -115,7 +115,7 @@
   height: 39px;
   border-top: 1px solid #CDD5DF;
   border-bottom: 1px solid #2D3642;
-  background-color: #2DCCD3;
+  background-color: #75787B;
   
   font-family: Helvetica;
   font-size: 20px;
@@ -128,7 +128,7 @@
   margin-top: 3px;
 }
 .mblTabPanelHeader .mblTabButton.mblTabButtonSelected {
-  background-color: #595B5C;
+  background-color: #419A9E;
   
 }
 .mblTabPanelHeader .mblTabButtonDomButton {

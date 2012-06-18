@@ -9,7 +9,7 @@
   z-index: 1;
   padding: 0px;
   height: 42px;
-  background-color: #2dccd3;
+  background-color: #75787B;
   
   border-top: 1px solid #CDD5DF;
   border-bottom: 1px solid #2D3642;
@@ -50,7 +50,7 @@
   height: 19px;
   border: 1px solid #3A4655;
   -webkit-transform: scale(0.7, 1) rotate(45deg);
-  background-color: #75787b
+  background-color: #2DCCD3
   
 }
 .dj_chrome .mblArrowButtonHead {
@@ -73,14 +73,14 @@
   line-height: 29px;
   -webkit-border-top-right-radius: 5px;
   -webkit-border-bottom-right-radius: 5px;
-  background-color: #75787b;
+  background-color: #2DCCD3;
   
 }
 .mblArrowButtonSelected .mblArrowButtonHead {
-  background-color: #595B5C;
+  background-color: #419A9E;
   
 }
 .mblArrowButtonSelected .mblArrowButtonBody {
-  background-color: #595B5C;
+  background-color: #419A9E;
   
 }

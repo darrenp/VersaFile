@@ -11799,7 +11799,9 @@ require(["dojo/_base/declare",
 
                 if(this.reference.binary_content_type.indexOf('image')>=0){
                     this.cpContent=new dojox.mobile.ContentPane({
-                        content: dojo.replace('<div style="text-align: center;vertical-align: middle;width: 100%; height: 100%;"><img src="{0}"/></div>', [this.reference.getViewUrl(this.zone, this.library)])
+                        content: dojo.replace('<div style="text-align: center;vertical-align: middle;width: 100%; height: 100%;">' +
+                                                '<img src="{0}" style="max-width: 100%; max-height: 100%;"/>' +
+                                              '</div>', [this.reference.getViewUrl(this.zone, this.library)])
                     });
                 }else if(this.reference.binary_content_type.indexOf('text')>=0){
 
@@ -11953,7 +11955,7 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
     function(declare){
         return declare("versa.widget.search.mobile.TextBox", [dijit._WidgetBase, dijit._TemplatedMixin], {
             header: null,
-        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div style=\"width: inherit;padding: 10px; text-align: center;\">\n    <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 300px;margin-left: auto; margin-right: auto; height: 35px;\" class=\"searchTextBox\">\n        <tr>\n            <td style=\"\">\n                <div dojoAttachPoint=\"formNode\">\n                    <input dojoAttachPoint=\"textboxNode,focusNode\"/>\n                </div>\n            </td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"resetButtonNode\"></button></td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n        </tr>\n    </table>\n</div>\n\n</div>"),
+        	templateString: dojo.cache("versa.widget.search.mobile", "template/TextBox.html", "<div>\n\n<div style=\"width: inherit;padding: 10px; text-align: center;\">\n    <table cellpadding=\"0\" cellspacing=\"0\" style=\"width: 300px;margin-left: auto; margin-right: auto; height: 35px;\" class=\"searchTextBox\">\n        <tr>\n            <td style=\"\">\n                <div dojoAttachPoint=\"formNode\">\n                    <input dojoAttachPoint=\"textboxNode,focusNode\"/>\n                </div>\n            </td>\n            <td style=\"width:1px\"><button dojoAttachPoint=\"submitButtonNode\"></button></td>\n        </tr>\n    </table>\n</div>\n\n</div>"),
 
             operators: null,
             library: null,
@@ -11984,15 +11986,6 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
                     onClick: dojo.hitch(this, this._onClick)
                 }, this.submitButtonNode);
 
-                this.btnReset=new dojox.mobile.Button({
-                    baseClass: 'imageButton commandIcon32 bfreeIconError32',
-                    label: '',
-                    showLabel: false,
-                    type: 'reset',
-                    onClick: dojo.hitch(this, this.reset)
-                }, this.resetButtonNode);
-                this.resetButtonNode.type='reset';
-
                 this.txtSearch = new versa.widget.mobile.TextBox({
                     intermediateChanges: true,
                     placeHolder: 'Search documents...',
@@ -12009,7 +12002,6 @@ define("versa/widget/search/mobile/TextBox", ["dojo/_base/declare",
             },
 
             _onSubmit: function(e){
-                e.preventDefault();
                 this.submit();
             },
 
@@ -14616,6 +14608,7 @@ require(["dojo/_base/declare",
         declare("versa.widget.search.mobile.SearchView", [dijit._WidgetBase, dojox.mobile.ScrollableView], {
             header: null,
             cpContent: null,
+            footer: null,
 
             constructor: function(args){
             },
@@ -14651,12 +14644,16 @@ require(["dojo/_base/declare",
 
                 this.searchField=dijit.byId('searchField');
                 this.searchField.txtSearch.onFocus = dojo.hitch(this, function(){
+                    if(this.searchField.txtSearch.focused){
+                        this.footer.domNode.style.visibility='hidden';
+                    }
                     this.findAppBars();
                     this.resize();
                 });
                 this.searchField.txtSearch.onBlur = dojo.hitch(this, function(){
                     this.findAppBars();
                     this.resize();
+                    this.footer.domNode.style.visibility='visible';
                 });
                 this.searchField.set('submit', dojo.hitch(this, function(){
                     this.onCommand(versa.widget.zone.mobile.Show.COMMANDS.PERFORM_SEARCH, {search: this.searchField.txtSearch.get('value')});
