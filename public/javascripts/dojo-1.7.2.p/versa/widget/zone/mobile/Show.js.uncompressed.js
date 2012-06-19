@@ -184,8 +184,14 @@ define("versa/widget/zone/mobile/Show", ["dojo/_base/declare",
                     }
                     this.documentViews[reference.document_id].performTransition("document-content-"+reference.document_id, 1, "slide");
                 }else{
-                    var file=reference.getCopyUrl(this.zone, this.activeLibrary);
-                    this.downloadUrl(file);
+
+                    if(dojo.isIos&&reference.binary_content_type.indexOf('pdf')>=0){
+                        var file=reference.getViewUrl(this.zone, this.activeLibrary);
+                        this.downloadUrl(file);
+                    }else{
+                        var file=reference.getCopyUrl(this.zone, this.activeLibrary);
+                        this.downloadUrl(file);
+                    }
                 }
 
 
