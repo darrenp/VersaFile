@@ -105,6 +105,7 @@ class Library < ActiveRecord::Base
         :updated_by => self.updated_by,
         :acl => self.acl.package()
     }
+
     _json = ActiveSupport::JSON.encode(exportable)
 
     json_file = File.join(root_folder, "_library.json")
@@ -145,7 +146,10 @@ class Library < ActiveRecord::Base
     count = 0
     root_folders = self.folders.root_folders
     root_folders.each do |folder|
-      next if folder.is_trash || folder.is_search
+      next if folder.folder_type==VersaFile::FolderTypes.Trash ||
+              folder.folder_type==VersaFile::FolderTypes.Search ||
+              folder.folder_type==VersaFile::FolderTypes.ShareRoot ||
+              folder.folder_type==VersaFile::FolderTypes.Share
       results[:folders] += 1
       folder_results = folder.package(folder_dir)
       results[:folders] += folder_results[:folders]
@@ -153,13 +157,13 @@ class Library < ActiveRecord::Base
       results[:versions] += folder_results[:versions]
     end
 
-    documents_dir = File.join(root_folder, 'documents')
-    FileUtils.mkdir_p documents_dir
-    root_documents = self.documents.in_folder(nil)
-    root_documents.each do |document|
-      results[:documents] += 1
-      results[:versions] += document.package(documents_dir)
-    end
+    #documents_dir = File.join(root_folder, 'documents')
+    #FileUtils.mkdir_p documents_dir
+    #root_references = self.references.in_folder(self.folders.root_folders.first)
+    #root_references.each do |reference|
+    #  results[:documents] += 1
+    #  results[:versions] += reference.package(documents_dir)
+    #end
 
     return results
   end
@@ -229,14 +233,14 @@ class Library < ActiveRecord::Base
       end
     end
 
-    documents_dir = File.join(root_dir, 'documents')
-    if Dir.exists?(documents_dir)
-      Dir.foreach(documents_dir) do |entry|
-        next if ['.', '..', '.svn', '.git'].include?(entry)
-        results[:versions] += Document.unpackage(library, nil, File.join(documents_dir, entry))
-        results[:documents] += 1
-      end
-    end
+    #documents_dir = File.join(root_dir, 'documents')
+    #if Dir.exists?(documents_dir)
+    #  Dir.foreach(documents_dir) do |entry|
+    #    next if ['.', '..', '.svn', '.git'].include?(entry)
+    #    results[:versions] += Document.unpackage(library, nil, File.join(documents_dir, entry))
+    #    results[:documents] += 1
+    #  end
+    #end
 
     return results
 
@@ -272,7 +276,7 @@ private
   def self.merge(library, data)
     begin
 
-      library.description = data['description'] unless data['description'].nil?
+      #library.description = data['description'] unless data['description'].nil?
       library.created_by = data['created_by'] unless data['created_by'].nil?
       library.created_at = data['created_at'] unless data['created_at'].nil?
       library.updated_by = data['updated_by'] unless data['updated_by'].nil?

@@ -150,6 +150,7 @@ class ViewDefinition < ActiveRecord::Base
   def package(root_folder)
 
     exportable = {
+        :id => self.id,
         :name => self.name,
         :scope => self.scope,
         :sort_by => self.sort_by,

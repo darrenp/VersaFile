@@ -20,4 +20,8 @@ class ViewMapping < ActiveRecord::Base
     return "/zones/#{self.library.zone.subdomain}/libraries/#{self.library.id}/view_mappings/#{self.id}"
   end
 
+  def package
+
+  end
+
 end
