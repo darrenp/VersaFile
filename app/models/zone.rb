@@ -250,8 +250,17 @@ private
 
     #create default groups
     self.groups.create([
-      { :name => 'Administrators', :description => 'TODO: create default description', :is_admin => true, :created_by => self.created_by, :updated_by => self.updated_by },
-      { :name => 'Everyone', :description => 'TODO: create default description', :is_everyone => true, :created_by => self.created_by, :updated_by => self.updated_by }
+      { :name => 'Administrators',
+        :description => 'Users in this group have administrative authority such that they can access all administrative functions and all site content.',
+        :is_admin => true,
+        :created_by => self.created_by,
+        :updated_by => self.updated_by },
+
+      { :name => 'Everyone',
+        :description => 'Default group that all regular users belong to.',
+        :is_everyone => true,
+        :created_by => self.created_by,
+        :updated_by => self.updated_by }
     ])
 
     #create default users
