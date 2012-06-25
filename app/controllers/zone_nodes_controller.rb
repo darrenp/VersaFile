@@ -42,6 +42,7 @@ class ZoneNodesController < ApplicationController
       logger.debug("Accessing zone => '#{@zone_node.name}'")
       respond_to do |format|
         format.html { render :layout => false } # master.html.erb
+        format.mobile { redirect_to "#{@zone_node.zone_url}"}
       end
 
     end

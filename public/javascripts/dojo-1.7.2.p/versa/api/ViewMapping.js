@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/ViewMapping",["dojo/_base/declare","versa/api/_Object","versa/api/Error"],function(_1){var o=_1("versa.api.ViewMapping",[versa.api._Object],{constructor:function(_2){if(_2){dojo.safeMixin(this,_2);}}});o.compare=function(_3,_4){return _3.sort_order-_4.sort_order;};o.schema={type:"object",properties:{"library_id":{type:"integer"},"folder_id":{type:"integer"},"user_id":{type:"integer"},"view_id":{type:"integer"}}};return o;});

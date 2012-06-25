@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title>VersaFile - <%=@zone.name%></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojox/mobile/themes/versaphone/versaphone.css"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+<% if ENV['RAILS_ENV'] != 'development' %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: false
+	};
+</script>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojo/dojo.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojo/versa_mobile.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+        isDebug: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojo/dojo.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/versa/_proto.js"></script>
+
+<% end %>
+
+<script type="text/javascript">
+
+function _setOK(msg){
+
+    var msgNode = dojo.byId('statusMsgNode');
+    var imgNode = dojo.byId('statusImgNode');
+
+    msgNode.innerHTML = msg;
+    dojo.addClass(msgNode, 'dijitOkLabel');
+    dojo.addClass(imgNode, 'statusIcon bfreeIconOk');
+    dojo.removeClass(imgNode, 'statusIcon bfreeIconError');
+    dojo.removeClass(msgNode, 'dijitErrorLabel');
+
+    dojo.fadeIn({node: dojo.byId('statusNode'), duration: 1000}).play();
+
+}
+
+function _onError(e){
+
+    var msgNode = dojo.byId('statusMsgNode');
+    var imgNode = dojo.byId('statusImgNode');
+
+    msgNode.innerHTML = dojo.replace('ERROR: <b>{message}</b>', e);
+    if(e.status == 402){
+        msgNode.innerHTML += ' ' + versa.VersaFile.messages.ACTIVATE_LINK;
+    }
+
+    dojo.removeClass(msgNode, 'dijitOkLabel');
+    dojo.removeClass(imgNode, 'statusIcon bfreeIconOk');
+    dojo.addClass(imgNode, 'statusIcon bfreeIconError');
+    dojo.addClass(msgNode, 'dijitErrorLabel');
+
+    dojo.fadeIn({node: dojo.byId('statusNode'), duration: 1000}).play();
+}
+
+function _onLogon(user){
+
+    var msg = dojo.replace('Success: <b>Logged in as username \'{name}\'.</b>', user);
+    _setOK(msg);
+
+    dojox.mobile.ProgressIndicator.getInstance().start();
+    dijit.byId('logonView').performTransition("loadingView", 1, "fade");
+
+    var cmd = 'window.location.reload(true)';
+    setTimeout(cmd, 1000);
+}
+
+function _onReset(username){
+    var msg = dojo.replace('Your password has been successfully reset, check your email.');
+    _setOK(msg);
+}
+
+require(["dojo/domReady!",
+         'versa/_proto'], function(){
+    require(["dojox/mobile/parser",
+             "dojox/mobile",
+             "dojox/mobile/compat"], function(parser) {
+            parser.parse();
+    });
+
+    require(['versa/api/XhrHelper',
+             'versa/api/Zones',
+             'versa/widget/zone/mobile/Logon',
+             'versa/VersaFile'], function(){
+
+        var _sniffer = null;
+        var _logon=null;
+        var zones=null;
+        var zone=null;
+        versa.api.XhrHelper.authenticity_token = '<%= form_authenticity_token %>';
+
+        zones = new versa.api.Zones();
+        zone = zones.fetchById({
+            id: '<%= @zone.subdomain %>'
+        });
+
+        _logon = new versa.widget.zone.mobile.Logon({
+            zone: zone,
+            onError: _onError,
+            onLogon: _onLogon,
+            onReset: _onReset,
+            onResetError: _onError
+        });
+        _logon.startup();
+    })
+});
+
+</script>
+
+</head>
+
+<body style="background-color: white;">
+
+</body>
+</html>

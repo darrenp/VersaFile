@@ -194,8 +194,19 @@ class Folder < ActiveRecord::Base
         :created_by => self.created_by,
         :updated_at => self.updated_at,
         :updated_by => self.updated_by,
-        :acl => self.acl.package()
+        :acl => self.acl.package(),
+        :id => self.id,
+        :folder_type=>self.folder_type,
+        :view_mappings=>[]
     }
+
+    self.view_mappings.each do |mapping|
+      exportable[:view_mappings]<<{
+          :view=>mapping.view_definition.name,
+          :user=>mapping.user.name
+      }
+    end
+
     _json = ActiveSupport::JSON.encode(exportable)
 
     json_file = File.join(folder_dir, "_folder.json")
@@ -203,10 +214,10 @@ class Folder < ActiveRecord::Base
 
     documents_dir = File.join(folder_dir, 'documents')
     FileUtils.mkdir_p documents_dir
-    documents = self.library.documents.in_folder(self)
-    documents.each do |document|
+    references = self.library.references.in_folder(self)
+    references.each do |reference|
       results[:documents] += 1
-      results[:versions] += document.package(documents_dir)
+      results[:versions] += reference.package(documents_dir)
     end
 
     folder_dir = File.join(folder_dir, 'folders')
@@ -232,15 +243,17 @@ class Folder < ActiveRecord::Base
 
     import_json = ActiveSupport::JSON.decode(IO.read(File.join(root_dir, '_folder.json')))
 
+    #only one root folder
     folder = (parent.nil?) ?
-                library.folders.root_folders.find_by_name(import_json['name']) :
+                library.folders.root_folders.first :
                 parent.children.find_by_name(import_json['name'])
 
     if(folder.nil?)
       folder = library.zone.folders.new(
         :library => library,
         :name => import_json['name'],
-        :parent_id => (parent.nil?) ? 0 : parent.id
+        :parent_id => (parent.nil?) ? library.folders.root_folders.first.id : parent.id,
+        :folder_type=>import_json['folder_type']
       )
     end
 
@@ -266,6 +279,25 @@ class Folder < ActiveRecord::Base
         results[:versions] += Document.unpackage(library, folder, File.join(documents_dir, entry))
       end
     end
+
+    mappings=import_json['view_mappings']
+    if(mappings&&mappings.length>0)
+      mappings.each do |mapping|
+        user=library.zone.users.find_by_name(mapping['user'])
+        view=library.view_definitions.find_by_name(mapping['view'])
+
+        viewMap=library.view_mappings.new(
+            :folder=>folder,
+            :user=>user,
+            :view_definition=>view
+        )
+
+        unless viewMap.save
+
+        end
+      end
+    end
+
 
     return results
 

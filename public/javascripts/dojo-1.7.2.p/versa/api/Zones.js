@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/Zones",["dojo/_base/declare","versa/api/_Collection","versa/api/Zone"],function(_1){var o=_1("versa.api.Zones",[versa.api._Collection],{constructor:function(_2){this.target=versa.api.Zones.TRGT;this.schema=versa.api.Zone.schema;this.cache=true;this._initialize();}});o.TRGT="/zones";return o;});

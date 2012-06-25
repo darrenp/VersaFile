@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/Role",["dojo/_base/declare","versa/api/_Object"],function(_1){var o=_1("versa.api.Role",[versa.api._Object],{constructor:function(_2){dojo.safeMixin(this,((!_2)?{}:_2));}});o.schema={type:"object",properties:{"id":{type:"integer"},"name":{type:"string","default":""},"permissions":{type:"integer"},"created_at":{type:"date",format:"date-time"},"created_by":{type:"string"},"updated_at":{type:"date",format:"date-time"},"updated_by":{type:"string"}},prototype:new o()};return o;});

@@ -97,7 +97,6 @@ class ReferencesController < ApplicationController
     type = version.content_type && disposition == 'inline' ?
               version.content_type.open_as :
               version.binary_content_type
-
     send_file(
         version.path,
         :filename => version.binary_file_name,

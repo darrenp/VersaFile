@@ -1,1 +1,1 @@
-{"name":"Customer","description":"Describes full customer name","data_type_id":5,"cardinality":1,"max_length":255,"created_at":"2012-02-07T18:08:58Z","created_by":"admin","updated_at":"2012-02-07T18:08:58Z","updated_by":"admin"}
+{"name":"Customer","description":"Describes the full customer name.","data_type_id":5,"cardinality":1,"max_length":255,"created_at":"2012-05-24T18:23:58Z","created_by":"admin","updated_at":"2012-05-24T18:26:51Z","updated_by":"admin"}

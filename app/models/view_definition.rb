@@ -150,6 +150,7 @@ class ViewDefinition < ActiveRecord::Base
   def package(root_folder)
 
     exportable = {
+        :id => self.id,
         :name => self.name,
         :scope => self.scope,
         :sort_by => self.sort_by,
@@ -158,6 +159,7 @@ class ViewDefinition < ActiveRecord::Base
         :created_by => self.created_by,
         :updated_at => self.updated_at,
         :updated_by => self.updated_by,
+        :is_template => self.is_template,
         :cell_definitions => []
     }
 
@@ -211,6 +213,7 @@ private
       view_definition.created_at = data['created_at'] unless data['created_at'].nil?
       view_definition.updated_by = data['updated_by'] unless data['updated_by'].nil?
       view_definition.updated_at = data['updated_at'] unless data['updated_at'].nil?
+      view_definition.is_template = data['is_template'] unless data['is_template'].nil?
 
       view_definition.cell_definitions.destroy_all
       unless data['cell_definitions'].nil?

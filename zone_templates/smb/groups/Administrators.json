@@ -1,0 +1,1 @@
+{"id":3,"name":"Administrators","is_admin":true,"is_everyone":false,"description":"Users in this group have administrative authority such that they can access all administrative functions and all site content.","created_at":"2012-02-27T20:05:42Z","created_by":"admin","updated_at":"2012-06-07T21:38:53Z","updated_by":"admin","users":["admin"]}

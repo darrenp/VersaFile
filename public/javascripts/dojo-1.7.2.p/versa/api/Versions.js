@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/Versions",["dojo/_base/declare","versa/api/_Collection","versa/api/Version"],function(_1){var o=_1("versa.api.Versions",[versa.api._Collection],{zone:null,library:null,document:null,constructor:function(_2){this.zone=_2.zone;this.library=_2.library;this.document=_2.document;this.target=dojo.replace(versa.api.Versions.TRGT,[this.zone.subdomain,this.library.id,this.document.getId()]);this.schema=versa.api.Version.schema;this.cache=true;this._initialize();}});o.TRGT="/zones/{0}/libraries/{1}/documents/{2}/versions";return o;});

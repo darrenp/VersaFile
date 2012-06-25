@@ -346,11 +346,17 @@ class Document < ActiveRecord::Base
     document = library.zone.documents.new(
       :library => library,
       :document_type => document_type,
-      :folder_id => (folder.nil?) ? 0 : folder.id,
       :name => import_json['name']
     )
 
-    merge(document, import_json)
+    reference = library.references.new(
+        :reference_type => 0,
+        :library => library,
+        :folder_id => (folder.nil?) ? library.folders.root_folders.first.id : folder.id,
+        :document => document
+    )
+    reference.create_acl() if reference.acl.nil?
+    Acl.unpackage(reference.acl, import_json['acl']) unless import_json['acl'].nil?
 
     count = 0
     versions_dir = File.join(root_dir, 'versions')
@@ -359,6 +365,12 @@ class Document < ActiveRecord::Base
       Version.unpackage(document, File.join(versions_dir, entry))
       count += 1
     end
+
+    merge(document, import_json)
+    unless reference.save
+
+    end
+
 
     return count
   end
@@ -438,9 +450,6 @@ private
       unless document.save
 
       end
-
-      document.create_acl() if document.acl.nil?
-      Acl.unpackage(document.acl, data['acl']) unless data['acl'].nil?
 
     ensure
       Document.record_timestamps = true

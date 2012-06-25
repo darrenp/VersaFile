@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/_Configurable",["dojo/_base/declare"],function(_1){return _1("versa.api._Configurable",[],{configuration:{configuration_settings:[]},constructor:function(_2){},getValue:function(_3){var _4=null;dojo.some(this.configuration.configuration_settings,function(_5,_6){if(_5.name.toLowerCase()==_3.toLowerCase()){_4=_5.value;return true;}return false;},this);return _4;}});});

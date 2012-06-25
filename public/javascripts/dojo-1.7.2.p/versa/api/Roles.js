@@ -1,0 +1,2 @@
+//>>built
+define("versa/api/Roles",["dojo/_base/declare","versa/api/_Collection","versa/api/Role"],function(_1){var o=_1("versa.api.Roles",[versa.api._Collection],{zone:null,constructor:function(_2){this.zone=_2.zone;this.target=dojo.replace(versa.api.Roles.TRGT,this.zone);this.schema=versa.api.Role.schema;this.cache=true;this._initialize();}});o.TRGT="/zones/{subdomain}/roles";return o;});

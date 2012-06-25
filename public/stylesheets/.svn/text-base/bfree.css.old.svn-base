@@ -1,0 +1,87 @@
+
+/*
+@import url("forms/Button.css");
+@import url("forms/Common.css");
+@import url("forms/Label.css");
+@import url("forms/Table.css");
+@import url("icons/icons.css");
+@import url("icons/icons2.css");
+@import url("bfree_dialog.css");
+@import url("bfree_grid.css");
+
+/* workaround for form submit problem in ie */
+.dijitOffScreen { visibility: visible !important; }
+
+html, body {
+	height: 100%;
+	margin: 0;
+	overflow:hidden;
+	width: 100%;
+}
+
+.bfree {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	font-size: 11px;
+    background: white;
+}
+
+/* Color Definitions */
+.bfreeDark{
+	color: #336699;
+}
+
+.bfreeDarkDisabled{
+	color: #81A7CC;
+}
+
+.bfreeLight{
+	color: #78CCFF;
+}
+
+.bfreeBackgroundLight{
+    color: #CDECFE;
+}
+
+/* Main Page Header */
+div#bfreeHeader,
+div.bfreeToolbar{
+    background-color: #CDECFE;
+    border-bottom: 2px solid #336699;
+    height:66px;
+    left: 0;
+    position: absolute;
+    top:0;
+    width:100%;
+    z-index: 512;
+}
+
+
+.bgFormLight {
+    background-color: #EEEEEE !important;
+}
+
+/* Borders */
+.borderThin {
+    border: 1px solid #C0C0C0;
+}
+
+.bfreeBorderDark {
+    border:  solid 1px #336699;
+}
+
+.claro .dijitTreeMenuRow {
+  background-color: #7dbefa;
+  background-position: 0 -177px;
+  padding: 3px 0 1px;
+  margin-left: 0;
+  border: solid 1px #769dc0;
+  color: #000000;
+}
+
+.mediumLabel{
+    font-size:11px;
+}
+.darkTitleLabel{
+	color: #035F94;
+	font-weight:bold;
+}

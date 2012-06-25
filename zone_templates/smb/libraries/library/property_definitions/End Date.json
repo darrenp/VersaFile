@@ -1,1 +1,1 @@
-{"name":"End Date","description":"Describes the period end date or expiration date or final date of report, etc\n","data_type_id":4,"cardinality":1,"max_length":null,"created_at":"2012-02-07T18:10:03Z","created_by":"admin","updated_at":"2012-02-07T18:10:03Z","updated_by":"admin"}
+{"name":"End Date","description":"Describes the period end date, expiration date or final date of report, etc.","data_type_id":4,"cardinality":1,"max_length":null,"created_at":"2012-05-24T18:24:50Z","created_by":"admin","updated_at":"2012-05-24T18:24:50Z","updated_by":"admin"}

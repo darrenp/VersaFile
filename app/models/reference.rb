@@ -224,10 +224,49 @@ class Reference < ActiveRecord::Base
 
   end
 
-private
+  def package(root_folder)
 
-  def on_before_create
-    create_acl if self.acl.nil?
+    document_dir = File.join(root_folder, self.document.name)
+    document_dir = Pathname.new(document_dir).cleanpath()
+    FileUtils.mkdir_p document_dir
+
+     exportable = {
+        :name => self.document.name,
+        :document_type => self.document.document_type.name,
+        :created_at => self.document.created_at,
+        :created_by => self.document.created_by,
+        :updated_at => self.document.updated_at,
+        :updated_by => self.document.updated_by,
+        :properties => [],
+        :acl => self.acl.package()
+    }
+
+    self.document.document_type.property_mappings.each do |property_mapping|
+      property_definition = property_mapping.property_definition
+      next if property_definition.is_system
+
+      if property_definition.table_name == 'documents'
+        exportable[:properties] << {
+            :name => property_definition.name,
+            :value => self[property_definition.column_name]
+        }
+      end
+    end
+
+
+    _json = ActiveSupport::JSON.encode(exportable)
+
+    json_file = File.join(document_dir, "_document.json")
+    File.open(json_file, 'w'){ |json_file| json_file.write _json }
+
+    count = 0
+    version_dir = File.join(document_dir, 'versions')
+    self.document.versions.each do |version|
+      count += 1
+      version.package(version_dir)
+    end
+
+    return count
   end
 
   #Creates the default ACL for the reference:
@@ -240,6 +279,12 @@ private
                   self.folder.acl.deep_clone
     self.acl.inherits = true
 
+  end
+
+private
+
+  def on_before_create
+    create_acl if self.acl.nil?
   end
 
 
