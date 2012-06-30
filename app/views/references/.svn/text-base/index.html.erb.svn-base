@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+        <title>VersaFile - <%= @library.name %></title>
+        <style type="text/css">
+            table { page-break-inside:auto }
+            tr    { page-break-inside:avoid; page-break-after:auto }
+            thead { display:table-header-group }
+            tfoot { display:table-footer-group }
+        </style>
+
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="/stylesheets/bfree_print.css" media="print,screen">
+    </head>
+    <body>
+        <div class="noprint">
+            <input type="image" src="/images/icons/16/print.png" alt="print" onclick="window.print();" title="Print" />
+            <a href="javascript:window.print();">Print</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <% @view.cell_definitions.each do |c| %>
+                    <th style="width:<%= c.width%>; text-align: left;">
+                        <%= raw(c.label) %>
+                    </th>
+                    <% end %>
+                </tr>
+            </thead>
+            <tbody>
+                <% @references.each do |reference| %>
+                <tr class="<%= cycle("even", "odd") %>">
+                    <% @view.cell_definitions.each do |c| %>
+                    <td style="width:<%= c.width%>">
+                        <%= raw(DocumentsHelper.formatted_column_value(reference, c, "html")) %>
+                    </td>
+                    <% end %>
+                </tr>
+                <% end %>
+            </tbody>
+        </table>
+    </body>
+</html>

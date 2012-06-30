@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/accounts
+END
+new.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/accounts/new.html.erb
+END
+show.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/accounts/show.html.erb
+END
+edit.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/accounts/edit.html.erb
+END
+_form.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/accounts/_form.html.erb
+END
+index.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/accounts/index.html.erb
+END

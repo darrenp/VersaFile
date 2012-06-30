@@ -1,0 +1,27 @@
+<h1>Listing view_mappings</h1>
+
+<table>
+  <tr>
+    <th>Folder</th>
+    <th>User</th>
+    <th>View</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @view_mappings.each do |view_mapping| %>
+  <tr>
+    <td><%= view_mapping.folder_id %></td>
+    <td><%= view_mapping.user_id %></td>
+    <td><%= view_mapping.view_id %></td>
+    <td><%= link_to 'Show', view_mapping %></td>
+    <td><%= link_to 'Edit', edit_view_mapping_path(view_mapping) %></td>
+    <td><%= link_to 'Destroy', view_mapping, confirm: 'Are you sure?', method: :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New View mapping', new_view_mapping_path %>

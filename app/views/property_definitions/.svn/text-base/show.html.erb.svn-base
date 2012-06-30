@@ -1,0 +1,5 @@
+<p id="notice"><%= notice %></p>
+
+
+<%= link_to 'Edit', edit_property_definition_path(@property_definition) %> |
+<%= link_to 'Back', property_definitions_path %>

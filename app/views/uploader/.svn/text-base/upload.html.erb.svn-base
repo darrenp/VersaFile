@@ -1,0 +1,7 @@
+<html>
+  <body>
+    <textarea>
+        <%= "{ file: '#{@file_info[:file]}', name: '#{@file_info[:name]}', size: #{@file_info[:size]}, type: '#{@file_info[:content_type]}', error: '#{@file_info[:error]}' }" %>
+    </textarea>
+  </body>
+</html>

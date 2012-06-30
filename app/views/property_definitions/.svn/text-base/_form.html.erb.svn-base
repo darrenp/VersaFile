@@ -1,0 +1,17 @@
+<%= form_for(@property_definition) do |f| %>
+  <% if @property_definition.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@property_definition.errors.count, "error") %> prohibited this property_definition from being saved:</h2>
+
+      <ul>
+      <% @property_definition.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

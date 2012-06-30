@@ -1,0 +1,112 @@
+10
+
+dir
+2198
+https://rkoiccbug.hq.rkosolutions.com:8443/svn/rko/VersaFile/trunk/app/views
+https://rkoiccbug.hq.rkosolutions.com:8443/svn/rko
+
+
+
+2012-06-13T22:37:36.217495Z
+2196
+AaronS
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+82dbde57-6f59-2547-b4c5-53f269b84463
+
+accounts
+dir
+
+acl_entries
+dir
+
+acls
+dir
+
+admin
+dir
+
+avatars
+dir
+
+bfree_docs
+dir
+
+data_types
+dir
+
+document_types
+dir
+
+documents
+dir
+
+folders
+dir
+
+groups
+dir
+
+icons
+dir
+
+layouts
+dir
+
+libraries
+dir
+
+operators
+dir
+
+packager
+dir
+
+property_definitions
+dir
+
+property_mappings
+dir
+
+references
+dir
+
+roles
+dir
+
+servers
+dir
+
+shares
+dir
+
+uploader
+dir
+
+users
+dir
+
+versions
+dir
+
+view_mappings
+dir
+
+zone_nodes
+dir
+
+zones
+dir
+

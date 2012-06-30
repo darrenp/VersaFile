@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/roles
+END
+new.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/roles/new.html.erb
+END
+show.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/roles/show.html.erb
+END
+edit.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/roles/edit.html.erb
+END
+_form.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/roles/_form.html.erb
+END
+index.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/roles/index.html.erb
+END

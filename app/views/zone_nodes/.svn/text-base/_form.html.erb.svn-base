@@ -1,0 +1,25 @@
+
+<%= form_for([@account, @zone_node]) do |f| %>
+
+  <% if @zone_node.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@zone_node.errors.count, "error") %> prohibited this zone_node from being saved:</h2>
+
+      <ul>
+      <% @zone_node.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+    <div class="field">
+        <%= f.label :name %>: <%= f.text_field :name %><br>
+        <%= f.label :subdomain %>: <%= f.text_field :subdomain %><br>
+        <%= f.label :server %>: <%= f.collection_select :server_id, Server.all, :id, :name %><br>
+    </div>
+
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

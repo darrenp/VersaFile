@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references
+END
+new.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/new.html.erb
+END
+show.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/show.html.erb
+END
+edit.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/edit.html.erb
+END
+error.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/error.html.erb
+END
+_form.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/_form.html.erb
+END
+index.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/index.html.erb
+END
+index.pdf.prawn
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/references/index.pdf.prawn
+END
