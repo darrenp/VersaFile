@@ -61529,7 +61529,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 		//		onmousedown event
 		// tags:
 		//		private
-        if((!(e.target.type&&e.target.type=='text')&&e.button==0)){
+        if((!(e.target.type&&e.target.type=='text')&&(e.button==0||(dojo.isIE<9&&e.button==1)))){
             this.mouseDown = true;
             this.mouseButton = e.button;
             this._lastX = e.pageX;

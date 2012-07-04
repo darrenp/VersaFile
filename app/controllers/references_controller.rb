@@ -20,6 +20,9 @@ class ReferencesController < ApplicationController
     end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
+
+    @reference.document.delay.extract_content()
+
     respond_to do |format|
       format.html # show.html.erb
       format.json { render json: @reference.to_json(:only => columns) }
@@ -51,6 +54,9 @@ class ReferencesController < ApplicationController
     end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
+
+    @reference.document.delay.extract_content()
+
     respond_to do |format|
       format.html # show.html.erb
       format.json { render json: @reference.to_json(:only => columns) }
