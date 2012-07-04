@@ -131,7 +131,7 @@ class Document < ActiveRecord::Base
   def cancel_checkout(user)
 
      raise "Document is not checked out" unless self.state == Bfree::DocumentStates.CheckedOut
-     raise "User '#{self.checked_out_by}' has the document checked out" unless self.checked_out_by == user.name
+     raise "User '#{self.checked_out_by}' has the document checked out" unless self.checked_out_by == user.name||user.is_admin||user.group.is_admin
 
      self.update_attributes(
         :state => Bfree::DocumentStates.CheckedIn,

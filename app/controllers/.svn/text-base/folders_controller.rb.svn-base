@@ -207,7 +207,7 @@ class FoldersController < ApplicationController
 
         #update share properties
         if(@folder.folder_type == VersaFile::FolderTypes.Share)
-          @folder.share.password = params[:password] unless params[:password].nil?
+          @folder.share.password = params[:password] unless params[:password].nil?||params[:password]==""
           @folder.share.expiry = params[:expiry]
         end
 

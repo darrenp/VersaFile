@@ -8277,13 +8277,15 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
     getPermissionSet: function(folder, library, user){
         var prmSet = new versa.api.PermissionSet();
 
+        var isAdmin = user.is_admin||library.zone.getGroups().fetchById({id: user.active_group}).is_admin;
+
         prmSet.setValue(versa.api.PermissionIndices.VIEW, this.hasRights(bfree.api._Securable.permissions.VIEW));
         prmSet.setValue(versa.api.PermissionIndices.COPY, this.hasRights(bfree.api._Securable.permissions.VIEW));
         prmSet.setValue(versa.api.PermissionIndices.EDIT, this.hasRights(bfree.api._Securable.permissions.WRITE_METADATA));
         prmSet.setValue(versa.api.PermissionIndices.MOVE, prmSet.getValue(versa.api.PermissionIndices.EDIT));
         prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_IN)));
         prmSet.setValue(versa.api.PermissionIndices.CKI, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name)));
-        prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, prmSet.getValue(versa.api.PermissionIndices.CKI));
+        prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name||isAdmin)));
         prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
         prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL));
 
@@ -57790,6 +57792,11 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
         if((this.documents+evt.length)>this.maxDocuments){
             alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
             this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
             return;
         }
 
@@ -57802,6 +57809,11 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
         if(this.size+tempSize>this.maxSize){
             alert(dojo.replace('You can only upload {0} at once.', [bfree.api.Utilities.readablizeBytes({bytes: this.maxSize})]));
             this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
             return;
         }
 
@@ -59824,10 +59836,10 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
                 }
             }
 
-            if(this._uploading){
-                alert("You must wait until all files are uploaded before closing this dialog.");
-                return false;
-            }
+//            if(this._uploading){
+//                alert("You must wait until all files are uploaded before closing this dialog.");
+//                return false;
+//            }
 
             if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
 
@@ -65631,6 +65643,7 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
         //Retrieve referenced document
         this.library.getDocuments().refreshAsync({
             scope: this,
+            invalidate: true,
             identity: this.activeReference.document_id,
             onItem: this._onItemLoaded,
             onError: this._onItemError
@@ -65776,6 +65789,8 @@ bfree.widget.document.PropertyEditor.show = function(args){
         throw new Error('No documents selected');
 
     var reference = args.items[0];
+
+    console.log("STATE - "+reference.state);
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgEditDocument',
@@ -78164,7 +78179,6 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
             return item.isShare();
         }, this);
 
-
         var hideDivs = (isDeleted || isShareRef);
 
         hiddenItems.VIEW = false;
@@ -78216,7 +78230,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
 
         this._buttons.CKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKO) && isSingleItem));
         this._buttons.CKI.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKI) && isSingleItem));
-        this._buttons.XCKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO) && isSingleItem));
+        this._buttons.XCKO.set('disabled', !((activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO)) && isSingleItem));
 
         this._buttons.MOVE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.MOVE)));
         this._buttons.DELETE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));
