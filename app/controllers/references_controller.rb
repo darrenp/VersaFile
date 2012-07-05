@@ -46,6 +46,8 @@ class ReferencesController < ApplicationController
 
     Document.transaction do
       @reference.document.checkin(@active_user, params, @temp_file)
+      @reference.document.body=""
+      @reference.document.metadata=""
 
       unless @reference.document.save
         raise @reference.document.errors

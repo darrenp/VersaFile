@@ -3,7 +3,12 @@ class UpdateIndex < ActiveRecord::Migration
     @documents=Document.all
 
     @documents.each do |document|
-      document.delay.extract_content()
+      if(document!=nil)
+        document.body=""
+        document.metadata=""
+        document.save
+        document.delay.extract_content()
+      end
     end
   end
 
