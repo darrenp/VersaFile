@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/rko/!svn/ver/2180/VersaFile/trunk/app/views/zone_nodes
+END
+new.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/zone_nodes/new.html.erb
+END
+bfree.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1878/VersaFile/trunk/app/views/zone_nodes/bfree.html.erb
+END
+show.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/zone_nodes/show.html.erb
+END
+edit.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/zone_nodes/edit.html.erb
+END
+bfree.mobile.erb
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/rko/!svn/ver/2180/VersaFile/trunk/app/views/zone_nodes/bfree.mobile.erb
+END
+_form.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/zone_nodes/_form.html.erb
+END
+index.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/zone_nodes/index.html.erb
+END

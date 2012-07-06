@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/rko/!svn/ver/1890/VersaFile/trunk/app/views/uploader
+END
+preview.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1715/VersaFile/trunk/app/views/uploader/preview.html.erb
+END
+test.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/rko/!svn/ver/1664/VersaFile/trunk/app/views/uploader/test.html.erb
+END
+upload.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1890/VersaFile/trunk/app/views/uploader/upload.html.erb
+END

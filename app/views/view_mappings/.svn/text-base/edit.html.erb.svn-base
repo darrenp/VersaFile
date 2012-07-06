@@ -1,0 +1,6 @@
+<h1>Editing view_mapping</h1>
+
+<%= render 'form' %>
+
+<%= link_to 'Show', @view_mapping %> |
+<%= link_to 'Back', view_mappings_path %>

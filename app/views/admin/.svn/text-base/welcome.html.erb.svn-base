@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+<% if ENV['RAILS_ENV'] != 'development' %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: false,
+		parseOnLoad: true,
+		cacheBust: '<%= "%d.%02d.%02d.%04d" % [configatron.bfree.major_version, configatron.bfree.minor_version, configatron.bfree.revision_number, configatron.bfree.build_number] %>'
+	};
+
+</script>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/bfree.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: true,
+		parseOnLoad: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+
+<% end %>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/bfree/_proto.js"></script>
+<script type="text/javascript">
+
+dojo.require('dijit.layout.BorderContainer');
+dojo.require('dijit.layout.ContentPane');
+
+dojo.require('bfree.api.XhrHelper');
+dojo.require('bfree.api.RkoUsers');
+dojo.require('bfree.widget.admin.Logon');
+dojo.require('bfree.widget.BrowserSniffer');
+
+bfree.api.XhrHelper.authenticity_token = '<%= form_authenticity_token %>';
+
+function _onLogon(){
+    var cmd = 'window.location.reload(true)';
+    setTimeout(cmd, 1000);
+}
+
+dojo.addOnLoad(function(){
+
+	_logon=new bfree.widget.admin.Logon({
+        users: new bfree.api.RkoUsers(),
+        onLogon: _onLogon
+	}, 'logonNode');
+
+    new bfree.widget.BrowserSniffer({
+    }, 'snifferNode').sniff();
+
+});
+
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return true;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="top"
+            splitter="false"
+            style="position:relative;border-bottom: 4px solid #FDD000;height:33%">
+
+      <img src="/images/versafile-64-tm.png" height="64" style="position:absolute;left:0;bottom:0;"/>
+
+        <div style="display:block;margin-left:auto;margin-right:auto;width:304px; position: relative; top: 160px;">
+            <div id="logonNode"></div>
+        </div>
+    </div>
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="center"
+            splitter="false"
+            style="border-top: 4px solid #00BEC0;">
+
+        <span style="position:absolute;top:8 ;left:8;font-size:1.33em;font-weight:bolder;font-variant:small-caps;color:#6F706F">
+            Administration
+        </span>
+
+        <div style="display:block;margin-left:auto;margin-right:auto;width:304px">
+            <table id="statusNode" cellpadding="0" cellspacing="0" style="opacity:0;width:100%">
+              <tr>
+                <td style="vertical-align:top;">
+                  <img id="statusImgNode" src="/images/icons/16/blank.png" width="16" height="16" style="float:right;margin-right:8px"/>
+                </td>
+                <td><span id="statusMsgNode"></span></td>
+              </tr>
+            </table>
+        </div>
+
+        <div style="position:absolute;right:8px;bottom:8px;">
+            <div id="snifferNode"></div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

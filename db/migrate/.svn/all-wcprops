@@ -1,0 +1,293 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/rko/!svn/ver/2152/VersaFile/trunk/db/migrate
+END
+20111027232731_create_groups.rb
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027232731_create_groups.rb
+END
+20111027232324_create_users.rb
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027232324_create_users.rb
+END
+20111027162958_create_servers.rb
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027162958_create_servers.rb
+END
+20120424212951_add_default_type_to_property_mapping.rb
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/rko/!svn/ver/2005/VersaFile/trunk/db/migrate/20120424212951_add_default_type_to_property_mapping.rb
+END
+20120221232820_update_versions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/rko/!svn/ver/1715/VersaFile/trunk/db/migrate/20120221232820_update_versions.rb
+END
+20111027162634_create_accounts.rb
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027162634_create_accounts.rb
+END
+20120113014214_create_preview_elements.rb
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20120113014214_create_preview_elements.rb
+END
+20111028161034_create_acls.rb
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028161034_create_acls.rb
+END
+20120209044243_create_zone_templates.rb
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20120209044243_create_zone_templates.rb
+END
+20120328220448_update_sort_order.rb
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/rko/!svn/ver/1907/VersaFile/trunk/db/migrate/20120328220448_update_sort_order.rb
+END
+20111028181755_create_folders.rb
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028181755_create_folders.rb
+END
+20120403202432_create_references.rb
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/rko/!svn/ver/1994/VersaFile/trunk/db/migrate/20120403202432_create_references.rb
+END
+20120425213115_add_is_desc.rb
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/rko/!svn/ver/2034/VersaFile/trunk/db/migrate/20120425213115_add_is_desc.rb
+END
+20100419211116_create_choice_values.rb
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20100419211116_create_choice_values.rb
+END
+20100223225009_create_view_definitions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20100223225009_create_view_definitions.rb
+END
+20120403194902_create_shares.rb
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/rko/!svn/ver/1992/VersaFile/trunk/db/migrate/20120403194902_create_shares.rb
+END
+20111103232654_create_data_types.rb
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111103232654_create_data_types.rb
+END
+20111027220502_create_avatars.rb
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027220502_create_avatars.rb
+END
+20111118173915_create_delayed_jobs.rb
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111118173915_create_delayed_jobs.rb
+END
+20111028182016_create_versions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028182016_create_versions.rb
+END
+20120430171120_update_share_root_acls.rb
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/rko/!svn/ver/2035/VersaFile/trunk/db/migrate/20120430171120_update_share_root_acls.rb
+END
+20111028182344_create_icons.rb
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028182344_create_icons.rb
+END
+20120327161934_update_documents_columns.rb
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/rko/!svn/ver/1928/VersaFile/trunk/db/migrate/20120327161934_update_documents_columns.rb
+END
+20111104173417_create_property_definitions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111104173417_create_property_definitions.rb
+END
+20111028161545_create_libraries.rb
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028161545_create_libraries.rb
+END
+20111027232610_create_groups_users.rb
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027232610_create_groups_users.rb
+END
+20111122043137_create_operators.rb
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111122043137_create_operators.rb
+END
+20111027173150_create_zone_nodes.rb
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027173150_create_zone_nodes.rb
+END
+20111027233142_create_configurations.rb
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027233142_create_configurations.rb
+END
+20120704194629_update_index.rb
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/rko/!svn/ver/2238/VersaFile/trunk/db/migrate/20120704194629_update_index.rb
+END
+20120417220327_create_root_folders.rb
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/rko/!svn/ver/1996/VersaFile/trunk/db/migrate/20120417220327_create_root_folders.rb
+END
+20111028181907_create_documents.rb
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028181907_create_documents.rb
+END
+20111206212331_create_rko_users.rb
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111206212331_create_rko_users.rb
+END
+20111103233123_create_property_columns.rb
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111103233123_create_property_columns.rb
+END
+20111027233225_create_configuration_settings.rb
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027233225_create_configuration_settings.rb
+END
+20120329163952_update_folder_types.rb
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/rko/!svn/ver/1992/VersaFile/trunk/db/migrate/20120329163952_update_folder_types.rb
+END
+20120314184506_add_is_template_to_view_definitions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/rko/!svn/ver/2106/VersaFile/trunk/db/migrate/20120314184506_add_is_template_to_view_definitions.rb
+END
+20120524161632_update_optimize1.rb
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/rko/!svn/ver/2152/VersaFile/trunk/db/migrate/20120524161632_update_optimize1.rb
+END
+20111027232749_create_roles.rb
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027232749_create_roles.rb
+END
+20100419210504_create_choice_lists.rb
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20100419210504_create_choice_lists.rb
+END
+20111109000825_create_document_types.rb
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111109000825_create_document_types.rb
+END
+20120125175056_create_content_types.rb
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20120125175056_create_content_types.rb
+END
+20120423212639_update_view_definitions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/rko/!svn/ver/2000/VersaFile/trunk/db/migrate/20120423212639_update_view_definitions.rb
+END
+20111028161117_create_acl_entries.rb
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111028161117_create_acl_entries.rb
+END
+20100223221132_create_cell_definitions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20100223221132_create_cell_definitions.rb
+END
+20120312172718_create_view_mappings.rb
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/rko/!svn/ver/1992/VersaFile/trunk/db/migrate/20120312172718_create_view_mappings.rb
+END
+20111027213220_create_zones.rb
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111027213220_create_zones.rb
+END
+20111109001347_create_property_mappings.rb
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/rko/!svn/ver/1664/VersaFile/trunk/db/migrate/20111109001347_create_property_mappings.rb
+END

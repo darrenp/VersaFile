@@ -1,0 +1,93 @@
+<%
+
+if property_mapping.has_choicelist then
+%>
+	<script type="text/javascript">
+		dojo.require('bfree.widget.ChoiceList');
+	</script>
+
+	<input	dojoType="bfree.widget.ChoiceList"
+			id="<%= property_mapping.property_definition.column_name %>"
+			name="<%= property_mapping.property_definition.name %>"
+			libraryId="<%= @library.id %>"
+			choiceListId="<%= property_mapping.choice_list_id %>"			
+			required="<%= property_mapping.is_required.to_s %>">			
+	</input>
+	
+<%
+else
+
+case property_mapping.property_definition.data_type_id
+	when  Bfree::DataTypes.Void	
+%>
+
+<% when Bfree::DataTypes.Boolean %>
+		
+ 	<script type="text/javascript">dojo.require('dijit.form.CheckBox');</script>
+	<input	dojoType="dijit.form.CheckBox"
+			id="<%= property_mapping.property_definition.column_name %>"
+			name="<%= property_mapping.property_definition.name %>"></input>  
+			
+<% when Bfree::DataTypes.Integer %>
+
+	<script type="text/javascript">dojo.require('dijit.form.NumberSpinner');</script>
+	<input	dojoType="dijit.form.NumberSpinner" 
+			id="<%= property_mapping.property_definition.column_name %>"
+			name="<%= property_mapping.property_definition.name %>"
+			required="<%= property_mapping.is_required.to_s %>"
+			smallDelta="1"
+			largeDelta="10"
+			intermediateChanges="true"
+			constraints="{min: -2147483648, max: 2147483647}"
+			selectOnClick="true"
+			smallDelta="1">
+	</input>
+		
+<% when Bfree::DataTypes.Float %>
+			
+	<script type="text/javascript">dojo.require('dijit.form.NumberSpinner');</script>
+	<input	dojoType="dijit.form.NumberSpinner" 
+			id="<%= property_mapping.property_definition.column_name %>"
+			name="<%= property_mapping.property_definition.name %>"			
+			required="<%= property_mapping.is_required.to_s %>"
+			smallDelta="1"			
+			intermediateChanges="true"
+			selectOnClick="true"	
+			constraints="{places:2}"></input>
+			
+
+<% when Bfree::DataTypes.DateTime %>
+	
+	<script type="text/javascript">dojo.require('bfree.ui.widgets.DateTimeBox');</script>
+	<input	dojoType="bfree.widget.DateTimeBox"
+			id="<%= property_mapping.property_definition.column_name %>" 
+			name="<%= property_mapping.property_definition.name %>"
+			dateEntryFormat="<%= date_entry_format %>"/>
+				
+<% when Bfree::DataTypes.String %>
+	
+	<script type="text/javascript">dojo.require('dijit.form.ValidationTextBox');</script>
+	<input	dojoType="dijit.form.ValidationTextBox"
+			type="text"
+			id="<%= property_mapping.property_definition.column_name %>" 
+			name="<%= property_mapping.property_definition.name %>" 
+			required="<%= property_mapping.is_required.to_s %>" 
+			maxLength="<%= property_mapping.property_definition.max_length %>"
+			trim="true"
+			invalidMessage="Required property"
+			style="width:101%">			
+			
+<% when Bfree::DataTypes.Text %>
+
+	<script type="text/javascript">dojo.require('dijit.form.SimpleTextarea');</script>
+   	<textarea	dojoType="dijit.form.SimpleTextarea"
+				id="<%= property_mapping.property_definition.column_name %>"
+				name="<%= property_mapping.property_definition.name %>" 
+        		rows="2"
+				maxLength="<%= property_mapping.property_definition.max_length %>" 
+				trim="true"
+				style="resize:none;width:100%;">
+    </textarea>
+						
+<% end %>
+<% end %>

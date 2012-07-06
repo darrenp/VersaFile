@@ -20,6 +20,9 @@ class ReferencesController < ApplicationController
     end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
+
+    @reference.document.delay.extract_content()
+
     respond_to do |format|
       format.html # show.html.erb
       format.json { render json: @reference.to_json(:only => columns) }
@@ -43,6 +46,8 @@ class ReferencesController < ApplicationController
 
     Document.transaction do
       @reference.document.checkin(@active_user, params, @temp_file)
+      @reference.document.body=""
+      @reference.document.metadata=""
 
       unless @reference.document.save
         raise @reference.document.errors
@@ -51,6 +56,9 @@ class ReferencesController < ApplicationController
     end
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
+
+    @reference.document.delay.extract_content()
+
     respond_to do |format|
       format.html # show.html.erb
       format.json { render json: @reference.to_json(:only => columns) }
@@ -97,6 +105,7 @@ class ReferencesController < ApplicationController
     type = version.content_type && disposition == 'inline' ?
               version.content_type.open_as :
               version.binary_content_type
+
     send_file(
         version.path,
         :filename => version.binary_file_name,

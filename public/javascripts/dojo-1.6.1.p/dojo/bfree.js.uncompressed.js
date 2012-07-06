@@ -8277,13 +8277,15 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
     getPermissionSet: function(folder, library, user){
         var prmSet = new versa.api.PermissionSet();
 
+        var isAdmin = user.is_admin||library.zone.getGroups().fetchById({id: user.active_group}).is_admin;
+
         prmSet.setValue(versa.api.PermissionIndices.VIEW, this.hasRights(bfree.api._Securable.permissions.VIEW));
         prmSet.setValue(versa.api.PermissionIndices.COPY, this.hasRights(bfree.api._Securable.permissions.VIEW));
         prmSet.setValue(versa.api.PermissionIndices.EDIT, this.hasRights(bfree.api._Securable.permissions.WRITE_METADATA));
         prmSet.setValue(versa.api.PermissionIndices.MOVE, prmSet.getValue(versa.api.PermissionIndices.EDIT));
         prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_IN)));
         prmSet.setValue(versa.api.PermissionIndices.CKI, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name)));
-        prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, prmSet.getValue(versa.api.PermissionIndices.CKI));
+        prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name||isAdmin)));
         prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
         prmSet.setValue(versa.api.PermissionIndices.SECURE, this.hasRights(bfree.api._Securable.permissions.WRITE_ACL));
 
@@ -57686,17 +57688,22 @@ dojo.provide('bfree.widget.Uploader');
 
 
 
-if(bfree.api.Uploader.useFlash()){
+if(!dojo.isIE||bfree.api.Uploader.useFlash()){
     dojo['require']('dojox.form.uploader.plugins.Flash');
 }
 else{
-    dojo['require']('dojox.form.uploader.plugins.IFrame');
+    dojo['require']('bfree.widget.IFrame');
+    dojox.form.addUploaderPlugin(bfree.widget.IFrame);
 }
 
 dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
 {
     documents:0,
-    maxDocuments:50,
+    maxDocuments:100,
+
+    //max size is 300mb
+    size:0,
+    maxSize:314572800,
 
     devMode: false,
     isDebug: false,
@@ -57785,10 +57792,30 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
         if((this.documents+evt.length)>this.maxDocuments){
             alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
             this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
             return;
         }
 
         this.documents+=evt.length
+
+        var tempSize=0
+        dojo.forEach(evt, function(file){
+            tempSize+=file.size;
+        }, this);
+        if(this.size+tempSize>this.maxSize){
+            alert(dojo.replace('You can only upload {0} at once.', [bfree.api.Utilities.readablizeBytes({bytes: this.maxSize})]));
+            this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
+            return;
+        }
 
         this.onBeforeUpload(evt);
         if(this.uploadType == 'iframe'){
@@ -57820,6 +57847,16 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
         if(dojo.isOpera){
             this.force = 'iframe';
         }
+        if(dojo.isIE&&!bfree.api.Uploader.useFlash()){
+            this.onError=dojo.hitch(this, function(err){
+                console.log('ON ERROR: '+err.message);
+                this.reset();
+                this.onErrorUpload(err);
+            })
+        }
+    },
+
+    onErrorUpload: function(err){
     },
 
     onChange: function(evt){
@@ -58144,6 +58181,31 @@ dojo.declare('bfree.widget.file.MultiUploader', [dijit._Widget, dijit._Templated
 
     },
 
+    //note: this is only for iframe uploads
+    _onErrorUpload: function(error){
+
+//        console.log("ON ERROR UPLOAD - "+error.message);
+
+        this.onErrorIFrame();
+
+
+        dojo.fadeOut({
+            node: this._prgBar.domNode,
+            duration: 2000,
+            onEnd: dojo.hitch(this,function() {
+                this._prgBar.set('value', (this._uploader.uploadType == 'iframe') ? (Infinity) : 0);
+            })
+        }).play();
+
+        alert(dojo.replace('An unexpected error had occured with the IFrame uploader. This is most probabaly caused by attempting to upload a file larger than {0}', [bfree.api.Utilities.readablizeBytes({bytes: this._uploader.maxSize})]));
+    },
+
+
+
+    onErrorIFrame: function(){
+
+    },
+
     _onProgress: function(evt){
         this._prgBar.set('value', evt.decimal * 100);
     },
@@ -58206,9 +58268,9 @@ dojo.declare('bfree.widget.file.MultiUploader', [dijit._Widget, dijit._Templated
             uploadOnSelect: false,
             url: bfree.api.Uploader.getUploadUrl({ zone: this.zone, isPackage: this.isPackage }),
             style: 'width:108px',
-            maxDocuments: 50,
             onBeforeUpload: dojo.hitch(this, this._onBeforeUpload),
             onAfterUpload: dojo.hitch(this, this._onAfterUpload),
+            onErrorUpload: dojo.hitch(this, this._onErrorUpload),
             onProgress: dojo.hitch(this, this._onProgress)
         },  this.uploaderNode);
 
@@ -58736,6 +58798,19 @@ dojo.declare('bfree.widget.document.FileGrid', [bfree.widget._Grid], {
         if(this.selection.getSelectedCount() < 1)
             this.selectItem(item);
 
+    },
+
+    reset: function(){
+        this._store.revert();
+        this.selection.clear();
+        this._store = new bfree.api.ItemFileWriteStore({
+            data: {
+                identifier: 'id',
+                label: 'name',
+                items: []
+            }
+        });
+        this.setStore(this._store, {}, {cache: true});
     },
 
 	constructor: function(/* Object */args){
@@ -59655,6 +59730,15 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         this._setState(this._activeItem);
     },
 
+    _onErrorIFrame: function(err){
+        this._fileGrid.reset();
+        this.filesUploaded=false;
+        this._uploading=false;
+        this.statusMsgNode.innerHTML = '';
+        this.statusIcnNode.src='/images/icons/states/none.16.png';
+        this._activeItem=null;
+    },
+
     _onValidChange: function(documentItem){
 
         documentItem.validate({library: this.library});
@@ -59752,10 +59836,10 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
                 }
             }
 
-            if(this._uploading){
-                alert("You must wait until all files are uploaded before closing this dialog.");
-                return false;
-            }
+//            if(this._uploading){
+//                alert("You must wait until all files are uploaded before closing this dialog.");
+//                return false;
+//            }
 
             if(dlgResult == bfree.widget.Dialog.dialogResult.ok){
 
@@ -59793,6 +59877,7 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
             onFileSelect: dojo.hitch(this, this._onFileSelect),
             onFileUploaded: dojo.hitch(this, this._onFileUploaded),
             onError: dojo.hitch(this, this._onUploadError),
+            onErrorIFrame: dojo.hitch(this, this._onErrorIFrame),
             style: 'width:100%'
         }, this.uploaderNode);
 
@@ -61444,7 +61529,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
 		//		onmousedown event
 		// tags:
 		//		private
-        if(!(e.target.type&&e.target.type=='text')){
+        if((!(e.target.type&&e.target.type=='text')&&(e.button==0||(dojo.isIE<9&&e.button==1)))){
             this.mouseDown = true;
             this.mouseButton = e.button;
             this._lastX = e.pageX;
@@ -65558,6 +65643,7 @@ dojo.declare('bfree.widget.document.PropertyEditor', [dijit._Widget, dijit._Temp
         //Retrieve referenced document
         this.library.getDocuments().refreshAsync({
             scope: this,
+            invalidate: true,
             identity: this.activeReference.document_id,
             onItem: this._onItemLoaded,
             onError: this._onItemError
@@ -65703,6 +65789,8 @@ bfree.widget.document.PropertyEditor.show = function(args){
         throw new Error('No documents selected');
 
     var reference = args.items[0];
+
+    console.log("STATE - "+reference.state);
 
     var dlg = new bfree.widget.Dialog({
         id: 'dlgEditDocument',
@@ -69602,6 +69690,15 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
                             this.activeItem.property_mappings[i].default_value=newDate;
                             this._setStore();
                             this._grdPropertyMappings.refresh();
+
+                            this._propMapStore.fetchItemByIdentity({
+                                identity: id,
+                                onItem: dojo.hitch(this,
+                                    function(item){
+                                        this._propMapStore.setValue(item, 'default_value', newDate);
+                                        this._propMapStore.setValue(item, 'default_type', bfree.api.PropertyMapping.types.date.fixed);
+                                    })
+                            });
                         })
                     });
                 }else if(newValue==bfree.api.PropertyMapping.types.date.floating){
@@ -69609,16 +69706,35 @@ dojo.declare('bfree.widget.doctype.Editor', [dijit._Widget, dijit._Templated],{
                     //as of right now we only support today for the floating date type, but other default values
                     //will add the specified number of days to the current date
                     this.activeItem.property_mappings[i].default_value=0;
+
+                    this._propMapStore.fetchItemByIdentity({
+                        identity: id,
+                        onItem: dojo.hitch(this,
+                            function(item){
+                                this._propMapStore.setValue(item, 'default_value', 0);
+                                this._propMapStore.setValue(item, 'default_type', newValue);
+                            })
+                    });
                 }else if(newValue==-1){
                     //none was selected, set default type to fixed and default value to null;
                     this.activeItem.property_mappings[i].default_type=bfree.api.PropertyMapping.types.date.fixed;
                     this.activeItem.property_mappings[i].default_value=null;
+
+                    this._propMapStore.fetchItemByIdentity({
+                        identity: id,
+                        onItem: dojo.hitch(this,
+                            function(item){
+                                this._propMapStore.setValue(item, 'default_value', null);
+                                this._propMapStore.setValue(item, 'default_type', bfree.api.PropertyMapping.types.date.fixed);
+                            })
+                    });
                 }else{
                     //the existing date value was selected, this is to allow the user to click on the default date
                     //that is currently selected, since this is the current default value, do nothing;
                     return;
                 }
                 this.documentTypes.setValue(this.activeItem, 'property_mappings', this.activeItem.property_mappings);
+
                 return;
             }
         }
@@ -74797,18 +74913,19 @@ dojo.declare('bfree.widget.view.cell.Editor', [dijit._Widget, dijit._Templated, 
 
             if(!dojo.has(this.filter, dbName)){
 
-                var item = {
-                    id: dbName,
-                    name: propDef.name,
-                    table_name: propDef.table_name,
-                    column_name: propDef.column_name,
-                    data_type_id: propDef.data_type_id
+                if(propDef.data_type_id!=bfree.api.DataTypes.types.TEXT){
+                    var item = {
+                        id: dbName,
+                        name: propDef.name,
+                        table_name: propDef.table_name,
+                        column_name: propDef.column_name,
+                        data_type_id: propDef.data_type_id
+                    }
+                    if(!this._first)
+                        this._first = item;
+                    items.push(item);
                 }
-                if(!this._first)
-                    this._first = item;
-                items.push(item);
             }
-
         }, this);
 
         if(!dojo.has(this.filter, 'document_types.name')){
@@ -77710,20 +77827,23 @@ dojo.declare('bfree.widget.document.ViewMenu', bfree.widget.HeaderMenu,
         propDefs.sort(bfree.api.PropertyDefinition.compare);
 
         dojo.forEach(propDefs, function(propDef){
-            if(!propDef.name){
-                return;
+            if(propDef.data_type_id!=bfree.api.DataTypes.types.TEXT){
+                if(!propDef.name){
+                    return;
+                }
+
+                var icon = 'menuIcon menuViewIcon';
+
+                var mniProp = new dijit.MenuItem({
+                    propertyDefinition: propDef,
+                    iconClass: icon,
+                    label: propDef.name,
+                    onClick: dojo.hitch(this, this._onColumnToggle, propDef)
+                });
+
+                this.addChild(mniProp);
             }
 
-            var icon = 'menuIcon menuViewIcon';
-
-            var mniProp = new dijit.MenuItem({
-                propertyDefinition: propDef,
-                iconClass: icon,
-                label: propDef.name,
-                onClick: dojo.hitch(this, this._onColumnToggle, propDef)
-            });
-
-            this.addChild(mniProp);
         }, this);
     },
 
@@ -78059,7 +78179,6 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
             return item.isShare();
         }, this);
 
-
         var hideDivs = (isDeleted || isShareRef);
 
         hiddenItems.VIEW = false;
@@ -78111,7 +78230,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
 
         this._buttons.CKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKO) && isSingleItem));
         this._buttons.CKI.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKI) && isSingleItem));
-        this._buttons.XCKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO) && isSingleItem));
+        this._buttons.XCKO.set('disabled', !((activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO)) && isSingleItem));
 
         this._buttons.MOVE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.MOVE)));
         this._buttons.DELETE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));

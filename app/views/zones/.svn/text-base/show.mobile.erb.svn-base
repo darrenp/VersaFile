@@ -4,7 +4,7 @@
     <title>VersaFile - <%=@zone.name%></title>
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojox/mobile/themes/iphone/iphone.css"></link>
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojox/mobile/themes/versaphone/versaphone.css"></link>
     <link rel="stylesheet" type="text/css" href="/stylesheets/VersaFile_Mobile.css"></link>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
@@ -32,6 +32,7 @@ var djConfig = {
 
 </script>
 <script type="text/javascript" src="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/dojo/dojo.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.mobile.dojo.version %>/versa/_proto.js"></script>
 
 <% end %>
 

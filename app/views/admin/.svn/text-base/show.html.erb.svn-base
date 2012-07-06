@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version %>/dojox/grid/resources/Grid.css">
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version %>/dojox/grid/resources/claroGrid.css">
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dojox/widget/Toaster/Toaster.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheets/versafile.css" />
+
+<% if ENV['RAILS_ENV'] != 'development' %>
+
+<script type="text/javascript">
+
+var djConfig = {
+    isDebug: false,
+    parseOnLoad: true,
+    cacheBust: '<%= "%d.%02d.%02d.%04d" % [configatron.bfree.major_version, configatron.bfree.minor_version, configatron.bfree.revision_number, configatron.bfree.build_number] %>'
+};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script >
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/bfree.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: true,
+		parseOnLoad: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+
+<% end %>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/bfree/_proto.js"></script>
+
+<script type="text/javascript">
+dojo.require('dojox.widget.Standby');
+
+
+var zone = null;
+
+
+function _wdgMain_onLoad(){
+    dijit.byId('wdgLoad').hide();
+}
+function _wdgMain_onWorking(){
+    setTimeout('dijit.byId(\'wdgLoad\').show();', 100);
+}
+
+function loadMain(){
+    dojo.require('bfree.api.XhrHelper');
+    dojo.require('bfree.api.RkoUsers');
+    dojo.require('bfree.api.Servers');
+    dojo.require('bfree.api.Accounts');
+    dojo.require('bfree.api.ZoneNodes');
+    dojo.require('bfree.widget.admin.Show');
+
+    bfree.api.XhrHelper.authenticity_token = '<%= form_authenticity_token %>';
+
+    var users=new bfree.api.RkoUsers();
+
+    var user=users.fetchById({id: parseInt('<%=@super_user.id%>')});
+
+    var wdgShow = new bfree.widget.admin.Show({
+        user: user,
+        users: new bfree.api.RkoUsers(),
+        servers: new bfree.api.Servers(),
+        accounts: new bfree.api.Accounts(),
+        zones: new bfree.api.ZoneNodes(),
+        onLoad: _wdgMain_onLoad,
+        onWorking: _wdgMain_onWorking
+    }, 'mainNode');
+
+}
+
+function wdgLoad_onShow(){
+    setTimeout('loadMain()', 1000);
+}
+
+dojo.addOnLoad(function(){
+
+    new dojox.widget.Standby({
+        id: 'wdgLoad',
+        target: 'mainNode',
+        image: '/images/loading/loading64.gif',
+        color: 'white',
+        zIndex: 1024,
+        onShow: wdgLoad_onShow
+    }, 'loadingNode').show();
+
+});
+
+dojo.addOnUnload(function(){
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return false;">
+
+<div id="mainNode" style="width:100%;height:100%;"></div>
+<div id="loadingNode" style="width:100%;height:100%"></div>
+
+</body>
+</html>

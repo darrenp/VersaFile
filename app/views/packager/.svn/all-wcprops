@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/rko/!svn/ver/1715/VersaFile/trunk/app/views/packager
+END
+unpackage.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/rko/!svn/ver/1715/VersaFile/trunk/app/views/packager/unpackage.html.erb
+END
+package.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1701/VersaFile/trunk/app/views/packager/package.html.erb
+END
+unpack.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1701/VersaFile/trunk/app/views/packager/unpack.html.erb
+END

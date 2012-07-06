@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/shares
+END
+show.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/shares/show.html.erb
+END
+forward.html.erb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/1992/VersaFile/trunk/app/views/shares/forward.html.erb
+END
