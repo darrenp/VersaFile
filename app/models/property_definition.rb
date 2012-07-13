@@ -67,7 +67,9 @@ class PropertyDefinition < ActiveRecord::Base
           :name => import_json['name'],
           :data_type => property_column.data_type,
           :table_name => 'documents',
-          :column_name => column[:name]
+          :column_name => column[:name],
+          :is_system => false,
+          :is_readonly => false
       )
     end
 
