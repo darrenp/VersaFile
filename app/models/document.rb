@@ -449,10 +449,12 @@ private
       end
 
       Document.record_timestamps = false
+      document.metadata=""
+      document.body=""
       unless document.save
 
       end
-
+      document.delay.extract_content()
     ensure
       Document.record_timestamps = true
     end
