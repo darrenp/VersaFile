@@ -30,6 +30,8 @@ class Library < ActiveRecord::Base
 
     if(@folder==nil)
       @folder=self.folders.new
+      @folder.zone=self.zone
+      @folder.library=self.library
       @folder.name=@archive_name
       @folder.parent=self.root_folder
       @folder.save
@@ -87,7 +89,7 @@ class Library < ActiveRecord::Base
   end
 
   def root_folder
-    return self.folders.where(:folder_type == VersaFile::FolderTypes.Root).first
+    return self.folders.find_all_by_folder_type(VersaFile::FolderTypes.Root).first
   end
 
   def as_json(options={})
