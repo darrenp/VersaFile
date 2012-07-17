@@ -10,9 +10,9 @@ class ZonesController < ApplicationController
 
     begin
       respond_to do |format|
-        format.json { render :json => 'Login failed: ' + exception.message, :status => :unauthorized }
         format.html { redirect_to :controller => 'zones', :action => 'welcome', :id => @zone.subdomain }
         format.mobile { redirect_to :controller => 'zones', :action => 'welcome', :id => @zone.subdomain }
+        format.json { render :json => 'Login failed: ' + exception.message, :status => :unauthorized }
       end
     rescue => e
       logger.debug 'ERROR: ' + e.message

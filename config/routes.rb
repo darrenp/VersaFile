@@ -13,6 +13,8 @@ VersaFile::Application.routes.draw do
       get 'package'
       get 'unpack'
       get 'unpackage'
+      get 'import'
+      post 'import_upload'
     end
 
   end

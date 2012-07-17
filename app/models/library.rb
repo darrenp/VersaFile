@@ -24,6 +24,52 @@ class Library < ActiveRecord::Base
     .joins("INNER JOIN ( #{Acl.viewable('Library', user, group).to_sql} ) AS viewable ON viewable.id = libraries.id")
   }
 
+  def import(root_dir)
+    @archive_name="Archive"
+    @folder=self.folders.find_by_name(@archive_name)
+
+    if(@folder==nil)
+      @folder=self.folders.new
+      @folder.zone=self.zone
+      @folder.library=self
+      @folder.name=@archive_name
+      @folder.parent=self.root_folder
+      @folder.save
+    end
+
+    libraries_dir = File.join(root_dir, 'libraries')
+    if Dir.exists?(libraries_dir)
+      Dir.foreach(libraries_dir) do |entry|
+        next if ['.', '..', '.svn', '.git'].include?(entry)
+        library_subdir = File.join(libraries_dir, entry)
+
+        puts entry
+
+        propdefs_dir = File.join(library_subdir, 'property_definitions')
+        if Dir.exists?(propdefs_dir)
+          Dir.glob(File.join(propdefs_dir, '*.json')).each do |entry|
+            PropertyDefinition.unpackage(self, entry)
+          end
+        end
+
+        doctypes_dir = File.join(library_subdir, 'document_types')
+        if Dir.exists?(doctypes_dir)
+          Dir.glob(File.join(doctypes_dir, '*.json')).each do |entry|
+            DocumentType.unpackage(self, entry)
+          end
+        end
+
+        folder_dir = File.join(library_subdir, 'folders')
+        if Dir.exists?(folder_dir)
+          Dir.foreach(folder_dir) do |entry|
+            next if ['.', '..', '.svn', '.git'].include?(entry)
+            Folder.unpackage(self, @folder, File.join(folder_dir, entry))
+          end
+        end
+      end
+    end
+  end
+
   def self.create_default(zone)
     libraries = []
 
@@ -43,7 +89,7 @@ class Library < ActiveRecord::Base
   end
 
   def root_folder
-    return self.folders.where(:folder_type == VersaFile::FolderTypes.Root).first
+    return self.folders.find_all_by_folder_type(VersaFile::FolderTypes.Root).first
   end
 
   def as_json(options={})

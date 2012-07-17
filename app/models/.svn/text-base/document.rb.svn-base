@@ -135,7 +135,9 @@ class Document < ActiveRecord::Base
 
      self.update_attributes(
         :state => Bfree::DocumentStates.CheckedIn,
-        :checked_out_by => nil
+        :checked_out_by => nil,
+        :body => "",
+        :metadata => ""
      )
 
   end

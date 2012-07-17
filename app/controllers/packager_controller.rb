@@ -14,6 +14,39 @@ class PackagerController < ApplicationController
 
   end
 
+  def import
+    respond_to do |format|
+      format.html {render :layout => false }
+      format.json { render json: {}, :status => :ok }
+    end
+  end
+
+  def import_upload
+    @library=@zone.libraries.first
+
+    @file=params[:importfile]
+
+    base_path = File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages')
+    zip_path = File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages', "#{@file.original_filename}")
+    dst_dir =  File.join(VersaFile::SYSTEM_PATH, @zone.subdomain, 'packages', "#{@file.original_filename.sub(".zip", "")}")
+
+    FileUtils.rm_rf(zip_path)
+    FileUtils.rm_rf(dst_dir)
+
+    FileUtils.mkdir_p File.join(base_path)
+
+    File.open(zip_path, "wb") { |f| f.write(@file.read) }
+
+    pkg_dir = Archive.new(zip_path).to_directory(dst_dir)
+
+    @library.import(dst_dir)
+
+    respond_to do |format|
+      format.html {render :layout => false }
+      format.json { render json: {}, :status => :ok }
+    end
+  end
+
   def package
 
     begin
