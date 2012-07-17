@@ -31,7 +31,7 @@ class Library < ActiveRecord::Base
     if(@folder==nil)
       @folder=self.folders.new
       @folder.zone=self.zone
-      @folder.library=self.library
+      @folder.library=self
       @folder.name=@archive_name
       @folder.parent=self.root_folder
       @folder.save
