@@ -37,30 +37,57 @@ class Reference < ActiveRecord::Base
     'versions.minor_version_number' => 'versions.minor_version_number',
   }
 
+  DOCUMENTS_TERSE = {
+      'documents.id' => 'documents.id AS \'document_id\'',
+      'documents.state' => 'documents.state',
+      'documents.checked_out_by' => 'documents.checked_out_by'
+  }
+
+  DOCUMENTS_VERBOSE = {
+
+    'documents.id' => 'documents.id AS \'document_id\'',
+    'documents.state' => 'documents.state',
+    'documents.name' => 'documents.name',
+    'documents.checked_out_by' => 'documents.checked_out_by',
+    'documents.description' => 'documents.description',
+    'documents.created_at' => 'documents.created_at',
+    'documents.created_by' => 'documents.created_by',
+    'documents.updated_at' => 'documents.updated_at',
+    'documents.updated_by' => 'documents.updated_by'
+
+  }
+
   REFERENCE_ALL = REFERENCE_VERBOSE.clone
+  DOCUMENTS_ALL = DOCUMENTS_VERBOSE.clone
   Bfree::ColumnMaximum.StringMax.times do |n|
     column_name = "prp_str%03d" % (n + 1)
     REFERENCE_ALL["documents.#{column_name}"] = column_name
+    DOCUMENTS_ALL["documents.#{column_name}"] = column_name
   end
   Bfree::ColumnMaximum.BooleanMax.times do |n|
     column_name = "prp_bln%03d" % (n + 1)
     REFERENCE_ALL["documents.#{column_name}"] = column_name
+    DOCUMENTS_ALL["documents.#{column_name}"] = column_name
   end
   Bfree::ColumnMaximum.IntegerMax.times do |n|
     column_name = "prp_int%03d" % (n + 1)
     REFERENCE_ALL["documents.#{column_name}"] = column_name
+    DOCUMENTS_ALL["documents.#{column_name}"] = column_name
   end
   Bfree::ColumnMaximum.FloatMax.times do |n|
     column_name = "prp_flt%03d" % (n + 1)
     REFERENCE_ALL["documents.#{column_name}"] = column_name
+    DOCUMENTS_ALL["documents.#{column_name}"] = column_name
   end
   Bfree::ColumnMaximum.DateTimeMax.times do |n|
     column_name = "prp_dtt%03d" % (n + 1)
     REFERENCE_ALL["documents.#{column_name}"] = column_name
+    DOCUMENTS_ALL["documents.#{column_name}"] = column_name
   end
   Bfree::ColumnMaximum.TextMax.times do |n|
     column_name = "prp_txt%03d" % (n + 1)
     REFERENCE_ALL["documents.#{column_name}"] = column_name
+    DOCUMENTS_ALL["documents.#{column_name}"] = column_name
   end
 
 
@@ -69,9 +96,14 @@ class Reference < ActiveRecord::Base
   }
 
   JOIN_STMT = [
-      'INNER JOIN documents ON documents.id = references.document_id',
-      'INNER JOIN versions ON versions.document_id = documents.id AND is_current_version = true',
-      'INNER JOIN document_types ON document_types.id = documents.document_type_id'
+    'INNER JOIN documents ON documents.id = references.document_id',
+    'INNER JOIN versions ON versions.document_id = documents.id AND is_current_version = true',
+    'INNER JOIN document_types ON document_types.id = documents.document_type_id'
+  ]
+
+  JOIN_STMT_SIMPLE = [
+    'INNER JOIN versions ON versions.document_id = documents.id AND is_current_version = true',
+    'INNER JOIN document_types ON document_types.id = documents.document_type_id'
   ]
 
   scope :advanced, lambda{ |library, query|
@@ -87,7 +119,7 @@ class Reference < ActiveRecord::Base
   #returns a light version of the record that is a "reference" to the
   #document and contains only columns specified in the view
   #limit row count to the "range" if provided
-  scope :browse, lambda{ |view, sort, range|
+  scope :browse, lambda{ |view, sort, range, simple|
 
     columns = REFERENCE_TERSE.clone
 
@@ -107,7 +139,11 @@ class Reference < ActiveRecord::Base
     end
 
     arel = select(columns.values.join(','))
-    arel = arel.joins(JOIN_STMT.join(' '))
+    if(simple)
+      arel = arel.joins(JOIN_STMT_SIMPLE.join(' '))
+    else
+      arel = arel.joins(JOIN_STMT.join(' '))
+    end
     arel = arel.order(sort) unless sort.nil?
     arel = arel.limit(range['row_count']) unless (range.nil? || range['row_count'] < 1)
     arel = arel.offset(range['offset']) unless range.nil?
@@ -142,8 +178,9 @@ class Reference < ActiveRecord::Base
   }
 
   #Returns full text search results
-  scope :simple, lambda{ |text|
-    where(sanitize_sql_array(["MATCH (documents.body, documents.metadata, documents.custom_metadata) AGAINST ('%s' IN BOOLEAN MODE)", text.gsub("'", "''")]))
+  scope :simple, lambda{ |view, text|
+    joins("INNER JOIN (#{Document.simple(view, text).to_sql}) as documents ON documents.id = references.document_id")
+    #where(sanitize_sql_array(["MATCH (documents.body, documents.metadata, documents.custom_metadata) AGAINST ('%s' IN BOOLEAN MODE)", text.gsub("'", "''")]))
   }
 
   #returns only documents that the user has at least "view" privileges
