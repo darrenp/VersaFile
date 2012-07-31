@@ -32,6 +32,38 @@ class FoldersController < ApplicationController
 
   end
 
+  def file
+    folder_id = params[:id].to_i
+    @folder = (folder_id == 0) ? nil : @library.folders.viewable(@active_user, @active_group).find(folder_id)
+    raise "Folder has not been specified or is invalid" if @folder.nil?
+
+    params[:references].each do |reference|
+      @reference = @library.references.viewable(@active_user, @active_group).full.find(reference)
+      unless Acl.has_rights(@reference.active_permissions, Bfree::Acl::Permissions.WriteMetadata)
+        raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
+      end
+
+      if !Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles)
+        raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.CreateFiles)
+      end
+
+      Reference.transaction do
+        @reference.file_in_folder(@folder, @active_user)
+      end
+
+      columns = ReferencesHelper.columns_by_doctype(@reference.document)
+    end
+
+
+    respond_to do |format|
+      format.html # show.html.erb
+      format.json  { render :json => @folder.as_json(
+          :user => @active_user,
+          :group => @active_group,
+          :request => request), :status => :ok, :location => @folder.dojo_url }
+    end
+  end
+
   # GET /folders
   # GET /folders.json
   def index

@@ -129,6 +129,7 @@ VersaFile::Application.routes.draw do
         end
         member do
           put 'share_items'
+          put 'file'
         end
       end
 
