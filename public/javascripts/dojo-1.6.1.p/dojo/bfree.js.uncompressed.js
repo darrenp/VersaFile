@@ -30497,13 +30497,18 @@ dojo.provide("dojox.grid._View");
 			this.headerNode.scrollLeft = this.scrollboxNode.scrollLeft;
 			// 'lastTop' is a semaphore to prevent feedback-loop with setScrollTop below
 
-            setTimeout(dojo.hitch(this, function(){
+            if(this.timeout){
+                clearTimeout(this.timeout);
+            }
+            this.timeout=setTimeout(dojo.hitch(this, function(){
                 var top = this.scrollboxNode.scrollTop;
                 if(top !== this.lastTop){
 //                    console.log("TOP: "+top + " LASTTOP: "+this.lastTop+" SCROLLTOP: "+this.scrollboxNode.scrollTop);
                     this.grid.scrollTo(top);
                 }
-            }), 100);
+
+                this.timeout=null;
+            }), 50);
 		},
 
 		setScrollTop: function(inTop){
@@ -57884,46 +57889,9 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
 
     _upload: function(evt){
 
-        if((this.documents+evt.length)>this.maxDocuments){
-            alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
-            this.reset();
-            if(this.flashObject){
-                this.flashObject.movie.reset();
-		        this._files = [];
-                this._fileMap = {};
-            }
-            return;
-        }
+        var proceed=this.checkFiles(evt);
 
-        this.documents+=evt.length
-
-        var tempSize=0;
-        var errorChar=false;
-        dojo.forEach(evt, function(file){
-            tempSize+=file.size;
-            if(file.name.indexOf('+')>0||file.name.indexOf('%')>0){
-                errorChar=true;
-            }
-        }, this);
-        if(errorChar){
-            alert('Files containing the + or % characters are not allowed.');
-            this.reset();
-            if(this.flashObject){
-                this.flashObject.movie.reset();
-		        this._files = [];
-                this._fileMap = {};
-            }
-            return;
-        }
-
-        if(this.size+tempSize>this.maxSize){
-            alert(dojo.replace('You can only upload {0} at once.', [bfree.api.Utilities.readablizeBytes({bytes: this.maxSize})]));
-            this.reset();
-            if(this.flashObject){
-                this.flashObject.movie.reset();
-		        this._files = [];
-                this._fileMap = {};
-            }
+        if(proceed<0){
             return;
         }
 
@@ -57941,6 +57909,83 @@ dojo.declare('bfree.widget.Uploader', dojox.form.Uploader,
             });
         }
 
+    },
+
+    checkFiles: function(files){
+        if((this.documents+files.length)>this.maxDocuments){
+            alert(dojo.replace('You can only upload {0} documents at once.', [this.maxDocuments]));
+            this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
+            return -1;
+        }
+
+        this.documents+=files.length
+
+        var tempSize=0;
+        var errorChar=false;
+        dojo.forEach(files, function(file){
+            tempSize+=file.size;
+            if(file.name.indexOf('+')>0||file.name.indexOf('%')>0){
+                errorChar=true;
+            }
+        }, this);
+        if(errorChar){
+            alert('Files containing the + or % characters are not allowed.');
+            this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
+            return -1;
+        }
+
+        if(this.size+tempSize>this.maxSize){
+            alert(dojo.replace('You can only upload {0} at once.', [bfree.api.Utilities.readablizeBytes({bytes: this.maxSize})]));
+            this.reset();
+            if(this.flashObject){
+                this.flashObject.movie.reset();
+		        this._files = [];
+                this._fileMap = {};
+            }
+            return -1;
+        }
+        return 1;
+    },
+
+    uploadExternal: function(files){
+        var proceed=this.checkFiles(files);
+
+        if(proceed<0){
+            return;
+        }
+
+        var fd = new FormData();
+
+        var fileArray=[];
+
+        fd.append("upload_type", "html5");
+        fd.append("authenticity_token", bfree.api.XhrHelper.authenticity_token);
+
+        dojo.forEach(files, function(f, i){
+            fd.append("uploadedfiles[]", f);
+
+            fileArray.push({
+                index:i,
+                name:f.name,
+                size:f.size,
+                type:f.type
+            });
+        }, this);
+
+        this.onBeforeUpload(files);
+        this.onBegin(fileArray);
+        var xhr=this.createXhr();
+        xhr.send(fd);
     },
 
     onAfterUpload: function(items){
@@ -60040,15 +60085,15 @@ dojo.declare('bfree.widget.document.Creator', [dijit._Widget, dijit._Templated, 
         this._fileGrid.startup();
         this._wdgPreview.startup();
 
-        if(this.fileItems){
-            dojo.forEach(this.fileItems, function(fileItem, idx){
-                this._onFileSelect(fileItem);
-                fileItem.content_type=fileItem.type;
-                this._onFileUploaded(fileItem);
-            }, this);
-        }
-
         setTimeout(bfree.widget.document.Creator._loadFnRef(this), 10);
+
+        setTimeout(dojo.hitch(this, function(){
+
+            if(this.fileItems){
+                this._multiUploader._uploader.uploadExternal(this.fileItems);
+            }
+
+        }), 50);
     }
 
 
@@ -64814,44 +64859,35 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
 
         var files = e.dataTransfer.files; // FileList object.
 
-        var rights=false;
-        var onComplete;
         if(!this.item.isSpecial()&&
            this.item.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
 
-            onComplete=dojo.hitch(this, function(){
-                this.tree.onCommand(bfree.widget.Bfree.Commands.NEW,
-                    bfree.widget.Bfree.ObjectTypes.DOCUMENT,
-                    {
-                        folder: this.item,
-                        fileItems: files
-                    });
-            });
-            rights=true;
-        }
-
-        if(rights){
-            bfree.api.Uploader.uploadFiles({files: files,
-                                            zone: this.tree.zone,
-                                            onComplete: onComplete});
+            this.tree.onCommand(bfree.widget.Bfree.Commands.NEW,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT,
+                {
+                    folder: this.item,
+                    fileItems: files
+                }
+            );
         }
     },
 
 
     folderNodeOnDragOver: function(e){
-        e.stopPropagation();
-        e.preventDefault();
-
-        if(!this.isExpanded&&this.isExpandable){
-            this.tree._onExpandoClick({node:this});
+//        e.stopPropagation();
+//        e.preventDefault();
 
 
-//            this.domNode.click();
-//            this.expand();
-//            setTimeout(dojo.hitch(this, this.expand), 1);
-        }
 
         if(!this.item.isSpecial()){
+            if(!this.isExpanded&&this.isExpandable&&!this.timeout){
+                this.timeout=setTimeout(dojo.hitch(this, function(){
+                    this.tree._onExpandoClick({node:this});
+                    delete this.timeout;
+                }), 1000);
+//                console.log("SET:"+this.timeout);
+            }
+
             dojo.addClass(this.domNode, 'dijitTreeNodeHover');
             dojo.addClass(this.rowNode, 'dijitTreeRowHover');
             dojo.addClass(this.tree.domNode.parentNode.parentNode, 'versaHighlightGrid');
@@ -64859,8 +64895,14 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
     },
 
     folderNodeOnDragLeave: function(e){
-        e.stopPropagation();
-        e.preventDefault();
+//        e.stopPropagation();
+//        e.preventDefault();
+
+        if(this.timeout){
+//            console.log("CLEAR:"+this.timeout);
+            clearTimeout(this.timeout);
+            delete this.timeout;
+        }
 
         if(!this.item.isSpecial()){
             dojo.removeClass(this.domNode, 'dijitTreeNodeHover');
@@ -65295,6 +65337,12 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
         if(this.isShareRootHidden)
             this.hideShareRoot();
 
+
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            this.domNode.addEventListener('dragover', dojo.hitch(this, this.folderTreeOnDragOver), false);
+            this.domNode.addEventListener('dragleave', dojo.hitch(this, this.folderTreeOnDragLeave), false);
+            this.domNode.addEventListener('drop', dojo.hitch(this, this.folderTreeOnDrop), false);
+        }
     },
 
     _onClick: function(/*TreeNode*/ nodeWidget, /*Event*/ e){
@@ -65320,7 +65368,78 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             dojo.stopEvent(e);
         }
 
-	}
+	},
+
+    folderTreeOnDrop: function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    },
+
+
+    folderTreeOnDragOver: function(e){
+        e.stopPropagation();
+        e.preventDefault();
+
+        var scrollTop=this.domNode.parentElement.offsetHeight*0.10;
+        var scrollBottom=this.domNode.parentElement.offsetHeight-scrollTop;
+
+        var position=dojo.position(this.domNode.parentElement);
+
+        var divY=e.clientY-position.y;
+
+        if(divY<scrollTop){
+            if(this.intervalBottom){
+                clearInterval(this.intervalBottom);
+                delete this.intervalBottom;
+            }
+            if(!this.intervalTop){
+                this.intervalTop=setInterval(dojo.hitch(this, function(){
+//                    console.log(this.domNode.parentElement.scrollTop);
+                    this.domNode.parentElement.scrollTop-=1;
+                }), 10);
+            }
+        }else if(divY>scrollBottom){
+            if(this.intervalTop){
+                clearInterval(this.intervalTop);
+                delete this.intervalTop;
+            }
+            if(!this.intervalBottom){
+                this.intervalBottom=setInterval(dojo.hitch(this, function(){
+//                    console.log(this.domNode.parentElement.scrollTop);
+                    this.domNode.parentElement.scrollTop+=1;
+                }), 10);
+            }
+
+//            console.log(this.domNode.offsetHeight+"|"+e.clientX);
+        }else{
+            if(this.intervalTop){
+                clearInterval(this.intervalTop);
+                delete this.intervalTop;
+            }
+            if(this.intervalBottom){
+                clearInterval(this.intervalBottom);
+                delete this.intervalBottom;
+            }
+        }
+
+
+    },
+
+    folderTreeOnDragLeave: function(e){
+        e.stopPropagation();
+        e.preventDefault();
+
+        if(this.intervalTop){
+            clearInterval(this.intervalTop);
+            delete this.intervalTop;
+        }
+        if(this.intervalBottom){
+            clearInterval(this.intervalBottom);
+            delete this.intervalBottom;
+        }
+
+//        console.log(this.domNode.offsetHeight);
+    }
 
 });
 
@@ -78286,6 +78405,24 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
             }
         }
 
+//        console.log("|"+this.grid.rowMouseDown+"|");
+
+        if(!this.grid.rowMouseDown){
+            //mouse not down, stop drag
+            //this can occur when the selection of documents
+            //is not completely loaded and triggers a load
+            //once this load is complete it can trigger an
+            //unintended drag
+
+//            console.log('STOP MOUSE DOWN DRAG');
+            dojo.dnd.manager().stopDrag();
+//            this.onMouseUp();
+            return;
+        }
+
+//        console.log(Event);
+//        console.log("|"+Event.button+"|");
+
         this.inherited('onDndStart', arguments);
 
 
@@ -78878,17 +79015,24 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
     },
 
-    //Attempt to make grid selection work with DnD (Based on Windows7 behaviour)
     onRowClick: function(evt){
-        if(this.selection.isSelected(evt.rowIndex)){
+        console.log('rowClick');
+
+        if(this.selection.isSelected(evt.rowIndex)&&this.lastRowIndex!=evt.rowIndex){
             this.inherited('onRowClick', arguments);
         }
+        this.rowMouseDown=false;
+        delete this.lastRowIndex;
     },
 
     onRowMouseDown: function(evt){
+        console.log('rowMouseDown');
+
         if(!this.selection.isSelected(evt.rowIndex)||evt.ctrlKey||evt.shiftKey){
             this.selection.clickSelect(evt.rowIndex, evt.ctrlKey, evt.shiftKey);
+            this.lastRowIndex=evt.rowIndex;
         }
+        this.rowMouseDown=true;
         this.inherited('onRowMouseDown', arguments);
     },
 //
@@ -79057,6 +79201,7 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
 
     _onFetchComplete: function(items, req){
         this.inherited('_onFetchComplete', arguments);
+        this.rowMouseDown=false;
         this.onFetchComplete(items, req);
     },
 
@@ -79073,21 +79218,13 @@ dojo.declare('versa.widget.reference.Grid', bfree.widget._Grid, {
         if(!this.activeFolder.isSpecial()&&
            this.activeFolder.hasRights(bfree.api._Securable.permissions.CREATE_DOCUMENTS)){
 
-            onComplete=dojo.hitch(this, function(){
-                this.onCommand(bfree.widget.Bfree.Commands.NEW,
-                    bfree.widget.Bfree.ObjectTypes.DOCUMENT,
-                    {
-                        folder: this.activeFolder,
-                        fileItems: files
-                    });
-            });
-            rights=true;
-        }
-
-        if(rights){
-            bfree.api.Uploader.uploadFiles({files: files,
-                                            zone: this.activeLibrary.zone,
-                                            onComplete: onComplete});
+            this.onCommand(bfree.widget.Bfree.Commands.NEW,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT,
+                {
+                    folder: this.activeFolder,
+                    fileItems: files
+                }
+            );
         }
     },
 
@@ -89525,7 +89662,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             //perform action on each item...
             dojo.forEach(items, function(item, idx){
                 try{
-                    actionFn(item);
+                    setTimeout(function(){
+                        actionFn(item);
+                    }, 5);
                 }
                 catch(e){
                     onError(item, e);
