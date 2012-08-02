@@ -90620,7 +90620,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 			});
         }
 
-        this.__doArrayAction(items, __action, dojo.hitch(this, __onComplete), __onError);
+        this.__doAction(items, __action, dojo.hitch(this, __onComplete), __onError);
     },
 
      _onDocumentRestore: function(folder, items){
