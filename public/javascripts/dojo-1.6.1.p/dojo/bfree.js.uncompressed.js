@@ -64853,6 +64853,15 @@ dojo.declare('bfree.widget._TreeNode', dijit._TreeNode, {
         e.stopPropagation();
         e.preventDefault();
 
+        if(this.tree.intervalTop){
+            clearInterval(this.tree.intervalTop);
+            delete this.tree.intervalTop;
+        }
+        if(this.tree.intervalBottom){
+            clearInterval(this.tree.intervalBottom);
+            delete this.tree.intervalBottom;
+        }
+
         dojo.removeClass(this.domNode, 'dijitTreeNodeHover');
         dojo.removeClass(this.rowNode, 'dijitTreeRowHover');
         dojo.removeClass(this.tree.domNode.parentNode.parentNode, 'versaHighlightGrid');
@@ -66437,9 +66446,9 @@ dojo.declare('versa.widget.reference.Accessor', null,{
         item.copyLocal({version_id: version_id, zone: this.activeZone, library: this.activeLibrary});
     },
 
-    doMove: function(folder, items){
-        folder.file({zone: this.activeZone, library: this.activeLibrary, items: items});
-//        item.file({zone: this.activeZone, library: this.activeLibrary, folder: folder});
+    doMove: function(folder, item){
+//        folder.file({zone: this.activeZone, library: this.activeLibrary, items: items});
+        item.file({zone: this.activeZone, library: this.activeLibrary, folder: folder});
     },
 
     doRestore: function(folder, item){
@@ -89645,51 +89654,53 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         if((items == null) || (items.length < 1))
             return;
 
-        try{
+        //Set item to busy
+        dojo.forEach(items, function(item, idx){
+            this._grdDocuments.setBusy(item, true);
+        }, this);
 
-            //Set item to busy
-            dojo.forEach(items, function(item, idx){
-                this._grdDocuments.setBusy(item, true);
-            }, this);
+        //putting this on a small timeout fixes some issues witht he
+        //busy icon not showing up in some browsers
+        setTimeout(dojo.hitch(this, function(){
+            try{
+                //Retrieve the row index of the first selected item...
+                ///will select this index if all current items are removed.
+                grdIdx = this._grdDocuments.getItemIndex(items[0]);
 
-            //Retrieve the row index of the first selected item...
-            ///will select this index if all current items are removed.
-            grdIdx = this._grdDocuments.getItemIndex(items[0]);
+                //Set grid to 'updating' to defer updates until 'endUpdate'
+                this._grdDocuments.beginUpdate();
 
-            //Set grid to 'updating' to defer updates until 'endUpdate'
-            this._grdDocuments.beginUpdate();
-
-            //perform action on each item...
-            dojo.forEach(items, function(item, idx){
-                try{
-                    setTimeout(function(){
+                //perform action on each item...
+                dojo.forEach(items, function(item, idx){
+                    try{
                         actionFn(item);
-                    }, 5);
-                }
-                catch(e){
-                    onError(item, e);
-                    if(e.status == 404){
-                        this._grdDocuments.store.onDelete(item);
                     }
-                }
-            }, this);
+                    catch(e){
+                        onError(item, e);
+                        if(e.status == 404){
+                            this._grdDocuments.store.onDelete(item);
+                        }
+                    }
+                }, this);
 
-        }
-        finally{
+            }finally{
 
-            //Mark grid changes complete...do update.
-            this._grdDocuments.endUpdate();
+                //Mark grid changes complete...do update.
+                this._grdDocuments.endUpdate();
 
-            //Unset busy state
-            dojo.forEach(items, function(item, idx){
-                this._grdDocuments.setBusy(item, false);
-            }, this);
+                //Unset busy state
+                dojo.forEach(items, function(item, idx){
+                    this._grdDocuments.setBusy(item, false);
+                }, this);
 
-            //Reselect items
-            this._grdDocuments.selectItems(items, grdIdx);
+                //Reselect items
+                this._grdDocuments.selectItems(items, grdIdx);
 
-            onComplete(items);
-        }
+                onComplete(items);
+            }
+        }),1);
+
+
 
     },
 
