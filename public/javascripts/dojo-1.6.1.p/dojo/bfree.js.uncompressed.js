@@ -61745,7 +61745,7 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
                 delete this.timeout;
             }), 1000);
         }
-    },
+    }
 });
 
 bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
