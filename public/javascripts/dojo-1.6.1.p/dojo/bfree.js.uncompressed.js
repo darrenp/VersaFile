@@ -61701,7 +61701,51 @@ dojo.declare('bfree.widget.folder.DndSource', dijit.tree.dndSource, {
             this._lastY = e.pageY;
             this.inherited(arguments);
         }
-	}
+	},
+
+//    onOverEvent: function(){
+//        if(this.current&&!this.timeout){
+//            this.timeout=setTimeout(dojo.hitch(this, function(){
+//                this.tree._onExpandoClick({node:this.current});
+//                delete this.timeout;
+//            }), 1000);
+//        }
+//
+//        this.inherited('onOverEvent', arguments);
+//    },
+//
+//
+    onOutEvent: function(){
+        if(this.timeout){
+            clearTimeout(this.timeout);
+            delete this.timeout;
+        }
+
+        this.inherited('onOutEvent', arguments);
+    },
+
+    _onDragMouse: function(){
+        var oldTarget=this.targetAnchor
+
+        this.inherited('_onDragMouse', arguments);
+
+        if(this.timeout&&oldTarget!==this.targetAnchor){
+            console.log('Clear Timeout');
+            clearTimeout(this.timeout);
+            delete this.timeout;
+        }
+
+        if(this.targetAnchor&&
+           this.targetAnchor.isExpandable&&
+           !this.targetAnchor.isExpanded&&
+           !this.timeout){
+            console.log('Timeout Set');
+            this.timeout=setTimeout(dojo.hitch(this, function(){
+                this.tree._onExpandoClick({node:this.targetAnchor});
+                delete this.timeout;
+            }), 1000);
+        }
+    },
 });
 
 bfree.widget.folder.DndSource._deferred = function(that, targetItem, sourceItems){
@@ -78416,7 +78460,8 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
 
 //        console.log("|"+this.grid.rowMouseDown+"|");
 
-        if(!this.grid.rowMouseDown){
+        if(!this.grid.rowMouseDown&&
+           this.source===this){
             //mouse not down, stop drag
             //this can occur when the selection of documents
             //is not completely loaded and triggers a load
