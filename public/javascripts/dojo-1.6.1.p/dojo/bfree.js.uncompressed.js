@@ -6676,7 +6676,7 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
         prmSet.setValue(versa.api.PermissionIndices.COPY, this.hasRights(bfree.api._Securable.permissions.VIEW));
         prmSet.setValue(versa.api.PermissionIndices.EDIT, this.hasRights(bfree.api._Securable.permissions.WRITE_METADATA));
         prmSet.setValue(versa.api.PermissionIndices.MOVE, prmSet.getValue(versa.api.PermissionIndices.EDIT));
-        prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_IN)));
+        prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && (this.getState(bfree.api.Document.states.CHECKED_IN)||this.getState(bfree.api.Document.states.INDEXED))));
         prmSet.setValue(versa.api.PermissionIndices.CKI, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name)));
         prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, prmSet.getValue(versa.api.PermissionIndices.CKI));
         prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
@@ -8315,7 +8315,7 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
         prmSet.setValue(versa.api.PermissionIndices.COPY, this.hasRights(bfree.api._Securable.permissions.VIEW));
         prmSet.setValue(versa.api.PermissionIndices.EDIT, this.hasRights(bfree.api._Securable.permissions.WRITE_METADATA));
         prmSet.setValue(versa.api.PermissionIndices.MOVE, prmSet.getValue(versa.api.PermissionIndices.EDIT));
-        prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_IN)));
+        prmSet.setValue(versa.api.PermissionIndices.CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && (this.getState(bfree.api.Document.states.CHECKED_IN)||this.getState(bfree.api.Document.states.INDEXED))));
         prmSet.setValue(versa.api.PermissionIndices.CKI, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name)));
         prmSet.setValue(versa.api.PermissionIndices.CANCEL_CKO, (this.hasRights(bfree.api._Securable.permissions.VERSION) && this.getState(bfree.api.Document.states.CHECKED_OUT) && (this.checked_out_by == user.name||isAdmin)));
         prmSet.setValue(versa.api.PermissionIndices.DELETE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
@@ -58534,6 +58534,7 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
     },
 
     _doSave: function(){
+        this.dialog._btnOk.set('disabled', true);
 
         var canClose = false;
 
@@ -58823,6 +58824,8 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
         finally{
             if(this._multiUploader) this._multiUploader.clean();
             this.library.getDocuments().revert();
+
+//            this.dialog._btnOk.set('disabled', false);
             //this.library.getReferences().refreshItem(this.activeReference.getId());
         }
 
