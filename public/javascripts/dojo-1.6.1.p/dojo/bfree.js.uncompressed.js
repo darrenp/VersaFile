@@ -2658,7 +2658,9 @@ bfree.api.Utilities.viewUrl = function(args){
         win.focus();
     }else{
         var win = window.open(url, '_blank', winArgs);
-        win.focus();
+        if(win){
+            win.focus();
+        }
     }
 };
 
