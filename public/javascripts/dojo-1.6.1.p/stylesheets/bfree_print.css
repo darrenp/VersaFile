@@ -1,0 +1,31 @@
+@media print {
+	.noprint {display:none;}
+}
+table, th, td {
+    border-color: transparent #D5CDB5 #D5CDB5 transparent;
+    border-right: 1px dotted #D5CDB5;
+    border-style: dotted;
+    border-width: 1px;
+}
+table {
+    font-family: Geneva, Arial, Helvetica, sans-serif;
+    font-size: 0.85em;
+    border-spacing: 0;
+    border-left: 1px dotted #D5CDB5;
+}
+th {
+    background: url("/javascripts/dojo/dijit/themes/tundra/images/tabEnabled.png") repeat-x scroll center top #E9E9E9;
+    border-top: 1px dotted #D5CDB5;
+}
+thead {
+    display: table-header-group;
+}
+tbody {
+    display: table-row-group;
+}
+.odd {
+    background-color: #F2F5F9;
+}
+.even {
+    background-color: #FFFFFF;
+}
