@@ -41,6 +41,13 @@ class Document < ActiveRecord::Base
     'versions.minor_version_number'
   ]
 
+  DOCUMENTS_TERSE = {
+    'documents.id' => 'documents.id',
+    'documents.state' => 'documents.state',
+    'documents.checked_out_by' => 'documents.checked_out_by',
+    'documents.document_type_id' => 'documents.document_type_id'
+  }
+
 
   #return all documents not (soft) deleted
   scope :active, lambda {
@@ -85,11 +92,11 @@ class Document < ActiveRecord::Base
 
   #returns all (soft) deleted documents in the system
   scope :deleted, lambda {
-    where("state & #{Bfree::DocumentStates.Deleted} > 0")
+    where("documents.state & #{Bfree::DocumentStates.Deleted} > 0")
   }
 
   scope :not_deleted, lambda {
-      where("state & #{Bfree::DocumentStates.Deleted} = 0")
+      where("documents.state & #{Bfree::DocumentStates.Deleted} = 0")
   }
 
   scope :full, lambda{
@@ -115,8 +122,23 @@ class Document < ActiveRecord::Base
     .joins("INNER JOIN ( #{Acl.viewable('Document', user, group).to_sql} ) AS viewable ON viewable.id = documents.id")
   }
 
-  scope :simple, lambda{ |text|
-    where("MATCH (body, metadata, custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
+  scope :simple, lambda{ |view, text|
+    #where("MATCH (body, metadata, custom_metadata) AGAINST ('#{text}' IN BOOLEAN MODE)")
+
+    columns=DOCUMENTS_TERSE.clone
+
+    unless view.nil?
+      view.cell_definitions.each do |cell|
+        column = "#{cell.table_name}.#{cell.column_name}"
+        unless columns.include?(column)
+          if cell.table_name == 'documents'
+            columns[column] = column
+          end
+        end
+      end
+    end
+
+    select(columns.values.join(',')).where(sanitize_sql_array(["MATCH (documents.body, documents.metadata, documents.custom_metadata) AGAINST ('%s' IN BOOLEAN MODE)", text.gsub("'", "''")]))
   }
 
   scope :advanced, lambda{ |library, query|
@@ -449,10 +471,12 @@ private
       end
 
       Document.record_timestamps = false
+      document.metadata=""
+      document.body=""
       unless document.save
 
       end
-
+      document.delay.extract_content()
     ensure
       Document.record_timestamps = true
     end

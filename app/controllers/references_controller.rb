@@ -155,13 +155,15 @@ class ReferencesController < ApplicationController
     sort = ReferencesHelper::generate_sort(params)
     range = ReferencesHelper::generate_range(request)
 
+    simple=false
     case @query_type
       when Bfree::SearchTypes.Folder
         @folder = @library.folders.find_by_id(params[:query])
         @query = @library.references.viewable(@active_user, @active_group).in_folder(@folder).not_deleted
       when Bfree::SearchTypes.Simple
-          @simple_text = params[:query]
-          @query = @library.references.viewable(@active_user, @active_group).simple(@simple_text).not_deleted.content
+        simple=true
+        @simple_text = params[:query]
+        @query = @library.references.viewable(@active_user, @active_group).simple(@view, @simple_text).not_deleted.content
       when Bfree::SearchTypes.Advanced
         @advanced = ActiveSupport::JSON.decode(params[:query])
         @query = @library.references.viewable(@active_user, @active_group).advanced(@library, @advanced).not_deleted.content
@@ -169,8 +171,8 @@ class ReferencesController < ApplicationController
         @query = @library.references.viewable(@active_user, @active_group).deleted
     end
 
-    @count = @query.browse(nil, nil, nil).count unless @query.nil?
-    @references = @query.browse(@view, sort, range) unless @query.nil?
+    @count = @query.browse(nil, nil, nil, simple).count unless @query.nil?
+    @references = @query.browse(@view, sort, range, simple) unless @query.nil?
 
     unless range['row_count'] < 0
       headers['Content-Range'] = "#{range['offset']}-#{range['offset'] + range['row_count'] - 1}/#{@count}"
