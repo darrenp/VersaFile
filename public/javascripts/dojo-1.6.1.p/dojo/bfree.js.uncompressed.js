@@ -78466,7 +78466,7 @@ dojo.declare('versa.widget.reference.dnd.Source', dojo.dnd.Source, {
 //        console.log("|"+this.grid.rowMouseDown+"|");
 
         if(!this.grid.rowMouseDown&&
-           this.source===this){
+           source===this){
             //mouse not down, stop drag
             //this can occur when the selection of documents
             //is not completely loaded and triggers a load
@@ -89748,7 +89748,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
                 onComplete(items);
             }
-        }),1);
+        }),100);
 
 
 

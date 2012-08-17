@@ -1,9 +1,1 @@
-
-.versafile .dijitTreeRowHover{
-    background-color: #D9D9D6;
-    border: solid 1px #C7C7C7;
-}
-.versafile .dijitTreeRowSelected{
-    background-color: #CFE5FA !important;
-    border: solid 1px #769dc0 !important;
-}
+.versafile .dijitTreeRowHover{background-color: #D9D9D6; border: solid 1px #C7C7C7;}.versafile .dijitTreeRowSelected{background-color: #CFE5FA !important; border: solid 1px #769dc0 !important;}
