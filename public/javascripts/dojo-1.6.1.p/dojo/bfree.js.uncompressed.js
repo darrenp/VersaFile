@@ -90619,16 +90619,16 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
                 for(var i=0;i<fileItems.length;i++){
 
-                    alert(fileItems[i].name+"| Type:"+fileItems[i].type+"| Size:"+fileItems[i].size);
+//                    alert(fileItems[i].name+"| Type:"+fileItems[i].type+"| Size:"+fileItems[i].size);
 
-                    if(!(fileItems[i].type==""&&(fileItems[i].size==0||fileItems[i].size==4096))){
+                    if(fileItems[i].type!=""){
                         files[pos++]=fileItems[i];
                     }
 
                 }
 
                 if(files.length==0){
-                    alert('Folders cannot be uploaded to the VersaFile system');
+                    alert('Folders and unrecognized files cannot be uploaded to the VersaFile system');
                     return;
                 }
             }
