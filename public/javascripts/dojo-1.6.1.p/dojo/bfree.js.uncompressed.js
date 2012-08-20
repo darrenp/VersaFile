@@ -90612,6 +90612,25 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         try{
 
+            if(fileItems){
+                var files=[];
+                var pos=0;
+
+
+                for(var i=0;i<fileItems.length;i++){
+
+                    if(!(fileItems[i].type==""&&(fileItems[i].size==0||fileItems[i].size==4096))){
+                        files[pos++]=fileItems[i];
+                    }
+
+                }
+
+                if(files.length==0){
+                    alert('Folders cannot be uploaded to the VersaFile system');
+                    return;
+                }
+            }
+
             this._tvwFolders.setSelectedItem(folder);
 
             this._grdDocuments.beginUpdate();
@@ -90620,7 +90639,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 folder: (folder),
                 library: this.activeLibrary,
                 zone: this.zone,
-                fileItems: fileItems,
+                fileItems: files,
                 onClose: dojo.hitch(this,
                     function(dlgResult, retValue){
                        this._grdDocuments.endUpdate();
