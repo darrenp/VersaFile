@@ -90619,6 +90619,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
                 for(var i=0;i<fileItems.length;i++){
 
+                    alert(fileItems[i].name+"| Type:"+fileItems[i].type+"| Size:"+fileItems[i].size);
+
                     if(!(fileItems[i].type==""&&(fileItems[i].size==0||fileItems[i].size==4096))){
                         files[pos++]=fileItems[i];
                     }
