@@ -3028,15 +3028,21 @@ dojo.declare('bfree.api._Collection', null,{
 
         this.store.syncMode = false;
 
+        var sync=this.syncMode
+        var onItem=args.onItem
+
         this.store.fetchItemByIdentity({
             scope: args.scope,
             identity: args.identity,
-            onItem: args.onItem,
+            onItem: dojo.hitch(this, function(item){
+                this.store.syncMode = sync;
+                onItem(item);
+            }),
             onError: args.onError
         });
 
 //        console.log('Complete');
-        this.store.syncMode = this.syncMode;
+
     },
 
     refreshItem: function(item_id){
@@ -66589,7 +66595,7 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
         this._document = this.library.getDocuments().refreshAsync({
             scope: this,
             identity: this.activeReference.document_id,
-            onItem: this._onItemLoaded,
+            onItem: dojo.hitch(this, this._onItemLoaded),
             onError: this._onItemError
         });
 
@@ -77828,7 +77834,7 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
                    scope: this,
                    invalidate: true,
                    identity: item.getId(),
-                   onItem: this.__onFolderLoad,
+                   onItem: dojo.hitch(this, this.__onFolderLoad),
                    onError: this.__onFolderLoadError
                 }, this);
             }
@@ -77836,7 +77842,7 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
                 this.library.getFolders().loadItem({
                     item: item,
                     scope: this,
-                    onItem: this.__onFolderLoad,
+                    onItem: dojo.hitch(this, this.__onFolderLoad),
                     onError: this.__onFolderLoadError
                 });
             }
@@ -90465,6 +90471,9 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         });
 
         function __action(item){
+            while(this.activeLibrary.getReferences().store.syncMode==false){
+                wait(5);
+            }
             accessor.doCheckout(item);
             accessor.doCopyLocal(item);
         }
