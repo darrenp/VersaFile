@@ -3026,20 +3026,28 @@ dojo.declare('bfree.api._Collection', null,{
 
         if(args.invalidate) this.invalidate(args.identity);
 
-        this.store.syncMode = false;
-
-        var sync=this.syncMode
-        var onItem=args.onItem
-
-        this.store.fetchItemByIdentity({
+        this.store.fetch({
+            query: args.identity,
             scope: args.scope,
-            identity: args.identity,
-            onItem: dojo.hitch(this, function(item){
-                this.store.syncMode = sync;
-                onItem(item);
-            }),
+            syncMode: false,
+            onComplete: args.onItem,
             onError: args.onError
         });
+
+//        this.store.syncMode = false;
+//
+//        var sync=this.syncMode
+//        var onItem=args.onItem
+//
+//        this.store.fetchItemByIdentity({
+//            scope: args.scope,
+//            identity: args.identity,
+//            onItem: dojo.hitch(this, function(item){
+//                this.store.syncMode = sync;
+//                onItem(item);
+//            }),
+//            onError: args.onError
+//        });
 
 //        console.log('Complete');
 
@@ -6641,10 +6649,23 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
         var library = args.library;
 
         var url = dojo.replace(bfree.api.Document.CP_TRGT, [zone.subdomain, library.id, this.getId()]);
-        bfree.api.Utilities.saveUrl({
-            url: url,
-            window_name: 'versa_save'
-        });
+        if(dojo.isWebKit){
+            var iframe;
+            iframe = document.getElementById("hiddenDownloader");
+            if (iframe === null)
+            {
+                iframe = document.createElement('iframe');
+                iframe.id = "hiddenDownloader";
+                iframe.style.visibility = 'hidden';
+                document.body.appendChild(iframe);
+            }
+            iframe.src = url;
+        }else{
+            bfree.api.Utilities.saveUrl({
+                url: url,
+                window_name: 'versa_save'
+            });
+        }
 
 	},
 
@@ -8289,11 +8310,23 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
                         dojo.replace(bfree.api.Reference.CPV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
                         dojo.replace(bfree.api.Reference.CP_TRGT, [zone.subdomain, library.id, this.getId()]);
 
-        bfree.api.Utilities.saveUrl({
-            url: url,
-            window_name: 'versa_save'
-        });
-
+        if(dojo.isWebKit){
+            var iframe;
+            iframe = document.getElementById("hiddenDownloader");
+            if (iframe === null)
+            {
+                iframe = document.createElement('iframe');
+                iframe.id = "hiddenDownloader";
+                iframe.style.visibility = 'hidden';
+                document.body.appendChild(iframe);
+            }
+            iframe.src = url;
+        }else{
+            bfree.api.Utilities.saveUrl({
+                url: url,
+                window_name: 'versa_save'
+            });
+        }
 	},
 
     file: function(args){
@@ -66484,7 +66517,7 @@ dojo.declare('versa.widget.reference.Accessor', null,{
 
     },
 
-    doCheckout: function(item){
+    doCheckout: function(item, refresh){
 
         try{
             item.checkout({zone: this.activeZone, library: this.activeLibrary});
@@ -89740,7 +89773,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 }, this);
 
             }finally{
-
                 //Mark grid changes complete...do update.
                 this._grdDocuments.endUpdate();
 
@@ -90471,10 +90503,8 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
         });
 
         function __action(item){
-            while(this.activeLibrary.getReferences().store.syncMode==false){
-                wait(5);
-            }
             accessor.doCheckout(item);
+
             accessor.doCopyLocal(item);
         }
 
@@ -91365,11 +91395,11 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             return;
         }
 
+        var old=this.activeDocuments;
         this.activeDocuments = items;
         this._cmdBar.set('activeDocuments', this.activeDocuments);
 
         if(this.activeType == bfree.widget.Bfree.ObjectTypes.DOCUMENT){
-
             this._wdgItemInfo.preload({
                 type: bfree.widget.Bfree.ObjectTypes.DOCUMENT,
                 items: items
@@ -91380,7 +91410,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                     this.activeLibrary.getDocuments().refreshAsync({
                         scope: this,
                         identity: item.document_id,
-                        onItem: this.__onDocumentLoad,
+                        onItem: dojo.hitch(this, this.__onDocumentLoad),
                         onError: this.__onDocumentLoadError
                     });
                 }, this);
