@@ -235,15 +235,19 @@ class Document < ActiveRecord::Base
   end
 
   def extract_content()
+    doc=Document.find_by_id(self.id)
 
-    my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
-    my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
+    if(doc.state&Bfree::DocumentStates.CheckedOut!=Bfree::DocumentStates.CheckedOut)
+      my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
+      my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
 
-    self.update_attributes(
-        :body => my_body,
-        :metadata => my_metadata,
-        :state => (self.state | Bfree::DocumentStates.Indexed)
-    )
+      doc.update_attributes(
+          :body => my_body,
+          :metadata => my_metadata,
+          :state => (self.state | Bfree::DocumentStates.Indexed)
+      )
+    end
+
 
   end
 
