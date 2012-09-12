@@ -152,7 +152,7 @@ class Document < ActiveRecord::Base
 
   def cancel_checkout(user)
 
-     raise "Document is not checked out" unless self.state == Bfree::DocumentStates.CheckedOut
+     #raise "Document is not checked out" unless self.state == Bfree::DocumentStates.CheckedOut
      raise "User '#{self.checked_out_by}' has the document checked out" unless self.checked_out_by == user.name||user.is_admin||user.group.is_admin
 
      self.update_attributes(
@@ -235,15 +235,19 @@ class Document < ActiveRecord::Base
   end
 
   def extract_content()
+    doc=Document.find_by_id(self.id)
 
-    my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
-    my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
+    if(doc.state&Bfree::DocumentStates.CheckedOut!=Bfree::DocumentStates.CheckedOut)
+      my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
+      my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
 
-    self.update_attributes(
-        :body => my_body,
-        :metadata => my_metadata,
-        :state => (self.state | Bfree::DocumentStates.Indexed)
-    )
+      doc.update_attributes(
+          :body => my_body,
+          :metadata => my_metadata,
+          :state => (self.state | Bfree::DocumentStates.Indexed)
+      )
+    end
+
 
   end
 
