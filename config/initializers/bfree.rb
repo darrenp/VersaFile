@@ -3,11 +3,12 @@ require 'pony'
 require 'shellwords'
 require 'csv'
 require 'prawn'
+require 'dropbox_sdk'
 
 configatron.bfree.major_version = 2
 configatron.bfree.minor_version = 12
 configatron.bfree.revision_number = 9
-configatron.bfree.build_number = 1101
+configatron.bfree.build_number = 2701
 
 configatron.dojo.version = ((Rails.env == 'development') ? '1.6.1.d' : '1.6.1.p')
 configatron.mobile.dojo.version = ((Rails.env == 'development') ? '1.7.2.d' : '1.7.2.p')
@@ -281,6 +282,7 @@ module Bfree
     @@_checked_out =  0x0040
     @@_invalid =      0x0400
     @@_deleted =      0x0800
+    @@_synchronizing= 0x1000
     @@_error =        0xFFFF
 
 
@@ -332,6 +334,10 @@ module Bfree
 
     def self.Deleted
       @@_deleted
+    end
+
+    def self.Synchronizing
+      @@_synchronizing
     end
 
   end

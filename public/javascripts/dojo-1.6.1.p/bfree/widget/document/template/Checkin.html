@@ -117,14 +117,19 @@
                         <div    dojoType="dijit.layout.ContentPane"
                                 region="bottom"
                                 splitter="false"
-                                style="height:0px;padding:0;position:relative;display:none">
+                                style="height:16px;padding:0;position:relative;">
 
-                            <span style="position:absolute;top:0;left:16px">
+                            <div style="position:absolute;top:0px;left:16px;">
+                                <div dojoAttachPoint="chkSynchronize"></div>
+                                <span dojoAttachPoint="lblSynchronize"></span>
+                            </div>
+
+                            <!--<span style="position:absolute;top:0;left:16px">
                             <div dojoAttachPoint="addMinorNode"></div>
                             <span id="chkAddMinor" class="bfree dijitDarkLabel boldLabel" style="vertical-align:middle">
                                 <label for="chkAddMinor" dojoAttachPoint="lblInheritNode">Add as Minor Version</label>
                             </span>
-                            </span>
+                            </span>-->
 
                         </div>
 
@@ -134,7 +139,6 @@
                             region="bottom"
                             splitter="false"
                             style="height:16px;padding:0 8px 8px 8px;position:relative">
-
                         <span style="position:absolute;top:0;right:8px;">
                             <img dojoAttachPoint="statusIcnNode" src="/images/icons/states/none.16.png" width="16" height="16"/>
                             <span dojoAttachPoint="statusMsgNode" class="dijitMediumLabel dijitDarkLabel" style="position:relative;top:-2px;white-space:nowrap;"></span>

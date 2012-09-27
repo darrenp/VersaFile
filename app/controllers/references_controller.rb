@@ -1,4 +1,5 @@
 class ReferencesController < ApplicationController
+
   before_filter :library_required
   before_filter :authorization_required
   prawnto :filename => "export.pdf", :prawn => { :page_layout => :landscape }
@@ -45,7 +46,7 @@ class ReferencesController < ApplicationController
     @temp_file = UploaderHelper.read_file(@zone, unique_id, params[:binary_file_name])
 
     Document.transaction do
-      @reference.document.checkin(@active_user, params, @temp_file)
+      @reference.document.checkin(@active_user, params, @temp_file, params[:synchronize])
       @reference.document.body=""
       @reference.document.metadata=""
 
@@ -64,6 +65,30 @@ class ReferencesController < ApplicationController
       format.json { render json: @reference.to_json(:only => columns) }
     end
 
+  end
+
+  def synchronize
+    @reference = @library.references.viewable(@active_user, @active_group).complete.find(params[:id])
+
+    #CHECK PERMISSIONS HERE
+    unless Acl.has_rights(@reference.active_permissions, Bfree::Acl::Permissions.Version)
+      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.Version)
+    end
+
+    if(params[:version_id]!=nil)
+      @version=@reference.document.versions.find_by_id(params[:version_id])
+
+    else
+      @version=@reference.document.current_version
+    end
+
+    @version.synchronize()
+
+    columns = ReferencesHelper.columns_by_doctype(@reference.document)
+    respond_to do |format|
+      format.html # show.html.erb
+      format.json { render json: @reference.to_json(:only => columns) }
+    end
   end
 
 
@@ -116,25 +141,43 @@ class ReferencesController < ApplicationController
   end
 
   def file
-
-    @reference = @library.references.viewable(@active_user, @active_group).full.find(params[:id])
-    unless Acl.has_rights(@reference.active_permissions, Bfree::Acl::Permissions.WriteMetadata)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
-    end
-
     folder_id = params[:folder_id].to_i
     @folder = (folder_id == 0) ? nil : @library.folders.viewable(@active_user, @active_group).find(folder_id)
     raise "Folder has not been specified or is invalid" if @folder.nil?
 
-    if !Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.CreateFiles)
+    if(@folder.dropbox_uid!=nil)
+      @document, @reference = DropboxHelper.copy_to_dropbox(params, @library, @active_user, @active_group)
+
+      columns = DocumentsHelper.columns_by_doctype(@document)
+    else
+      if(params[:id].index('db')!=nil)
+        if(@folder.dropbox_path!=nil)
+          @document, @reference = DropboxHelper.move_dropbox(params, @library, @active_user, @active_group)
+        else
+          @document, @reference = DropboxHelper.copy_from_dropbox(params, @library, @active_user, @active_group)
+        end
+
+        columns = DocumentsHelper.columns_by_doctype(@document)
+      else
+        @reference = @library.references.viewable(@active_user, @active_group).full.find(params[:id])
+        unless Acl.has_rights(@reference.active_permissions, Bfree::Acl::Permissions.WriteMetadata)
+          raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
+        end
+
+        if !Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.CreateFiles)
+          raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.CreateFiles)
+        end
+
+        Reference.transaction do
+          @reference.file_in_folder(@folder, @active_user)
+        end
+
+        columns = ReferencesHelper.columns_by_doctype(@reference.document)
+      end
+
     end
 
-    Reference.transaction do
-      @reference.file_in_folder(@folder, @active_user)
-    end
 
-    columns = ReferencesHelper.columns_by_doctype(@reference.document)
     respond_to do |format|
       format.html # show.html.erb
       format.json { render json: @reference.to_json(:only => columns) }
@@ -159,6 +202,52 @@ class ReferencesController < ApplicationController
     case @query_type
       when Bfree::SearchTypes.Folder
         @folder = @library.folders.find_by_id(params[:query])
+
+        if(@folder.folder_type==VersaFile::FolderTypes.DropboxAccount||@folder.folder_type==VersaFile::FolderTypes.DropboxFolder)
+
+          uid=@folder.dropbox_uid
+          path=@folder.dropbox_path
+
+          sezzion=@zone.db_sessions.find_by_dropbox_uid(uid)
+          if(sezzion!=nil)
+            dbsession=sezzion.getSession()
+
+            dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+            dbaccount=dbclient.account_info()
+
+            meta=dbclient.metadata(path)
+
+            meta['contents'].each do |file|
+              if(!file['is_dir'])
+                ref={
+                  :name=>file['path'].slice(file['path'].rindex('/')+1..file['path'].length),
+                  :active_permissions=>2147483647,
+                  :updated_by=>'Dropbox',
+                  :created_by=>'Dropbox',
+                  :binary_content_type=>file['mime_type'],
+                  :major_version_number=>1,
+                  :minor_version_number=>0,
+                  :binary_file_size=>file['bytes'],
+                  :folder_id=>params[:query],
+                  :document_id=>'db'+dbaccount['uid'].to_s+"-"+file['path'].to_s.gsub("/",">").gsub(".","<"),
+                  :id=>'db'+dbaccount['uid'].to_s+"-"+file['path'].to_s.gsub("/",">").gsub(".","<"),
+                  :reference_type=>0,
+                  :state=>16,
+                  :is_dropbox_proxy=>true
+                }
+                @references<<ref
+              end
+            end
+
+          end
+          respond_to do |format|
+            format.json { render json: @references }
+          end
+
+
+          return
+        end
+
         @query = @library.references.viewable(@active_user, @active_group).in_folder(@folder).not_deleted
       when Bfree::SearchTypes.Simple
         simple=true
@@ -181,7 +270,7 @@ class ReferencesController < ApplicationController
     respond_to do |format|
       format.csv { send_data(to_csv(@references, @view), :type => 'text/csv; charset=utf-8; header=present', :filename => "documents.csv") }
       format.html # index.html.erb
-      format.json { render json: @references }
+      format.json { render json: @references.to_json(:methods => [:is_dropbox, :is_synchronized]) }
       format.pdf
       format.xml  { send_data(DocumentsHelper.generate_view(@references, @view,'xml').to_xml, :filename => "documents.xml") }
     end
@@ -235,13 +324,45 @@ class ReferencesController < ApplicationController
   # GET /references/1
   # GET /references/1.json
   def show
+    if(params[:id].index('db')!=nil)
+      uid=params[:id].sub("db", "")
+      uid=uid.slice(0..(uid.index("-")-1))
+      path=params[:id]
+      path=path.slice((path.index("-")+1)..path.length)
+      path=path.gsub(">","/").gsub("<", ".")
 
-    @reference = @library.references.viewable(@active_user, @active_group).complete.find(params[:id])
+      sezzion=@zone.db_sessions.find_by_dropbox_uid(uid)
+      dbsession=sezzion.getSession()
+
+      dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+      dbaccount=dbclient.account_info()
+
+      file=dbclient.metadata(path)
+
+      @reference={
+        :name=>file['path'].slice(file['path'].rindex('/')+1..file['path'].length),
+        :active_permissions=>2147483647,
+        :updated_by=>'Dropbox',
+        :created_by=>'Dropbox',
+        :binary_content_type=>file['mime_type'],
+        :major_version_number=>1,
+        :minor_version_number=>0,
+        :binary_file_size=>file['bytes'],
+        :folder_id=>params[:query],
+        :document_id=>"dbox#{file['revision']}",
+        :id=>'db'+dbaccount['uid'].to_s+"-"+file['path'].to_s.gsub("/",">").gsub(".", "<"),
+        :reference_type=>0,
+        :state=>16
+      }
+    else
+      @reference = @library.references.viewable(@active_user, @active_group).complete.find(params[:id])
+    end
+
 
     columns = ReferencesHelper.columns_by_doctype(@reference.document)
     respond_to do |format|
       format.html # show.html.erb
-      format.json { render json: @reference.to_json(:only => columns) }
+      format.json { render json: @reference.to_json(:only => columns, :methods => [:is_dropbox, :is_synchronized]) }
     end
 
 

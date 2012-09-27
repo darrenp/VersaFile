@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120524161632) do
+ActiveRecord::Schema.define(:version => 20120927160251) do
 
   create_table "accounts", :force => true do |t|
     t.string   "email",                                      :null => false
@@ -128,6 +128,15 @@ ActiveRecord::Schema.define(:version => 20120524161632) do
     t.string  "name"
     t.string  "prefix"
     t.boolean "allow_choice_list", :default => false
+  end
+
+  create_table "db_sessions", :force => true do |t|
+    t.integer  "zone_id"
+    t.integer  "library_id"
+    t.integer  "dropbox_uid"
+    t.text     "session"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "delayed_jobs", :force => true do |t|
@@ -324,12 +333,14 @@ ActiveRecord::Schema.define(:version => 20120524161632) do
     t.integer  "zone_id"
     t.integer  "library_id"
     t.integer  "parent_id"
-    t.string   "name",        :null => false
+    t.string   "name",         :null => false
     t.string   "created_by"
     t.string   "updated_by"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "folder_type"
+    t.integer  "dropbox_uid"
+    t.text     "dropbox_path"
   end
 
   add_index "folders", ["parent_id"], :name => "index_folders_on_parent_id"
@@ -504,6 +515,8 @@ ActiveRecord::Schema.define(:version => 20120524161632) do
     t.integer "major_version_number"
     t.integer "minor_version_number"
     t.integer "library_id"
+    t.integer "dropbox_uid"
+    t.text    "dropbox_path"
   end
 
   add_index "versions", ["document_id"], :name => "index_versions_on_document_id"
@@ -564,7 +577,5 @@ ActiveRecord::Schema.define(:version => 20120524161632) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "zones", ["subdomain"], :name => "index_zones_on_subdomain", :unique => true
 
 end

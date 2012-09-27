@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/rko/!svn/ver/2184/VersaFile/trunk/config/initializers
+END
+bfree.rb
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/rko/!svn/ver/2180/VersaFile/trunk/config/initializers/bfree.rb
+END
+mime_types.rb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/2184/VersaFile/trunk/config/initializers/mime_types.rb
+END
+versafile.rb
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/rko/!svn/ver/2035/VersaFile/trunk/config/initializers/versafile.rb
+END
+time_extension.rb
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/rko/!svn/ver/1681/VersaFile/trunk/config/initializers/time_extension.rb
+END
+paperclip.rb
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/rko/!svn/ver/1715/VersaFile/trunk/config/initializers/paperclip.rb
+END
+secret_token.rb
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/rko/!svn/ver/1666/VersaFile/trunk/config/initializers/secret_token.rb
+END
+session_store.rb
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/rko/!svn/ver/1666/VersaFile/trunk/config/initializers/session_store.rb
+END
+inflections.rb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1664/VersaFile/trunk/config/initializers/inflections.rb
+END
+natcmp.rb
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/rko/!svn/ver/1754/VersaFile/trunk/config/initializers/natcmp.rb
+END
+exceptions.rb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/1873/VersaFile/trunk/config/initializers/exceptions.rb
+END
+subdomain.rb
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/rko/!svn/ver/1664/VersaFile/trunk/config/initializers/subdomain.rb
+END
+backtrace_silencers.rb
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/rko/!svn/ver/1664/VersaFile/trunk/config/initializers/backtrace_silencers.rb
+END
+delayed_job.rb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1664/VersaFile/trunk/config/initializers/delayed_job.rb
+END
+wrap_parameters.rb
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/rko/!svn/ver/1664/VersaFile/trunk/config/initializers/wrap_parameters.rb
+END

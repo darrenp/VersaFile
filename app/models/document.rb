@@ -150,9 +150,17 @@ class Document < ActiveRecord::Base
     .joins("INNER JOIN ( #{Acl.viewable('Document', user, group).to_sql} ) AS viewable ON viewable.id = documents.id")
   }
 
+  def get_dropbox_uid_and_path()
+    self.versions.each do |version|
+      if(version.dropbox_uid!=nil)
+        return version.dropbox_uid, version.dropbox_path
+      end
+    end
+  end
+
   def cancel_checkout(user)
 
-     #raise "Document is not checked out" unless self.state == Bfree::DocumentStates.CheckedOut
+     raise "Document is not checked out" unless self.state == Bfree::DocumentStates.CheckedOut
      raise "User '#{self.checked_out_by}' has the document checked out" unless self.checked_out_by == user.name||user.is_admin||user.group.is_admin
 
      self.update_attributes(
@@ -164,7 +172,7 @@ class Document < ActiveRecord::Base
 
   end
 
-  def checkin(user, attributes, file)
+  def checkin(user, attributes, file, sync=false)
 
     raise "Document is not checked out" unless ((self.state & Bfree::DocumentStates.CheckedOut) == Bfree::DocumentStates.CheckedOut)
     raise "User '#{self.checked_out_by}' has the document checked out" unless self.checked_out_by == user.name
@@ -187,6 +195,10 @@ class Document < ActiveRecord::Base
 
     unless version.save
       raise version.errors
+    end
+
+    if(sync)
+      version.synchronize()
     end
 
   end
@@ -216,6 +228,22 @@ class Document < ActiveRecord::Base
     return (self.state & Bfree::DocumentStates.Deleted == Bfree::DocumentStates.Deleted)
   end
 
+  def add_flag(flag)
+    self.state=self.state|flag
+  end
+
+  def remove_flag(flag)
+    self.state=self.state&(~flag)
+  end
+
+  def toggle_flag(flag)
+    if((self.state&flag)==flag)
+      self.remove_flag(flag)
+    else
+      self.add_flag(flag)
+    end
+  end
+
   def soft_delete(user)
 
     self.update_attributes(
@@ -235,19 +263,15 @@ class Document < ActiveRecord::Base
   end
 
   def extract_content()
-    doc=Document.find_by_id(self.id)
 
-    if(doc.state&Bfree::DocumentStates.CheckedOut!=Bfree::DocumentStates.CheckedOut)
-      my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
-      my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
+    my_body = %x{java -jar tika-app-1.1.jar -t #{self.current_version.binary.path} }
+    my_metadata = %x{java -jar tika-app-1.1.jar -m #{self.current_version.binary.path} }
 
-      doc.update_attributes(
-          :body => my_body,
-          :metadata => my_metadata,
-          :state => (self.state | Bfree::DocumentStates.Indexed)
-      )
-    end
-
+    self.update_attributes(
+        :body => my_body,
+        :metadata => my_metadata,
+        :state => (self.state | Bfree::DocumentStates.Indexed)
+    )
 
   end
 
@@ -319,6 +343,14 @@ class Document < ActiveRecord::Base
     end
 
     return text.join(' ')
+  end
+
+  def get_dropbox_uid_and_path
+    self.versions.each do |version|
+      if(version.dropbox_uid!=nil)
+        return version.dropbox_uid, version.dropbox_path
+      end
+    end
   end
 
   def package(root_folder)

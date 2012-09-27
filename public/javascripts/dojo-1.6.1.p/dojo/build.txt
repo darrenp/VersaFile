@@ -77,6 +77,8 @@ bfree.js:
 ./../../../dojo-1.6.1.p/bfree/api/Folders.js
 ./../../../dojo-1.6.1.p/bfree/api/PropertyDefinition.js
 ./../../../dojo-1.6.1.p/bfree/api/PropertyDefinitions.js
+./../../../dojo-1.6.1.p/bfree/api/DropboxAccount.js
+./../../../dojo-1.6.1.p/bfree/api/DropboxAccounts.js
 ./../../../dojo-1.6.1.p/bfree/api/Reference.js
 ./../../../dojo-1.6.1.p/bfree/api/References.js
 ./../../../dojo-1.6.1.p/bfree/api/ViewMapping.js

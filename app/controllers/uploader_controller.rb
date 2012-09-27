@@ -64,8 +64,6 @@ class UploaderController < ApplicationController
 
       @upload_type = params[:upload_type].nil? ? '' : params[:upload_type].downcase
 
-      p
-
       case @upload_type
         when 'html5'
           uploaded_files = params[:uploadedfiles]

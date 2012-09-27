@@ -15,6 +15,7 @@ class Library < ActiveRecord::Base
   has_many :cell_definitions
   has_many :preferences
   has_many :view_mappings
+  has_many :db_sessions
 
   after_create :create_defaults
 

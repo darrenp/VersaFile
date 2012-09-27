@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title></title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version  %>/dijit/themes/claro/claro.css" />
+    <link rel="stylesheet" type="text/css" href="/javascripts/dojo-<%= configatron.dojo.version %>/stylesheets/versafile.css" />
+
+<% if ENV['RAILS_ENV'] != 'development' %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: false,
+		parseOnLoad: true,
+		cacheBust: '<%= "%d.%02d.%02d.%04d" % [configatron.bfree.major_version, configatron.bfree.minor_version, configatron.bfree.revision_number, configatron.bfree.build_number] %>'
+	};
+
+</script>
+
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/bfree.js"></script>
+
+<% else %>
+
+<script type="text/javascript">
+
+	var djConfig = {
+		isDebug: true,
+		parseOnLoad: true
+	};
+
+</script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/dojo/dojo.js"></script>
+
+<% end %>
+
+<script type="text/javascript">
+
+dojo.addOnUnload(function(){
+    window.opener.location.reload();
+});
+
+</script>
+
+</head>
+
+<body class="versafile claro" oncontextmenu="return true;">
+
+<div    dojoType="dijit.layout.BorderContainer"
+        design="headline"
+        gutters="false"
+        style="height:100%;width:100%;">
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="top"
+            splitter="false"
+            class="versaSplashTop"
+            style="position:relative">
+        <img src="/images/versafile-64-tm.png" height="64" style="position:absolute;left:0;bottom:0;"/>
+
+    </div>
+
+    <div    dojoType="dijit.layout.ContentPane"
+            region="center"
+            splitter="false"
+            class="versaSplashBottom">
+
+        <div style="display:block;margin-left:auto;margin-right:auto;text-align:center;width:504px">
+            Your Dropbox account has successfully been added to VersaFile.<br/>
+            <a href="javascript://" onclick="window.close()">Close</a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

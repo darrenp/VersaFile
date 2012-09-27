@@ -3026,31 +3026,17 @@ dojo.declare('bfree.api._Collection', null,{
 
         if(args.invalidate) this.invalidate(args.identity);
 
-        this.store.fetch({
-            query: args.identity,
+        this.store.syncMode = false;
+
+        this.store.fetchItemByIdentity({
             scope: args.scope,
-            syncMode: false,
-            onComplete: args.onItem,
+            identity: args.identity,
+            onItem: args.onItem,
             onError: args.onError
         });
 
-//        this.store.syncMode = false;
-//
-//        var sync=this.syncMode
-//        var onItem=args.onItem
-//
-//        this.store.fetchItemByIdentity({
-//            scope: args.scope,
-//            identity: args.identity,
-//            onItem: dojo.hitch(this, function(item){
-//                this.store.syncMode = sync;
-//                onItem(item);
-//            }),
-//            onError: args.onError
-//        });
-
 //        console.log('Complete');
-
+        this.store.syncMode = this.syncMode;
     },
 
     refreshItem: function(item_id){
@@ -6569,7 +6555,8 @@ versa.api.PermissionIndices = {
     'DELETE':       0x09,
     'SECURE':       0x0A,
     'RESTORE':      0x0B,
-    'DESTROY':      0x0C
+    'DESTROY':      0x0C,
+    'SYNCHRONIZE':  0x0D
 
 }
 
@@ -6649,23 +6636,10 @@ dojo.declare('bfree.api.Document', [bfree.api._Object, bfree.api._Securable], {
         var library = args.library;
 
         var url = dojo.replace(bfree.api.Document.CP_TRGT, [zone.subdomain, library.id, this.getId()]);
-        if(dojo.isWebKit){
-            var iframe;
-            iframe = document.getElementById("hiddenDownloader");
-            if (iframe === null)
-            {
-                iframe = document.createElement('iframe');
-                iframe.id = "hiddenDownloader";
-                iframe.style.visibility = 'hidden';
-                document.body.appendChild(iframe);
-            }
-            iframe.src = url;
-        }else{
-            bfree.api.Utilities.saveUrl({
-                url: url,
-                window_name: 'versa_save'
-            });
-        }
+        bfree.api.Utilities.saveUrl({
+            url: url,
+            window_name: 'versa_save'
+        });
 
 	},
 
@@ -6904,6 +6878,7 @@ bfree.api.Document.states = {
     'CHECKED_OUT':  0x0040,
     'INVALID':      0x0400,
     'DELETED':      0x0800,
+    'SYNCHRONIZING':0x1000,
     'ERROR':        0x8000
 };
 
@@ -7729,7 +7704,12 @@ dojo.declare('bfree.api.Folder', [bfree.api._Object, bfree.api._Securable], {
         return (this.folder_type == bfree.api.Folder.FolderTypes.SEARCH ||
                    this.folder_type == bfree.api.Folder.FolderTypes.TRASH ||
                    this.folder_type == bfree.api.Folder.FolderTypes.SHARE ||
-                   this.folder_type == bfree.api.Folder.FolderTypes.SHARE_ROOT);
+                   this.folder_type == bfree.api.Folder.FolderTypes.SHARE_ROOT ||
+                   this.folder_type == bfree.api.Folder.FolderTypes.DROPBOX_ROOT);
+    },
+
+    isDropboxRoot: function(){
+        return this.folder_type == bfree.api.Folder.FolderTypes.DROPBOX_ROOT;
     },
 
     isTrash: function(){
@@ -7770,13 +7750,16 @@ bfree.api.Folder.SHAREITEMS_TRGT = '/zones/{0}/libraries/{1}/folders/{2}/share_i
 bfree.api.Folder.FILE_TRGT = '/zones/{0}/libraries/{1}/folders/{2}/file.json';
 
 bfree.api.Folder.FolderTypes = {
-    'ROOT':         0x0000,
-    'CONTENT':      0x0001,
-    'SHARE_ROOT':   0x0010,
-    'SHARE':        0x0011,
-    'SEARCH':       0x0020,
-    'TRASH':        0x0040,
-    'ERROR':        0xFFFF
+    'ROOT':             0x0000,
+    'CONTENT':          0x0001,
+    'SHARE_ROOT':       0x0010,
+    'SHARE':            0x0011,
+    'DROPBOX_ROOT':     0x0014,
+    'DROPBOX_ACCOUNT':  0x0015,
+    'DROPBOX_FOLDER':   0x0016,
+    'SEARCH':           0x0020,
+    'TRASH':            0x0040,
+    'ERROR':            0xFFFF
 }
 
 bfree.api.Folder.getIconUrl = function(folder, size){
@@ -8204,6 +8187,101 @@ bfree.api.PropertyDefinitions.TRGT = '/zones/{0}/libraries/{1}/property_definiti
 
 }
 
+if(!dojo._hasResource['bfree.api.DropboxAccount']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.DropboxAccount'] = true;
+/**
+ * Created by JetBrains RubyMine.
+ * User: scotth
+ * Date: 07/09/11
+ * Time: 4:03 PM
+ * To change this template use File | Settings | File Templates.
+ */
+
+dojo.provide('bfree.api.DropboxAccount');
+
+
+
+dojo.declare('bfree.api.DropboxAccount', [bfree.api._Object], {
+
+    constructor: function(args){
+        dojo.safeMixin(this, ((!args) ? { } : args));
+    }
+});
+
+bfree.api.DropboxAccount.requestAccess = function(zone, library){
+    var box = bfree.api.Utilities.getBox({scale: 0.75});
+	var url = dojo.replace(bfree.api.DropboxAccount.requestURL, [zone.id, library.id]);
+	var winName = 'DropboxAccess';
+
+	var winArgs = dojo.string.substitute(
+								'width=${0},height=${1},top=${2},left=${3},toolbar=0,resizable=1,location=0,directories=0,status=0,menubar=0,scrollbars=1',
+								[box.w, box.h, box.t, box.l])
+
+    if(!dojo.isIE){
+        //for non ie browsers
+        var win = window.open(url, winName, winArgs);
+        win.focus();
+    }else{
+        var win = window.open(url, '_blank', winArgs);
+        if(win){
+            win.focus();
+        }
+    }
+}
+
+bfree.api.DropboxAccount.requestURL = '/zones/{0}/libraries/{1}/dropbox/access';
+
+bfree.api.ChoiceList.schema = {
+	type: 'object',
+	properties: {
+		'id': {
+			type: 'integer'
+		},
+        'request_token':{
+            type: 'string'
+        },
+        'request_secret':{
+            type: 'string'
+        },
+        'access_token':{
+            type: 'string'
+        },
+        'access_secret':{
+            type: 'string'
+        }
+    },
+    prototype: new bfree.api.DropboxAccount()
+};
+
+}
+
+if(!dojo._hasResource['bfree.api.DropboxAccounts']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
+dojo._hasResource['bfree.api.DropboxAccounts'] = true;
+/**
+ * @author Scott
+ */
+dojo.provide('bfree.api.DropboxAccounts');
+
+
+
+
+dojo.declare('bfree.api.DropboxAccounts', [bfree.api._Collection],{
+
+	constructor: function(/* Object */args){
+        this.zone=args.zone;
+        this.library=args.library;
+		this.target = dojo.replace(bfree.api.DropboxAccounts.TRGT, [this.zone.subdomain, this.library.id]);
+		this.schema = bfree.api.DropboxAccount.schema;
+        this.cache = true;
+
+        this._initialize();
+	}
+});
+
+bfree.api.DropboxAccounts.TRGT="/zones/{0}/libraries/{1}/dropbox"
+
+}
+
 if(!dojo._hasResource['bfree.api.Reference']){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource['bfree.api.Reference'] = true;
 /**
@@ -8214,6 +8292,7 @@ dojo._hasResource['bfree.api.Reference'] = true;
  * To change this template use File | Settings | File Templates.
  */
 dojo.provide('bfree.api.Reference');
+
 
 
 
@@ -8302,31 +8381,64 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
         return true;
     },
 
-    copyLocal: function(args){
+    synchronize: function(args){
         var zone = args.zone;
         var library = args.library;
 
-        var url = (args.version_id) ?
-                        dojo.replace(bfree.api.Reference.CPV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
-                        dojo.replace(bfree.api.Reference.CP_TRGT, [zone.subdomain, library.id, this.getId()]);
-
-        if(dojo.isWebKit){
-            var iframe;
-            iframe = document.getElementById("hiddenDownloader");
-            if (iframe === null)
-            {
-                iframe = document.createElement('iframe');
-                iframe.id = "hiddenDownloader";
-                iframe.style.visibility = 'hidden';
-                document.body.appendChild(iframe);
-            }
-            iframe.src = url;
+        var url
+        if(args.version_id!=null){
+            url = dojo.replace(bfree.api.Reference.SYNCHV_TRGT,  [zone.subdomain, library.id, this.getId(), args.version_id]);
         }else{
+            url = dojo.replace(bfree.api.Reference.SYNCH_TRGT,  [zone.subdomain, library.id, this.getId()]);
+        }
+        var putData = {};
+
+        var result = bfree.api.XhrHelper.doPutAction({
+            target: url,
+            putData: putData
+        });
+
+        return true;
+    },
+
+    copyLocal: function(args){
+        var zone = args.zone;
+        var library = args.library;
+        var url='';
+        if(this.id.indexOf&&this.id.indexOf('db')>=0){
+            var uid=this.id;
+            uid=uid.replace("db", "");
+            uid=uid.substring(0, (uid.indexOf("-")));
+            var path=this.id;
+            //cut off the 1st /
+            path=path.substring((path.indexOf("-")+2), path.length);
+            path=path.replace(/\>/g,"/").replace(/\</g, ".");
+
+            var dbinfo=args.library.getDropboxAccounts().fetchById({id: uid});
+            dropbox.requestToken=dbinfo.request_token;
+            dropbox.requestTokenSecret=dbinfo.request_secret;
+            dropbox.accessToken=dbinfo.access_token;
+            dropbox.accessTokenSecret=dbinfo.access_secret;
+
+            dropbox.media(path, function(data){
+                bfree.api.Utilities.saveUrl({
+                    url: data.url+'?dl=1',
+                    window_name: 'versa_save'
+                });
+            });
+
+        }else{
+            url = (args.version_id) ?
+                    dojo.replace(bfree.api.Reference.CPV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
+                    dojo.replace(bfree.api.Reference.CP_TRGT, [zone.subdomain, library.id, this.getId()]);
+
             bfree.api.Utilities.saveUrl({
                 url: url,
                 window_name: 'versa_save'
             });
         }
+
+
 	},
 
     file: function(args){
@@ -8364,6 +8476,8 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
 
         prmSet.setValue(versa.api.PermissionIndices.RESTORE, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
         prmSet.setValue(versa.api.PermissionIndices.DESTROY, this.hasRights(bfree.api._Securable.permissions.DELETE_ITEMS));
+
+        prmSet.setValue(versa.api.PermissionIndices.SYNCHRONIZE, this.hasRights(bfree.api._Securable.permissions.VERSION)&&!this.is_synchronized);
 
         return prmSet;
     },
@@ -8437,10 +8551,32 @@ dojo.declare('bfree.api.Reference', [bfree.api._Object, bfree.api._Securable], {
         var zone = args.zone;
         var library = args.library;
 
-        var url = (args.version_id) ?
-                        dojo.replace(bfree.api.Reference.VWV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
-                        dojo.replace(bfree.api.Reference.VW_TRGT, [zone.subdomain, library.id, this.getId()]);
+        var url='';
+        if(this.id.indexOf&&this.id.indexOf('db')>=0){
+            var uid=this.id;
+            uid=uid.replace("db", "");
+            uid=uid.substring(0, (uid.indexOf("-")));
+            var path=this.id;
+            //cut off the 1st /
+            path=path.substring((path.indexOf("-")+2), path.length);
+            path=path.replace(/\>/g,"/").replace(/\</g, ".");
 
+            var dbinfo=args.library.getDropboxAccounts().fetchById({id: uid});
+            dropbox.requestToken=dbinfo.request_token;
+            dropbox.requestTokenSecret=dbinfo.request_secret;
+            dropbox.accessToken=dbinfo.access_token;
+            dropbox.accessTokenSecret=dbinfo.access_secret;
+
+//            console.log(uid);
+//            console.log(path);
+
+            url = dropbox.getFileURL(path, false);
+        }else{
+            url = (args.version_id) ?
+                dojo.replace(bfree.api.Reference.VWV_TRGT, [zone.subdomain, library.id, this.getId(), args.version_id]) :
+                dojo.replace(bfree.api.Reference.VW_TRGT, [zone.subdomain, library.id, this.getId()]);
+
+        }
 
         bfree.api.Utilities.viewUrl({
             windowBox: args.windowBox,
@@ -8458,6 +8594,8 @@ bfree.api.Reference.CPV_TRGT = '/zones/{0}/libraries/{1}/references/{2}/download
 bfree.api.Reference.CKO_TRGT = '/zones/{0}/libraries/{1}/references/{2}/checkout.json';
 bfree.api.Reference.CKI_TRGT  = '/zones/{0}/libraries/{1}/references/{2}/checkin.json';
 bfree.api.Reference.XCKO_TRGT = '/zones/{0}/libraries/{1}/references/{2}/cancel_checkout.json';
+bfree.api.Reference.SYNCH_TRGT = '/zones/{0}/libraries/{1}/references/{2}/synchronize.json';
+bfree.api.Reference.SYNCHV_TRGT = '/zones/{0}/libraries/{1}/references/{2}/synchronize.json?version_id={3}';
 bfree.api.Reference.FILE_TRGT = '/zones/{0}/libraries/{1}/references/{2}/file.json?folder_id={3}';
 bfree.api.Reference.SHARE_TRGT = '/zones/{0}/libraries/{1}/references/{2}/share.json?folder_id={3}'
 bfree.api.Reference.UNSHARE_TRGT = '/zones/{0}/libraries/{1}/references/{2}/unshare.json?'
@@ -8770,6 +8908,16 @@ dojo.declare('bfree.api.Library', [bfree.api._Object, bfree.api._Securable], {
         }
 
         return this._choiceLists;
+    },
+
+    getDropboxAccounts: function(){
+        if(!this._dropbox){
+            this._dropbox = new bfree.api.DropboxAccounts({
+                zone:this.zone,
+                library: this
+            })
+        }
+        return this._dropbox
     },
 
     getDocuments: function(){
@@ -16497,6 +16645,16 @@ bfree.api.CellDefinition.formatIcon = function(data, rowIndex){
     if(item.isShare()){
         imgSrc = '/images/icons/states/shared.16.png';
         dojo.create('img', {src: imgSrc, width: 16, height: 16, style: {position: 'absolute', top:'2px', left:'2px'}}, node);
+    }
+
+    if(item.is_dropbox){
+        if(item.is_synchronized){
+            imgSrc = '/images/icons/states/dropbox.16.png';
+            dojo.create('img', {src: imgSrc, width: 16, height: 16, style: {position: 'absolute', top:'2px', left:'2px'}}, node);
+        }else{
+            imgSrc = '/images/icons/states/dropbox.disabled.16.png';
+            dojo.create('img', {src: imgSrc, width: 16, height: 16, style: {position: 'absolute', top:'2px', left:'2px'}}, node);
+        }
     }
 
     return wrapper.innerHTML;
@@ -41206,6 +41364,9 @@ bfree.widget.Bfree.Commands = {
 
     'EDIT_USER':            0x0401,
 
+    'ADD_DROPBOX':          0xD001,
+    'SYNCHRONIZE':          0xD002,
+
     'ADMIN_USERS':          0xF001,
     'ADMIN_GROUPS':         0xF002,
     'ADMIN_PROP_DEFS':      0xF003,
@@ -58538,7 +58699,7 @@ dojo.provide('bfree.widget.document.Checkin');
 
 
 dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, bfree.widget._DialogWidget],{
-    templateString: dojo.cache("bfree/widget/document", "template/Checkin.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n        </div>\n\n         <div   dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                    <div class=\"versaGridOutline\">\n                        <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                            Select a file to checkin\n                        </div>\n                        <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                            <tr>\n                                <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                            </tr>\n                        </table>\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:0px;padding:0;position:relative;display:none\">\n\n                            <span style=\"position:absolute;top:0;left:16px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div>\n\n</div>\n\n    <!-- div    dojoType=\"dijit.layout.BorderContainer\"\n            dojoAttachPoint=\"mainContainer\"\n            design=\"sidebar\"\n            gutters=\"false\"\n            style=\"height:100%;width:100%;\">\n\n        <div   dojoType=\"dijit.layout.ContentPane\"\n               dojoAttachPoint=\"previewPane\"\n               splitter=\"false\"\n               region=\"center\"\n               style=\"display:none\">\n\n            <div dojoAttachPoint=\"previewNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"right\"\n                splitter=\"false\"\n                style=\"width:480px\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    dojoAttachPoint=\"headerPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopHeader\"\n                    style=\"height:12px;position:relative;\">\n\n                <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n                </span>\n\n                <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n                </span>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:32px;padding:4px 0 4px 0\">\n\n                    <div dojoAttachPoint=\"uploaderNode\"></div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                        <div class=\"versaGridOutline\">\n                            <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                                Select a file to checkin\n                            </div>\n                            <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                                <tr>\n                                    <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                                </tr>\n                            </table>\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                dojoAttachPoint=\"midTitlePane\"\n                                region=\"top\"\n                                splitter=\"false\"\n                                class=\"versaMidHeader\"\n                                style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                            Custom Properties\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.BorderContainer\"\n                                design=\"headline\"\n                                gutters=\"false\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0\">\n\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"center\"\n                                    splitter=\"false\"\n                                    style=\"padding:0;\">\n\n                                <div dojoAttachPoint=\"editorNode\"></div>\n\n                            </div>\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"bottom\"\n                                    splitter=\"false\"\n                                    style=\"height:0px;padding:0;position:relative;display:none\">\n\n                                <span style=\"position:absolute;top:0;left:16px\">\n                                <div dojoAttachPoint=\"addMinorNode\"></div>\n                                <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                    <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                                </span>\n                                </span>\n\n                            </div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                            <span style=\"position:absolute;top:0;right:8px;\">\n                                <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                                <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                            </span>\n\n                    </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div -->\n\n</div>\n"),
+    templateString: dojo.cache("bfree/widget/document", "template/Checkin.html", "<div style=\"height:100%;width:100%;\">\n\n<div    dojoType=\"dijit.layout.BorderContainer\"\n        dojoAttachPoint=\"mainContainer\"\n        design=\"sidebar\"\n        gutters=\"false\"\n        style=\"height:100%;width:100%;\">\n\n    <div   dojoType=\"dijit.layout.ContentPane\"\n           dojoAttachPoint=\"previewPane\"\n           splitter=\"false\"\n           region=\"center\"\n           style=\"display:none\">\n\n        <div dojoAttachPoint=\"previewNode\"></div>\n\n    </div>\n\n    <div    dojoType=\"dijit.layout.BorderContainer\"\n            design=\"headline\"\n            gutters=\"false\"\n            region=\"right\"\n            splitter=\"false\"\n            style=\"width:480px\">\n\n        <div    dojoType=\"dijit.layout.ContentPane\"\n                dojoAttachPoint=\"headerPane\"\n                region=\"top\"\n                splitter=\"false\"\n                class=\"versaTopHeader\"\n                style=\"height:12px;position:relative;\">\n\n            <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n            </span>\n\n            <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n            </span>\n\n        </div>\n\n         <div   dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"center\"\n                splitter=\"false\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    style=\"height:32px;padding:4px 0 4px 0\">\n\n                <div dojoAttachPoint=\"uploaderNode\"></div>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                    <div class=\"versaGridOutline\">\n                        <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                            Select a file to checkin\n                        </div>\n                        <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                            <tr>\n                                <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                            </tr>\n                        </table>\n                    </div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            dojoAttachPoint=\"midTitlePane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            class=\"versaMidHeader\"\n                            style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                        Custom Properties\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\"\n                            style=\"padding:0\">\n\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0;\">\n\n                            <div dojoAttachPoint=\"editorNode\"></div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:16px;padding:0;position:relative;\">\n\n                            <div style=\"position:absolute;top:0px;left:16px;\">\n                                <div dojoAttachPoint=\"chkSynchronize\"></div>\n                                <span dojoAttachPoint=\"lblSynchronize\"></span>\n                            </div>\n\n                            <!--<span style=\"position:absolute;top:0;left:16px\">\n                            <div dojoAttachPoint=\"addMinorNode\"></div>\n                            <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                            </span>\n                            </span>-->\n\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"bottom\"\n                            splitter=\"false\"\n                            style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n                        <span style=\"position:absolute;top:0;right:8px;\">\n                            <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                            <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                        </span>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div>\n\n</div>\n\n    <!-- div    dojoType=\"dijit.layout.BorderContainer\"\n            dojoAttachPoint=\"mainContainer\"\n            design=\"sidebar\"\n            gutters=\"false\"\n            style=\"height:100%;width:100%;\">\n\n        <div   dojoType=\"dijit.layout.ContentPane\"\n               dojoAttachPoint=\"previewPane\"\n               splitter=\"false\"\n               region=\"center\"\n               style=\"display:none\">\n\n            <div dojoAttachPoint=\"previewNode\"></div>\n\n        </div>\n\n        <div    dojoType=\"dijit.layout.BorderContainer\"\n                design=\"headline\"\n                gutters=\"false\"\n                region=\"right\"\n                splitter=\"false\"\n                style=\"width:480px\">\n\n            <div    dojoType=\"dijit.layout.ContentPane\"\n                    dojoAttachPoint=\"headerPane\"\n                    region=\"top\"\n                    splitter=\"false\"\n                    class=\"versaTopHeader\"\n                    style=\"height:12px;position:relative;\">\n\n                <span dojoAttachPoint=\"showPreviewNode\" style=\"position:absolute;left:8px;\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onShowPreview\">Show Preview</a>\n                </span>\n\n                <span dojoAttachPoint=\"hidePreviewNode\" style=\"position:absolute;left:8px;opacity:0;display:none\">\n                    <a href=\"javascript://\" class=\"versaLink\" dojoAttachEvent=\"onclick: _onHidePreview\">Hide Preview</a>\n                </span>\n\n            </div>\n\n            <div    dojoType=\"dijit.layout.BorderContainer\"\n                    design=\"headline\"\n                    gutters=\"false\"\n                    region=\"center\"\n                    splitter=\"false\">\n\n                <div    dojoType=\"dijit.layout.ContentPane\"\n                        region=\"top\"\n                        splitter=\"false\"\n                        style=\"height:32px;padding:4px 0 4px 0\">\n\n                    <div dojoAttachPoint=\"uploaderNode\"></div>\n\n                </div>\n\n                <div    dojoType=\"dijit.layout.BorderContainer\"\n                        design=\"headline\"\n                        gutters=\"false\"\n                        region=\"center\"\n                        splitter=\"false\">\n\n                    <div    dojoType=\"dijit.layout.ContentPane\"\n                            region=\"top\"\n                            splitter=\"false\"\n                            style=\"height:28px;overflow:hidden;padding:0 8px 8px 8px\">\n\n                        <div class=\"versaGridOutline\">\n                            <div dojoAttachPoint=\"selectNode\" class=\"versafile dijitDarkLabel\" style=\"padding-top:3px;height:18px;text-align:center;width:100%\">\n                                Select a file to checkin\n                            </div>\n                            <table dojoAttachPoint=\"fileTableNode\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;opacity:0;display:none\">\n                                <tr>\n                                    <td style=\"padding: 2px 0 0 2px;width:1px;\"><img dojoAttachPoint=\"stateIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td style=\"padding: 2px 4px 0 2px;width:1px\"><img dojoAttachPoint=\"typeIconNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:100%\"><span dojoAttachPoint=\"fileNameNode\"></span></td>\n                                    <td class=\"versafile dijitDarkLabel\" style=\"width:56px;padding-right:4px;text-align:right;white-space:nowrap\"><span dojoAttachPoint=\"fileSizeNode\"></span></td>\n                                </tr>\n                            </table>\n                        </div>\n\n                    </div>\n\n                    <div    dojoType=\"dijit.layout.BorderContainer\"\n                            design=\"headline\"\n                            gutters=\"false\"\n                            region=\"center\"\n                            splitter=\"false\">\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                dojoAttachPoint=\"midTitlePane\"\n                                region=\"top\"\n                                splitter=\"false\"\n                                class=\"versaMidHeader\"\n                                style=\"height:16px;padding:4px 8px 4px 8px;position:relative;\">\n                            Custom Properties\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.BorderContainer\"\n                                design=\"headline\"\n                                gutters=\"false\"\n                                region=\"center\"\n                                splitter=\"false\"\n                                style=\"padding:0\">\n\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"center\"\n                                    splitter=\"false\"\n                                    style=\"padding:0;\">\n\n                                <div dojoAttachPoint=\"editorNode\"></div>\n\n                            </div>\n\n                            <div    dojoType=\"dijit.layout.ContentPane\"\n                                    region=\"bottom\"\n                                    splitter=\"false\"\n                                    style=\"height:0px;padding:0;position:relative;display:none\">\n\n                                <span style=\"position:absolute;top:0;left:16px\">\n                                <div dojoAttachPoint=\"addMinorNode\"></div>\n                                <span id=\"chkAddMinor\" class=\"bfree dijitDarkLabel boldLabel\" style=\"vertical-align:middle\">\n                                    <label for=\"chkAddMinor\" dojoAttachPoint=\"lblInheritNode\">Add as Minor Version</label>\n                                </span>\n                                </span>\n\n                            </div>\n\n                        </div>\n\n                        <div    dojoType=\"dijit.layout.ContentPane\"\n                                region=\"bottom\"\n                                splitter=\"false\"\n                                style=\"height:16px;padding:0 8px 8px 8px;position:relative\">\n\n                            <span style=\"position:absolute;top:0;right:8px;\">\n                                <img dojoAttachPoint=\"statusIcnNode\" src=\"/images/icons/states/none.16.png\" width=\"16\" height=\"16\"/>\n                                <span dojoAttachPoint=\"statusMsgNode\" class=\"dijitMediumLabel dijitDarkLabel\" style=\"position:relative;top:-2px;white-space:nowrap;\"></span>\n                            </span>\n\n                    </div>\n\n                    </div>\n\n                </div>\n\n            </div>\n\n        </div>\n\n    </div -->\n\n</div>\n"),
     widgetsInTemplate: true,
 
     _chkAddMinor: null,
@@ -58555,6 +58716,10 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
 
     _chkAddMinor_onChange: function(newValue){
         this._document.isMinorVersion = newValue;
+    },
+
+    _chkSynchronize_onChange: function(newValue){
+        this.activeReference.synchronize = newValue;
     },
 
     _doCancel: function(){
@@ -58809,6 +58974,10 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
             var icon = bfree.api.Document.getStateIcon(this._fileItem.state | this._document.state);
             this.statusMsgNode.innerHTML = msg;
             this.statusIcnNode.src = dojo.replace('/images/icons/states/{0}', [icon]);
+
+            if(this._chkSynchronize){
+                this._chkSynchronize.set('disabled', false);
+            }
         }
         else{
             this.statusMsgNode.innerHTML = 'Select a file to checkin';
@@ -58816,7 +58985,7 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
         }
 
         var canAddMinor = false;
-        this._chkAddMinor.set('disabled', !canAddMinor);
+//        this._chkAddMinor.set('disabled', !canAddMinor);
 
     },
 
@@ -58896,13 +59065,25 @@ dojo.declare('bfree.widget.document.Checkin', [dijit._Widget, dijit._Templated, 
         }, this.editorNode);
 
         //Removed (for now)
-        this._chkAddMinor = new dijit.form.CheckBox({
-            id: 'chkAddMinor',
-            checked: false,
-            scrollOnFocus: false,
-            disabled: true,
-            onChange: dojo.hitch(this, this._chkAddMinor_onChange)
-        }, this.addMinorNode);
+//        this._chkAddMinor = new dijit.form.CheckBox({
+//            id: 'chkAddMinor',
+//            checked: false,
+//            scrollOnFocus: false,
+//            disabled: true,
+//            onChange: dojo.hitch(this, this._chkAddMinor_onChange)
+//        }, this.addMinorNode);
+
+        if(this.activeReference.is_dropbox){
+            this._chkSynchronize = new dijit.form.CheckBox({
+                id: 'chkSynchronize',
+                checked: false,
+                scrollOnFocus: false,
+                disabled: true,
+                onChange: dojo.hitch(this, this._chkSynchronize_onChange)
+            }, this.chkSynchronize);
+
+            this.lblSynchronize.innerHTML='Synchronize to Dropbox'
+        }
 
         this._wdgPreview = new bfree.widget.file.Preview({
             zone: this.zone
@@ -60286,6 +60467,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         hiddenItems.SHARE = !folder.isShareRoot();
         hiddenItems.UNSHARE = !folder.isShare();
         hiddenItems.COPY  = !folder.isShare();
+        hiddenItems.DROPBOX = !folder.isDropboxRoot();
 
         dojo.forEach(this._arrDivides, function(divider, idx){
             dojo.toggleClass(divider.domNode, 'versaHide', hideDivs);
@@ -60300,6 +60482,7 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
         dojo.toggleClass(this._buttons.SHARE.domNode, 'versaHide', hiddenItems.SHARE);
         dojo.toggleClass(this._buttons.UNSHARE.domNode, 'versaHide', hiddenItems.UNSHARE);
         dojo.toggleClass(this._buttons.COPY.domNode, 'versaHide', hiddenItems.COPY);
+        dojo.toggleClass(this._buttons.DROPBOX.domNode, 'versaHide', hiddenItems.DROPBOX);
 
         var activePrmSet = folder.getPermissionSet(this.activeLibrary, this.activeUser);
 
@@ -60449,6 +60632,14 @@ dojo.declare('bfree.widget.folder.ContextMenu', bfree.widget.HeaderMenu,{
             onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.EMPTY)
         });
         this.addChild(this._buttons.EMPTY);
+
+        this._buttons.DROPBOX = new dijit.MenuItem({
+            label: 'Add Dropbox Account...',
+            disabled: false,
+            iconClass: 'menuIcon bfreeIconSecureFolder',
+            onClick: dojo.hitch(this, this._onCommand, bfree.widget.Bfree.Commands.ADD_DROPBOX)
+        });
+        this.addChild(this._buttons.DROPBOX);
 
 
     },
@@ -65234,6 +65425,8 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
             iconClass = 'folderIcon bfreeSearchFolder';
         else if(item.isShareRoot())
             iconClass = 'folderIcon bfreeShareRootFolder';
+        else if(item.isDropboxRoot())
+            iconClass = 'folderIcon bfreeDropboxRootFolder';
         else if(item.isShare())
             iconClass = (!item || this.model.mayHaveChildren(item)) ?
                 (opened ? 'folderIcon bfreeShareFolderOpened' : 'folderIcon bfreeShareFolderClosed') : 'folderIcon bfreeShareFolderClosed';
@@ -65410,6 +65603,9 @@ dojo.declare('bfree.widget.folder.Tree', dijit.Tree, {
     },
 
     setSelectedPath: function(path){
+        if(!path||path.length==0){
+            path=this.rootNode.item.path;
+        }
         this.set('path', path);
         this.setSelectedNode(this.selectedNode);
     },
@@ -66243,7 +66439,7 @@ dojo.declare('bfree.widget.document.version.ContextMenu', bfree.widget.HeaderMen
     menuLabel: 'Version',
     activeItem: null,
     versions: null,
-    document: null,
+    reference: null,
 
     refresh: function(){
     },
@@ -66265,6 +66461,19 @@ dojo.declare('bfree.widget.document.version.ContextMenu', bfree.widget.HeaderMen
             this.rowHit = false;
         }
 
+    },
+
+    _setActiveItemAttr: function(item){
+        this.activeItem=item;
+        if(this._btnDocSync){
+            if(this.reference.getState(bfree.api.Document.states.SYNCHRONIZING)){
+                this._btnDocSync.set('disabled', true);
+                this._btnDocSync.set('label', 'Synchronizing...');
+            }else{
+                this._btnDocSync.set('disabled', this.activeItem.dropbox_uid!=null);
+                this._btnDocSync.set('label', 'Synchronize');
+            }
+        }
     },
 
     constructor: function(args){
@@ -66299,6 +66508,17 @@ dojo.declare('bfree.widget.document.version.ContextMenu', bfree.widget.HeaderMen
                 bfree.widget.Bfree.ObjectTypes.VERSION)
         });
 		this.addChild(this._btnDocCopy);
+
+        if(this.dropbox){
+            this._btnDocSync = new dijit.MenuItem({
+                label: 'Synchronize',
+                iconClass: 'menuIcon bfreeDropboxRootFolder',
+                onClick: dojo.hitch(this, this._onCommand,
+                    bfree.widget.Bfree.Commands.SYNCHRONIZE,
+                    bfree.widget.Bfree.ObjectTypes.VERSION)
+            });
+            this.addChild(this._btnDocSync);
+        }
     }
 
 });
@@ -66326,7 +66546,7 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
 
     _mnuVersion: null,
 
-    activeDocument: null,
+    reference: null,
     library: null,
     zone: null,
 
@@ -66359,17 +66579,17 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
                 item=this.getItem(evt.rowIndex);
                 this.selection.select(evt.rowIndex);
                 this._mnuVersion.rowHit = true;
-                this._mnuVersion.activeItem = item;
+                this._mnuVersion.set('activeItem', item);
             }
             this._mnuVersion.rowHit = true;
-            this._mnuVersion.activeItem = item;
+            this._mnuVersion.set('activeItem', item);
         }
 
     },
 
     _setActiveDocumentAttr: function(value){
         this.activeDocument = value;
-        this.setStore(this.activeDocument.getVersions({zone: this.zone, library: this.library}).store, {}, {cache: true});
+        this.setStore(this.activeDocument.getVersions({zone: this.zone, library: this.library}).store, {}, {cache: false});
     },
 
 	constructor: function(/* Object */args){
@@ -66386,7 +66606,7 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
         this.canEdit = this._canEdit;
 		this.canSort = this._canSort;
 		this.noDataMessage = 'No Versions found';
-        this.sortInfo = 4;
+        this.sortInfo = 5;
 	},
 
 	postCreate: function(){
@@ -66395,11 +66615,18 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
         this._mnuVersion = new bfree.widget.document.version.ContextMenu({
             onCommand: dojo.hitch(this, this._onCommand),
             versions: this.versions,
-            document: this.document,
+            reference: this.reference,
+            dropbox: this.dropbox,
             targetNodeIds: [this.id]
         });
 
         this.onRowContextMenu = dojo.hitch(this, this._onRowContextMenu);
+
+        if(this.dropbox){
+            bfree.widget.document.version.Grid.view[0].cells[1].hidden=false;
+        }else{
+            bfree.widget.document.version.Grid.view[0].cells[1].hidden=true;
+        }
 
         this.set('structure', bfree.widget.document.version.Grid.view);
         //this.set('sortInfo', 2);
@@ -66425,6 +66652,16 @@ dojo.declare('bfree.widget.document.version.Grid', [bfree.widget._Grid], {
     }
 
 });
+
+bfree.widget.document.version.Grid.formatDropbox = function(data, rowIndex){
+
+    var iconClass = '';
+
+    if(data){
+        iconClass = 'statusIcon bfreeDropboxRootFolder';
+    }
+    return dojo.replace('<img src="/images/icons/16/blank.png" width="16" height="16" class="{0}"/>', [iconClass]);
+}
 
 bfree.widget.document.version.Grid.formatState = function(data, rowIndex){
 
@@ -66457,6 +66694,12 @@ bfree.widget.document.version.Grid.view = [
                 name: '&nbsp;',
                 width: '16px',
                 formatter: bfree.widget.document.version.Grid.formatState
+            },
+            {
+                field: 'dropbox_uid',
+                name: '&nbsp;',
+                width: '16px',
+                formatter: bfree.widget.document.version.Grid.formatDropbox
             },
             {
                 field: 'major_version_number',
@@ -66517,10 +66760,23 @@ dojo.declare('versa.widget.reference.Accessor', null,{
 
     },
 
-    doCheckout: function(item, refresh){
+    doCheckout: function(item){
 
         try{
             item.checkout({zone: this.activeZone, library: this.activeLibrary});
+            this.activeLibrary.getDocuments().invalidate(item.document_id);
+        }
+        finally{
+            // SEE notes in 'doCancelCheckout' on this.
+            this.activeLibrary.getReferences().refreshItem(item.getId());
+        }
+
+    },
+
+    doSynchronize: function(item, version_id){
+
+        try{
+            item.synchronize({zone: this.activeZone, library: this.activeLibrary, version_id: version_id});
             this.activeLibrary.getDocuments().invalidate(item.document_id);
         }
         finally{
@@ -66607,6 +66863,20 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
         }
     },
 
+    __onSynchronize: function(args){
+        var version = args.version;
+
+        try{
+            this._accessor.doSynchronize(this.activeReference, version.getId());
+        }
+        catch(e){
+            var err = new bfree.api.Error('Failed to synchronize', e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+    },
+
     __onView: function(args){
         var version = args.version;
 
@@ -66628,7 +66898,7 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
         this._document = this.library.getDocuments().refreshAsync({
             scope: this,
             identity: this.activeReference.document_id,
-            onItem: dojo.hitch(this, this._onItemLoaded),
+            onItem: this._onItemLoaded,
             onError: this._onItemError
         });
 
@@ -66642,6 +66912,9 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
                 break;
             case bfree.widget.Bfree.Commands.COPY:
                 this.__onCopy(e);
+                break;
+            case bfree.widget.Bfree.Commands.SYNCHRONIZE:
+                this.__onSynchronize(e);
                 break;
         }
 
@@ -66716,6 +66989,8 @@ dojo.declare('bfree.widget.document.version.Versions', [dijit._Widget, dijit._Te
             'class': 'versaGridOutline',
             library: this.library,
             zone: this.zone,
+            reference: this.activeReference,
+            dropbox: this.activeReference.is_dropbox,
             onCommand: dojo.hitch(this, this._onCommand)
         }, this.gridNode);
 
@@ -77867,7 +78142,7 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
                    scope: this,
                    invalidate: true,
                    identity: item.getId(),
-                   onItem: dojo.hitch(this, this.__onFolderLoad),
+                   onItem: this.__onFolderLoad,
                    onError: this.__onFolderLoadError
                 }, this);
             }
@@ -77875,7 +78150,7 @@ dojo.declare('bfree.widget.folder.Info', [dijit._Widget, dijit._Templated],{
                 this.library.getFolders().loadItem({
                     item: item,
                     scope: this,
-                    onItem: dojo.hitch(this, this.__onFolderLoad),
+                    onItem: this.__onFolderLoad,
                     onError: this.__onFolderLoadError
                 });
             }
@@ -78626,21 +78901,30 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
             return item.isShare();
         }, this);
 
-        var hideDivs = (isDeleted || isShareRef);
+        var isDropbox=false;
+        var isDropboxProxy=false;
+
+        if(isSingleItem){
+            isDropbox=this.activeItems[0].is_dropbox;
+            isDropboxProxy=this.activeItems[0].is_dropbox_proxy===true
+        }
+
+        var hideDivs = (isDeleted || isShareRef || isDropboxProxy);
 
         hiddenItems.VIEW = false;
         hiddenItems.COPY = isShareRef;
-        hiddenItems.EDIT = (isDeleted || isShareRef);
-        hiddenItems.VERSIONS = (isDeleted || isShareRef);
+        hiddenItems.EDIT = (isDeleted || isShareRef || isDropboxProxy);
+        hiddenItems.VERSIONS = (isDeleted || isShareRef || isDropboxProxy);
         hiddenItems.MOVE = (isDeleted || isShareRef);
-        hiddenItems.CKO = (isDeleted || isShareRef);
-        hiddenItems.CKI = (isDeleted || isShareRef);
-        hiddenItems.CANCEL_CKO = (isDeleted || isShareRef);
-        hiddenItems.DELETE = (isDeleted || isShareRef);
-        hiddenItems.SECURE = (isDeleted);
-        hiddenItems.RESTORE = (!isDeleted);
-        hiddenItems.DESTROY = (!isDeleted);
-        hiddenItems.UNSHARE = (!isShareRef);
+        hiddenItems.CKO = (isDeleted || isShareRef || isDropboxProxy);
+        hiddenItems.CKI = (isDeleted || isShareRef || isDropboxProxy);
+        hiddenItems.CANCEL_CKO = (isDeleted || isShareRef || isDropboxProxy);
+        hiddenItems.DELETE = (isDeleted || isShareRef || isDropboxProxy);
+        hiddenItems.SECURE = (isDeleted || isDropboxProxy);
+        hiddenItems.RESTORE = (!isDeleted || isDropboxProxy);
+        hiddenItems.DESTROY = (!isDeleted || isDropboxProxy);
+        hiddenItems.UNSHARE = (!isShareRef || isDropboxProxy);
+        hiddenItems.SYNCHRONIZE = (!isDropbox || isDropboxProxy);
 
         dojo.forEach(this._arrDivides, function(divider, idx){
             dojo.toggleClass(divider.domNode, 'versaHide', hideDivs);
@@ -78659,6 +78943,7 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
         dojo.toggleClass(this._buttons.RESTORE.domNode, 'versaHide', hiddenItems.RESTORE);
         dojo.toggleClass(this._buttons.DESTROY.domNode, 'versaHide', hiddenItems.DESTROY);
         dojo.toggleClass(this._buttons.UNSHARE.domNode, 'versaHide', hiddenItems.UNSHARE);
+        dojo.toggleClass(this._buttons.DROPBOX.domNode, 'versaHide', hiddenItems.SYNCHRONIZE);
 
         //calculate total permissions...will take the "least" amount of permissions
         var doAnd = (this.activeItems.length > 0) ? true : false;
@@ -78678,6 +78963,19 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
         this._buttons.CKO.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKO) && isSingleItem));
         this._buttons.CKI.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.CKI) && isSingleItem));
         this._buttons.XCKO.set('disabled', !((activePrmSet.getValue(versa.api.PermissionIndices.CANCEL_CKO)) && isSingleItem));
+
+        if(isSingleItem){
+            if(this.activeItems[0].getState(bfree.api.Document.states.SYNCHRONIZING)){
+                this._buttons.DROPBOX.set('disabled', true);
+                this._buttons.DROPBOX.set('label', 'Synchronizing...');
+            }else{
+                this._buttons.DROPBOX.set('disabled', !((activePrmSet.getValue(versa.api.PermissionIndices.SYNCHRONIZE)) && isSingleItem));
+                this._buttons.DROPBOX.set('label', 'Synchronize');
+            }
+        }else{
+            this._buttons.DROPBOX.set('disabled', true);
+        }
+
 
         this._buttons.MOVE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.MOVE)));
         this._buttons.DELETE.set('disabled', !(activePrmSet.getValue(versa.api.PermissionIndices.DELETE)));
@@ -78784,6 +79082,16 @@ dojo.declare('versa.widget.reference.ContextMenu', bfree.widget.HeaderMenu,{
                 bfree.widget.Bfree.ObjectTypes.DOCUMENT)
         });
         this.addChild(this._buttons.XCKO);
+
+        this._buttons.DROPBOX = new dijit.MenuItem({
+            label: 'Synchronize',
+            disabled: true,
+            iconClass: 'menuIcon bfreeDropboxRootFolder',
+            onClick: dojo.hitch(this, this._onCommand,
+                bfree.widget.Bfree.Commands.SYNCHRONIZE,
+                bfree.widget.Bfree.ObjectTypes.DOCUMENT)
+        });
+        this.addChild(this._buttons.DROPBOX);
 
 		this._arrDivides[2] = new dijit.MenuSeparator();
 		this.addChild(this._arrDivides[2]);
@@ -89681,6 +89989,8 @@ dojo.provide('bfree.widget.zone.Show');
 
 
 
+
+
 //dojo.require('bfree.widget.document.Grid');
 
 
@@ -89773,6 +90083,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 }, this);
 
             }finally{
+
                 //Mark grid changes complete...do update.
                 this._grdDocuments.endUpdate();
 
@@ -90031,11 +90342,31 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             case bfree.widget.Bfree.Commands.LOGOFF:
                 this._onLogoff();
                 break;
+            case bfree.widget.Bfree.Commands.ADD_DROPBOX:
+                this._onAddDropbox();
+                break;
+            case bfree.widget.Bfree.Commands.SYNCHRONIZE:
+                this.__onSynchronize(option, params);
+                break;
         };
 
     },
 
-     __onAdmin: function(object_type){
+    _onAddDropbox: function(){
+
+      try{
+
+          bfree.api.DropboxAccount.requestAccess(this.zone, this.activeLibrary)
+
+      }catch(e){
+        var err = new bfree.api.Error('Failed to add new dropbox account', e);
+        bfree.widget.ErrorManager.handleError({
+          error: err
+        });
+      }
+    },
+
+    __onAdmin: function(object_type){
 
         switch(object_type){
             case bfree.widget.Bfree.ObjectTypes.USER:
@@ -90148,6 +90479,39 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                 break;
         }
 
+    },
+
+    __onSynchronize: function(object_type, params){
+        switch(object_type){
+            case bfree.widget.Bfree.ObjectTypes.DOCUMENT:
+                this.__onDocumentSynchronize(params.items)
+            break;
+        }
+    },
+
+    __onDocumentSynchronize: function(items){
+        this._wdgItemInfo.setBusy(true);
+
+        var accessor = new versa.widget.reference.Accessor({
+            activeLibrary: this.activeLibrary,
+            activeZone: this.zone
+        });
+
+        function __action(item){
+            accessor.doSynchronize(item);
+        }
+
+        function __onComplete(items){
+        }
+
+        function __onError(item, e){
+            var err = new bfree.api.Error(dojo.replace('Failed to synchronize document \'{0}\'', [item.name]), e);
+			bfree.widget.ErrorManager.handleError({
+				error: err
+			});
+        }
+
+        this.__doAction(items, dojo.hitch(this, __action), dojo.hitch(this, __onComplete), dojo.hitch(this, __onError));
     },
 
     __onMove: function(object_type, params){
@@ -90504,7 +90868,6 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
         function __action(item){
             accessor.doCheckout(item);
-
             accessor.doCopyLocal(item);
         }
 
@@ -90658,16 +91021,14 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
 
                 for(var i=0;i<fileItems.length;i++){
 
-//                    alert(fileItems[i].name+"| Type:"+fileItems[i].type+"| Size:"+fileItems[i].size);
-
-                    if(fileItems[i].type!=""){
+                    if(!(fileItems[i].type==""&&(fileItems[i].size==0||fileItems[i].size==4096))){
                         files[pos++]=fileItems[i];
                     }
 
                 }
 
                 if(files.length==0){
-                    alert('Folders and unrecognized files cannot be uploaded to the VersaFile system');
+                    alert('Folders cannot be uploaded to the VersaFile system');
                     return;
                 }
             }
@@ -91395,11 +91756,11 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
             return;
         }
 
-        var old=this.activeDocuments;
         this.activeDocuments = items;
         this._cmdBar.set('activeDocuments', this.activeDocuments);
 
         if(this.activeType == bfree.widget.Bfree.ObjectTypes.DOCUMENT){
+
             this._wdgItemInfo.preload({
                 type: bfree.widget.Bfree.ObjectTypes.DOCUMENT,
                 items: items
@@ -91410,7 +91771,7 @@ dojo.declare('bfree.widget.zone.Show', [dijit._Widget, dijit._Templated], {
                     this.activeLibrary.getDocuments().refreshAsync({
                         scope: this,
                         identity: item.document_id,
-                        onItem: dojo.hitch(this, this.__onDocumentLoad),
+                        onItem: this.__onDocumentLoad,
                         onError: this.__onDocumentLoadError
                     });
                 }, this);

@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/rko/!svn/ver/2196/VersaFile/trunk/config/environments
+END
+development.rb
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/rko/!svn/ver/1666/VersaFile/trunk/config/environments/development.rb
+END
+production.rb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/rko/!svn/ver/2204/VersaFile/trunk/config/environments/production.rb
+END
+test.rb
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/rko/!svn/ver/1666/VersaFile/trunk/config/environments/test.rb
+END

@@ -106,6 +106,25 @@ module UploaderHelper
     return {:name => tmpFileName, :path => tmpFilePath, :size => File.size(tmpFilePath)}
   end
 
+  def self.write_binary_file(zone, session_id, file, name)
+
+    session_id = session_id.gsub( /[^a-zA-Z0-9_\.]/, '_')
+
+    tmp_dir = File.join(zone.subdomain, '~tmp', session_id)
+    tmp_dir = File.join(VersaFile::SYSTEM_PATH, tmp_dir)
+    FileUtils.mkdir_p tmp_dir
+
+    tmpFileName = name #UploaderHelper.generate_name(tmp_dir)
+    tmpFilePath = File.join(tmp_dir, tmpFileName)
+
+
+    tmpFilePath = Pathname.new(tmpFilePath).cleanpath()
+    File.open(tmpFilePath, 'wb') {|f| f.write file }
+
+    return {:name => tmpFileName, :path => tmpFilePath, :size => File.size(tmpFilePath)}
+
+  end
+
 
   def self.write_zero_byte_file(zone, session_id, file_name)
 

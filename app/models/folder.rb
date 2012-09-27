@@ -131,8 +131,6 @@ class Folder < ActiveRecord::Base
       #json_obj[:document_count] = self.document_count
       json_obj[:text_path] = self.text_path
       json_obj[:folder_type] = self.folder_type
-      json_obj[:active_permissions] = self.acl.get_role(options[:user], options[:group]).permissions
-      json_obj[:view_definition_id] = self.get_view_definition(options[:user]).id
 
       if self.folder_type == VersaFile::FolderTypes.Share
         json_obj[:expiry] = self.share.expiry
@@ -142,18 +140,28 @@ class Folder < ActiveRecord::Base
 
       json_obj[:children] = []
 
+      if(self.folder_type==VersaFile::FolderTypes.DropboxRoot)
+        json_obj[:active_permissions] = 2147483647
+        json_obj[:view_definition_id] = self.library.root_folder.get_view_definition(options[:user]).id
+      elsif(self.folder_type==VersaFile::FolderTypes.DropboxAccount||self.folder_type==VersaFile::FolderTypes.DropboxFolder)
+        json_obj[:active_permissions] = 2147483647
+        json_obj[:view_definition_id] = self.library.root_folder.get_view_definition(options[:user]).id
+      else
+        json_obj[:view_definition_id] = self.get_view_definition(options[:user]).id
+        json_obj[:active_permissions] = self.acl.get_role(options[:user], options[:group]).permissions
+      end
+
       self.children.viewable(options[:user], options[:group]).each do |child|
         json_obj[:children] << {
             '$ref' => child.id,
             :name => child.name,
             :parent_id => child.parent_id,
-            :children => (child.children.count > 0),
+            :children => child.children.length>0,
             :path => child.dojo_path,
             :folder_type => child.folder_type,
             :active_permissions => child.acl.get_role(options[:user], options[:group]).permissions,
             :view_definition_id => child.get_view_definition(options[:user]).id
         }
-
       end
 
     return json_obj

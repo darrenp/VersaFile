@@ -206,6 +206,19 @@ class Reference < ActiveRecord::Base
     return share
   end
 
+  def is_dropbox
+    self.document.versions.each do |version|
+      if(version.dropbox_uid!=nil)
+        return true
+      end
+    end
+    return false
+  end
+
+  def is_synchronized
+    return self.document.current_version.dropbox_uid!=nil
+  end
+
   def file_in_folder(folder, user)
 
     raise "Folder not defined" if folder.nil?
@@ -316,6 +329,41 @@ class Reference < ActiveRecord::Base
                   self.folder.acl.deep_clone
     self.acl.inherits = true
 
+  end
+
+  def move_to_dropbox(uid, path)
+    self.document.add_flag(Bfree::DocumentStates.Synchronizing)
+    self.document.save
+
+    self.document.versions.each do |version|
+      if(version.id==document.current_version.id)
+        version.dropbox_uid=uid
+        version.dropbox_path=path+'/'+version.binary_file_name
+      else
+        version.dropbox_uid=nil
+        version.dropbox_path=nil
+      end
+      version.save
+    end
+
+    self.delay.move_to_dropbox_delay(uid, path)
+  end
+
+  def move_to_dropbox_delay(uid, path)
+    version=self.document.current_version
+
+    local_filepath = version.path
+    orig_filename = version.binary_file_name
+
+    dbsession=library.db_sessions.find_by_dropbox_uid(uid).getSession()
+    dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+    metadata=dbclient.put_file("#{path}/#{orig_filename}", File.open(local_filepath, "rb"))
+
+    document.current_version.dropbox_uid=uid
+    document.current_version.dropbox_path=metadata['path']
+    document.current_version.save
+    self.document.remove_flag(Bfree::DocumentStates.Synchronizing)
+    self.document.save
   end
 
 private

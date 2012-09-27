@@ -98,6 +98,13 @@ VersaFile::Application.routes.draw do
       end
 
       resources :choice_lists
+      resources :dropbox do
+        collection do
+          get 'access'
+          get 'connection'
+          get 'finished'
+        end
+      end
       resources :view_mappings
       resources :document_types do
         collection do
@@ -139,6 +146,7 @@ VersaFile::Application.routes.draw do
           put 'checkout'
           put 'checkin'
           put 'cancel_checkout'
+          put 'synchronize'
           get 'download'
           put 'file'
           put 'restore'

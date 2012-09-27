@@ -114,7 +114,98 @@ class FoldersController < ApplicationController
   # GET /folders/1.json
   def show
 
+    #if(params[:id].index("db")!=nil)
+    #  uid, path=DropboxHelper.parse_id(params[:id])
+    #
+    #  sezzion=@library.db_sessions.find_by_dropbox_uid(uid)
+    #  dbsession=sezzion.getSession()
+    #
+    #  dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+    #  dbaccount=dbclient.account_info()
+    #
+    #  meta=dbclient.metadata(path)
+    #
+    #  @folder=@library.folders.new(
+    #      :name=>meta['path'].length==1 ? dbaccount['display_name'] : meta['path'].slice((meta['path'].rindex('/')+1)..meta['path'].length),
+    #      :folder_type=>meta['path'].length==1 ? VersaFile::FolderTypes.DropboxAccount : VersaFile::FolderTypes.DropboxFolder
+    #  )
+    #  @folder.id='db'+dbaccount['uid'].to_s+"-"+meta['path'].to_s.gsub("/",">")
+    #else
     @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
+
+    if(@folder.folder_type==VersaFile::FolderTypes.DropboxRoot)
+      @library.db_sessions.each do |dbsess|
+
+        dbsession=dbsess.getSession()
+        dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+        account=dbclient.account_info()
+        meta=dbclient.metadata('/')
+
+        @folder_account=@library.folders.find_by_dropbox_uid_and_dropbox_path(account['uid'], '/')
+
+        meta['contents'].each do |file|
+          if(file['is_dir'])
+            childmeta=dbclient.metadata(file['path'])
+
+            folder=@library.folders.find_by_dropbox_uid_and_dropbox_path(account['uid'], childmeta['path'])
+
+            if(folder==nil)
+              folder = @zone.folders.new(
+                :library => @library,
+                :name => childmeta['path'].slice((childmeta['path'].rindex('/')+1)..childmeta['path'].length),
+                :folder_type => VersaFile::FolderTypes.DropboxFolder,
+                :created_by => 'Dropbox',
+                :updated_by => 'Dropbox',
+                :parent_id => @folder_account.id,
+                :dropbox_uid => account['uid'],
+                :dropbox_path => childmeta['path']
+              )
+
+              unless folder.save
+                raise_errors(@folder.errors)
+              end
+            end
+          end
+        end
+      end
+    elsif(@folder.folder_type==VersaFile::FolderTypes.DropboxAccount||@folder.folder_type==VersaFile::FolderTypes.DropboxFolder)
+      @folder.children.each do |child|
+
+        dbsess=@library.db_sessions.find_by_dropbox_uid(child.dropbox_uid)
+        dbsession=dbsess.getSession()
+        dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+        account=dbclient.account_info()
+        meta=dbclient.metadata(child.dropbox_path)
+
+        meta['contents'].each do |file|
+          if(file['is_dir'])
+            childmeta=dbclient.metadata(file['path'])
+
+            folder=@library.folders.find_by_dropbox_uid_and_dropbox_path(account['uid'], childmeta['path'])
+
+            if(folder==nil)
+              folder = @zone.folders.new(
+                :library => @library,
+                :name => childmeta['path'].slice((childmeta['path'].rindex('/')+1)..childmeta['path'].length),
+                :folder_type => VersaFile::FolderTypes.DropboxFolder,
+                :created_by => 'Dropbox',
+                :updated_by => 'Dropbox',
+                :parent_id => child.id,
+                :dropbox_uid => account['uid'],
+                :dropbox_path => childmeta['path']
+              )
+
+              unless folder.save
+                raise_errors(@folder.errors)
+              end
+            end
+          end
+        end
+      end
+    end
+
+
+    #end
 
     respond_to do |format|
       format.html # show.html.erb
@@ -148,6 +239,24 @@ class FoldersController < ApplicationController
 
     begin
 
+      #if(params[:parent_id].index('db')!=nil)
+      #  uid, path=DropboxHelper.parse_id(params[:parent_id])
+      #  path=path.length==1 ? "#{path}#{params[:name]}" : "#{path}/#{params[:name]}"
+      #
+      #  sezzion=@library.db_sessions.find_by_dropbox_uid(uid).getSession()
+      #  client=DropboxClient.new(sezzion, configatron.versafile.dropbox.access_type)
+      #  client.file_create_folder(path)
+      #
+      #  @folder = @zone.folders.new(
+      #    :library => @library,
+      #    :name => params[:name],
+      #    :folder_type => VersaFile::FolderTypes.DropboxFolder,
+      #    :created_by => @active_user.name,
+      #    :updated_by => @active_user.name,
+      #    :parent_id => params[:parent_id]
+      #  )
+      #  @folder.id='db'+uid+"-"+path.to_s.gsub("/",">")
+      #else
       @parent = nil
       @share = nil
 
@@ -158,6 +267,23 @@ class FoldersController < ApplicationController
       @parent = @library.root_folder if (@parent.nil? && (folder_type != VersaFile::FolderTypes.Root))
 
       Folder.transaction do
+        dropbox_uid=nil
+        dropbox_path=nil
+
+        if(@parent.folder_type==VersaFile::FolderTypes.DropboxAccount||
+           @parent.folder_type==VersaFile::FolderTypes.DropboxFolder)
+          uid=@parent.dropbox_uid
+          path=@parent.dropbox_path
+          path=path.length==1 ? "#{path}#{params[:name]}" : "#{path}/#{params[:name]}"
+
+          dbsession=@library.db_sessions.find_by_dropbox_uid(uid).getSession()
+          client=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+          client.file_create_folder(path)
+
+          folder_type=VersaFile::FolderTypes.DropboxFolder
+          dropbox_uid=uid
+          dropbox_path=path
+        end
 
         @folder = @zone.folders.new(
             :library => @library,
@@ -165,7 +291,9 @@ class FoldersController < ApplicationController
             :folder_type => folder_type,
             :created_by => @active_user.name,
             :updated_by => @active_user.name,
-            :parent_id => @parent.nil? ? nil : @parent.id
+            :parent_id => @parent.nil? ? nil : @parent.id,
+            :dropbox_uid => dropbox_uid,
+            :dropbox_path => dropbox_path
         )
 
         unless @folder.save
@@ -191,13 +319,11 @@ class FoldersController < ApplicationController
 
             #replicater seed's ACL
             @folder.acl = @seed.acl.deep_clone
-            @folder.acl.update_attribute(:inherits, false);
-
+            @folder.acl.update_attribute(:inherits, false)
           end
-
         end
-
       end
+      #end
 
       respond_to do |format|
         format.html { redirect_to @folder, notice: 'Folder was successfully created.' }
@@ -216,56 +342,75 @@ class FoldersController < ApplicationController
   # PUT /folders/1
   # PUT /folders/1.json
   def update
+    if(params[:id].index('db'))
+      uid, path=DropboxHelper.parse_id(params[:id])
 
-    @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
-    unless Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata)||
-           Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View)
-      raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
-    end
+      sezzion=@library.db_sessions.find_by_dropbox_uid(uid)
+      dbsession=sezzion.getSession()
 
-    if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata))
-      Folder.transaction do
+      dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+      dbaccount=dbclient.account_info()
 
-        #change name here
-        @folder.name = params[:name] unless params[:name].nil?
+      meta=dbclient.metadata(path)
 
-        #change parent folder here
-        unless ((params[:parent_id].nil?) || (@folder.folder_type != VersaFile::FolderTypes.Content))
-          #attempt to retrieve parent folder -- assign root if folder not found.
-          @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(params[:parent_id])
-          @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
-          @folder.file_in_folder(@parent) if @folder.parent != @parent
-        end
-
-        #update share properties
-        if(@folder.folder_type == VersaFile::FolderTypes.Share)
-          @folder.share.password = params[:password] unless params[:password].nil?||params[:password]==""
-          @folder.share.expiry = params[:expiry]
-        end
-
-        unless @folder.save
-          raise_errors(@folder.errors)
-        end
-
-        #can have only one custom view per folder/user, so...
-        @view_mapping = @library.view_mappings.find_by_folder_id_and_user_id(@folder.id, @active_user.id)
-        unless @view_mapping.nil? || @view_mapping.view_definition.is_template
-          #if view is a template don't delete it
-          #OR current view_definition has been updated, don't deleted it
-          @view_mapping.view_definition.destroy unless @view_mapping.view_definition.id == params[:view_definition_id]
-        end
+      @folder=@library.folders.new(
+          :name=>meta['path'].length==1 ? dbaccount['display_name'] : meta['path'].slice((meta['path'].rindex('/')+1)..meta['path'].length),
+          :folder_type=>meta['path'].length==1 ? VersaFile::FolderTypes.DropboxAccount : VersaFile::FolderTypes.DropboxFolder
+      )
+      @folder.id='db'+dbaccount['uid'].to_s+"-"+meta['path'].to_s.gsub("/",">")
+    else
+      @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
+      unless Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata)||
+             Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View)
+        raise Exceptions::PermissionError.new(@active_user.name, Bfree::Acl::Permissions.WriteMetadata)
       end
 
-    end
+      if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.WriteMetadata))
+        Folder.transaction do
 
-    if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View))
-      #create new mapping
-      @view_mapping = @library.view_mappings.find_or_initialize_by_folder_id_and_user_id(@folder.id, @active_user.id)
-      @view_mapping.view_definition = @library.view_definitions.find(params[:view_definition_id])
-      unless @view_mapping.save
-        raise_errors(@view_mapping.errors)
+          #change name here
+          @folder.name = params[:name] unless params[:name].nil?
+
+          #change parent folder here
+          unless ((params[:parent_id].nil?) || (@folder.folder_type != VersaFile::FolderTypes.Content))
+            #attempt to retrieve parent folder -- assign root if folder not found.
+            @parent = @library.folders.viewable(@active_user, @active_group).find_by_id(params[:parent_id])
+            @parent = @library.root_folder if (@parent.nil? && @folder.folder_type != VersaFile::FolderTypes.Root)
+            @folder.file_in_folder(@parent) if @folder.parent != @parent
+          end
+
+          #update share properties
+          if(@folder.folder_type == VersaFile::FolderTypes.Share)
+            @folder.share.password = params[:password] unless params[:password].nil?||params[:password]==""
+            @folder.share.expiry = params[:expiry]
+          end
+
+          unless @folder.save
+            raise_errors(@folder.errors)
+          end
+
+          #can have only one custom view per folder/user, so...
+          @view_mapping = @library.view_mappings.find_by_folder_id_and_user_id(@folder.id, @active_user.id)
+          unless @view_mapping.nil? || @view_mapping.view_definition.is_template
+            #if view is a template don't delete it
+            #OR current view_definition has been updated, don't deleted it
+            @view_mapping.view_definition.destroy unless @view_mapping.view_definition.id == params[:view_definition_id]
+          end
+        end
+
+      end
+
+      if(Acl.has_rights(@folder.active_permissions, Bfree::Acl::Permissions.View))
+        #create new mapping
+        @view_mapping = @library.view_mappings.find_or_initialize_by_folder_id_and_user_id(@folder.id, @active_user.id)
+        @view_mapping.view_definition = @library.view_definitions.find(params[:view_definition_id])
+        unless @view_mapping.save
+          raise_errors(@view_mapping.errors)
+        end
       end
     end
+
+
 
 
     respond_to do |format|
@@ -284,6 +429,16 @@ class FoldersController < ApplicationController
     begin
 
       @folder = @library.folders.viewable(@active_user, @active_group).find(params[:id])
+
+      if(@folder.folder_type==VersaFile::FolderTypes.DropboxAccount)
+        @session=@library.db_sessions.find_by_dropbox_uid(@folder.dropbox_uid)
+        @session.destroy
+      elsif(@folder.folder_type==VersaFile::FolderTypes.DropboxFolder)
+        sezzion=@library.db_sessions.find_by_dropbox_uid(@folder.dropbox_uid).getSession()
+        client=DropboxClient.new(sezzion, configatron.versafile.dropbox.access_type)
+        client.file_delete(@folder.dropbox_path)
+      end
+
       destroy_permissions = (@folder.folder_type == VersaFile::FolderTypes.Share) ?
                                 Bfree::Acl::Permissions.WriteMetadata :
                                 Bfree::Acl::Permissions.Delete

@@ -108,9 +108,43 @@ class DocumentsController < ApplicationController
   # GET /documents/1
   # GET /documents/1.json
   def show
+    if(params[:id].index('db')!=nil)
+      uid=params[:id].sub("db", "")
+      uid=uid.slice(0..(uid.index("-")-1))
+      path=params[:id]
+      path=path.slice((path.index("-")+1)..path.length)
+      path=path.gsub(">","/").gsub("<", ".")
 
-    @document = @library.documents.full.find(params[:id])
-    columns = DocumentsHelper.columns_by_doctype(@document)
+      sezzion=@zone.db_sessions.find_by_dropbox_uid(uid)
+      dbsession=sezzion.getSession()
+
+      dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+      dbaccount=dbclient.account_info()
+
+      file=dbclient.metadata(path)
+
+      @document={
+        :name=>file['path'],
+        :active_permissions=>2147483647,
+        :updated_by=>'Dropbox',
+        :created_by=>'Dropbox',
+        :binary_content_type=>file['mime_type'],
+        :major_version_number=>1,
+        :minor_version_number=>0,
+        :binary_file_size=>file['bytes'],
+        :folder_id=>params[:query],
+        :document_id=>"dbox#{file['revision']}",
+        :document_type_id=>@library.document_types.first.id,
+        :document_type=>@library.document_types.first,
+        :id=>'db'+dbaccount['uid'].to_s+"-"+file['path'].to_s.gsub("/",">").gsub(".", "<"),
+        :reference_type=>0,
+        :state=>16
+      }
+    else
+      @document = @library.documents.full.find(params[:id])
+      columns = DocumentsHelper.columns_by_doctype(@document)
+    end
+
 
     respond_to do |format|
       format.html # show.html.erb

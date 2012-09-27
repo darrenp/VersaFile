@@ -47,6 +47,41 @@ class Version < ActiveRecord::Base
     self.document.library.zone
   end
 
+  def synchronize
+    self.document.add_flag(Bfree::DocumentStates.Synchronizing)
+    self.document.save
+    self.delay.synchronize_delay()
+  end
+
+  def synchronize_delay()
+    uid, path=self.document.get_dropbox_uid_and_path()
+
+    dbsession=self.zone.db_sessions.find_by_dropbox_uid(uid).getSession
+    dbclient=DropboxClient.new(dbsession, configatron.versafile.dropbox.access_type)
+
+    local_filepath = self.path
+
+    dbclient.put_file(path, File.open(local_filepath, "rb"), true)
+
+    document=self.library.documents.find_by_id(self.document.id)
+    document.remove_flag(Bfree::DocumentStates.Synchronizing)
+    document.save
+
+    oldversion=self.document.versions.find_by_dropbox_uid_and_dropbox_path(uid, path)
+    oldversion.dropbox_uid=nil
+    oldversion.dropbox_path=nil
+    oldversion.save
+
+    newversion=self.document.versions.find_by_id(self.id)
+    newversion.dropbox_uid=uid
+    newversion.dropbox_path=path
+    newversion.save
+
+    #self.document.remove_flag(Bfree::DocumentStates.Synchronizing)
+    #self.document.save
+
+  end
+
   def binary_primary_folder
     self.binary_storage_name[0,1]
   end

@@ -11,17 +11,36 @@ module VersaFile
   configatron.versafile.mail.zone_upgrade_active.subject = "Welcome to VersaFile"
   configatron.versafile.mail.zone_upgrade_quota.subject = "VersaFile Account Upgrade Notification"
 
+  configatron.versafile.dropbox.app_key = "utjo1v2e4xal91h"
+  configatron.versafile.dropbox.app_secret = "q5eyeavqrg74sws"
+  configatron.versafile.dropbox.access_type = :app_folder
+
   #folders are sorted by types (descending order)
   #gaps between indices are there to insert
   #new folder types if needed.
   module FolderTypes
-    @@_root       = 0x0000
-    @@_content    = 0x0001
-    @@_share_root = 0x0010
-    @@_share      = 0x0011
-    @@_search     = 0x0020
-    @@_trash      = 0x0040
-    @@_error      = 0xFFFF
+    @@_root             = 0x0000
+    @@_content          = 0x0001
+    @@_share_root       = 0x0010
+    @@_share            = 0x0011
+    @@_dropbox_root     = 0x0014
+    @@_dropbox_account  = 0x0015
+    @@_dropbox_folder   = 0x0016
+    @@_search           = 0x0020
+    @@_trash            = 0x0040
+    @@_error            = 0xFFFF
+
+    def self.DropboxRoot
+      @@_dropbox_root
+    end
+
+    def self.DropboxAccount
+      @@_dropbox_account
+    end
+
+    def self.DropboxFolder
+      @@_dropbox_folder
+    end
 
     def self.Content
       @@_content

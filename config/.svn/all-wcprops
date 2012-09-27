@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/rko/!svn/ver/2196/VersaFile/trunk/config
+END
+routes.rb
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/rko/!svn/ver/2272/VersaFile/trunk/config/routes.rb
+END
+database.yml
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/rko/!svn/ver/2204/VersaFile/trunk/config/database.yml
+END
+environment.rb
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/rko/!svn/ver/1666/VersaFile/trunk/config/environment.rb
+END
+boot.rb
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/rko/!svn/ver/1664/VersaFile/trunk/config/boot.rb
+END
+application.rb
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/rko/!svn/ver/1685/VersaFile/trunk/config/application.rb
+END

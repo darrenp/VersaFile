@@ -40,6 +40,7 @@ var djConfig = {
 <% end %>
 
 <script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/bfree/_proto.js"></script>
+<script type="text/javascript" src="/javascripts/dojo-<%= configatron.dojo.version %>/bfree/dropbox.js"></script>
 <script type="text/javascript">
 dojo.require('dojox.widget.Standby');
 
@@ -52,6 +53,7 @@ function _wdgMain_onLoad(wdg){
 function _wdgMain_onWorking(){
     setTimeout('dijit.byId(\'wdgLoad\').show();', 100);
 }
+
 
 function loadMain(){
     dojo.require('bfree.api.XhrHelper');
@@ -90,7 +92,6 @@ function loadMain(){
         onWorking: _wdgMain_onWorking,
         version: '<%="#{configatron.bfree.major_version}.#{configatron.bfree.minor_version}.#{configatron.bfree.revision_number}.#{configatron.bfree.build_number}"%>'
     }, 'mainNode');
-
 }
 
 function logout(){

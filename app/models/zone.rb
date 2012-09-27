@@ -14,6 +14,7 @@ class Zone < ActiveRecord::Base
   has_many :libraries
   has_many :acls
   has_one :acl, :as => :securable
+  has_many :db_sessions
   after_create :create_defaults
 
   validate :subdomain, :uniqueness => true

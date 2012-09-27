@@ -28,6 +28,8 @@ VersaFile::Application.configure do
   # Expands the lines which load the assets
   config.assets.debug = true
 
+  #config.force_ssl=true
+
   ENV['location']="bfreetest.com:3000"
 
   #Pony.options = {:via => :smtp, :via_options => {
