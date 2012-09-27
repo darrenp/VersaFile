@@ -18,6 +18,8 @@ gem 'prawnto'
 gem 'rubyzip'
 gem 'mobile-fu'
 
+gem 'dropbox-sdk'
+
 gem 'newrelic_rpm' #allow ey monitoring
 
 # Gems used only for assets and not required
