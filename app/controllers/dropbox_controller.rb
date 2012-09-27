@@ -8,7 +8,7 @@ class DropboxController < ApplicationController
 
     session[:dropbox_request]=dbsession
 
-    redirect_to dbsession.get_authorize_url(@_env['REQUEST_URI'].sub('access', 'finished'))
+    redirect_to dbsession.get_authorize_url("#{request.protocol}#{request.host_with_port}#{request.fullpath}".sub('access', 'finished'))
 
     #respond_to do |format|
     #  format.json{ render json: json }
